@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  role          Role     @default(BREEDER)
+  firstName     String
+  lastName      String
+  phone         String?
+  dni           String?
+  country       String
+  city          String
+  address       String?
+  postalCode    String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  breederProfile Breeder?
+  horses         Horse[]
+  requests       ServiceRequest[]
+  payments       Payment[]
+
+  @@map("users")
+}
+
+model Breeder {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  breederCode     String   @unique
+  farmName        String
+  brandName       String?
+  farmAddress     String
+  farmCity        String
+  farmProvince    String
+  farmCountry     String
+  farmPostalCode  String
+  isApproved      Boolean  @default(false)
+  renewalDate     DateTime?
+  createdAt       DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  horses  Horse[]
+
+  @@map("breeders")
+}
+
+model Horse {
+  id                String    @id @default(uuid())
+  registrationNumber String   @unique
+  name              String
+  birthDate         DateTime
+  sex               Sex
+  color             String
+  microchip         String?
+  brand             String?
+  tattoo            String?
+  height            Float?
+  breedComposition  String    // Ej: "50% PRE / 50% PSL"
+  breedType         BreedType
+  motherBreed       MotherBreed
+  fatherId          String?
+  motherId          String?
+  breederId         String?
+  ownerId           String
+  status            HorseStatus @default(PENDING)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  father          Horse?   @relation("Sire", fields: [fatherId], references: [id])
+  mother          Horse?   @relation("Dam", fields: [motherId], references: [id])
+  childrenSire    Horse[]  @relation("Sire")
+  childrenDam     Horse[]  @relation("Dam")
+  breeder         Breeder? @relation(fields: [breederId], references: [id])
+  owner           User     @relation(fields: [ownerId], references: [id])
+
+  originCertificate   OriginCertificate?
+  qualityCertificate  QualityCertificate?
+  photos              HorsePhoto[]
+  videos              HorseVideo[]
+  evaluations         Evaluation[]
+  serviceRequests     ServiceRequest[]
+  pedigreeEntries     PedigreeEntry[]
+
+  @@map("horses")
+}
+
+model PedigreeEntry {
+  id          String @id @default(uuid())
+  horseId     String
+  generation  Int    // 1=padres, 2=abuelos, 3=bisabuelos
+  relation    String // "father", "mother", "paternal_grandfather", etc.
+  name        String
+  breed       String
+  studbook    String?
+  isCiberico  Boolean @default(false)
+
+  horse Horse @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  @@map("pedigree_entries")
+}
+
+model HorsePhoto {
+  id        String @id @default(uuid())
+  horseId   String
+  angle     PhotoAngle
+  url       String
+  isApproved Boolean @default(false)
+  uploadedAt DateTime @default(now())
+
+  horse Horse @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  @@map("horse_photos")
+}
+
+model HorseVideo {
+  id          String @id @default(uuid())
+  horseId     String
+  url         String
+  type        VideoType
+  duration    Int?     // segundos
+  aiScore     Float?   // score de IA externa
+  aiData      Json?    // datos crudos de IA
+  isAnalyzed  Boolean  @default(false)
+  uploadedAt  DateTime @default(now())
+
+  horse Horse @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  @@map("horse_videos")
+}
+
+model OriginCertificate {
+  id            String   @id @default(uuid())
+  horseId       String   @unique
+  issuedAt      DateTime @default(now())
+  pdfUrl        String?
+  hash          String   @unique
+  isDigital     Boolean  @default(true)
+  isPhysical    Boolean  @default(false)
+  physicalSent  Boolean  @default(false)
+
+  horse Horse @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  @@map("origin_certificates")
+}
+
+model QualityCertificate {
+  id            String    @id @default(uuid())
+  horseId       String    @unique
+  stars         Int       // 3, 6, 12, 24
+  starColor     StarColor @default(BLUE)
+  discipline    String
+  competitionLevel String
+  resultsUrl    String?
+  issuedAt      DateTime  @default(now())
+  pdfUrl        String?
+  hash          String    @unique
+
+  horse Horse @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  @@map("quality_certificates")
+}
+
+model Evaluation {
+  id              String   @id @default(uuid())
+  horseId         String
+  evaluatorType   EvaluatorType @default(AI)
+  evaluatorId     String?  // ID del certificador o sistema IA
+  status          EvaluationStatus @default(PENDING)
+
+  // Puntuaciones (0-10)
+  morphologyScore Float?
+  movementScore   Float?
+  dressageScore   Float?
+  sportsScore     Float?
+  overallScore    Float?
+
+  // Datos biomecánicos de IA
+  biomechanics    Json?
+
+  notes           String?
+  evaluatedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  horse Horse @relation(fields: [horseId], references: [id], onDelete: Cascade)
+
+  @@map("evaluations")
+}
+
+model ServiceRequest {
+  id          String        @id @default(uuid())
+  userId      String
+  horseId     String?
+  type        ServiceType
+  status      RequestStatus @default(PENDING)
+  oldValue    String?
+  newValue    String?
+  documents   Json?         // URLs de documentos adjuntos
+  notes       String?
+  createdAt   DateTime      @default(now())
+  resolvedAt  DateTime?
+
+  user  User   @relation(fields: [userId], references: [id])
+  horse Horse? @relation(fields: [horseId], references: [id])
+
+  @@map("service_requests")
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  userId        String
+  stripeId      String?       @unique
+  amount        Float
+  currency      String        @default("EUR")
+  status        PaymentStatus @default(PENDING)
+  serviceType   ServiceType
+  horseId       String?
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  paidAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+enum Role {
+  ADMIN
+  CERTIFIER
+  BREEDER
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  GELDING
+}
+
+enum BreedType {
+  PURE          // 100% ibérico o 50/50 entre razas madre
+  CROSS_50_50   // 50% ibérico 50% exterior
+  CROSS_40_60   // 40% ibérico 60% exterior
+  CROSS_30_70   // 30% ibérico 70% exterior
+  CROSS_20_80   // 20% ibérico 80% exterior
+  NOT_ALLOWED   // <20% ibérico
+}
+
+enum MotherBreed {
+  PRE
+  PSL
+  PRM
+  C_IBERICO
+}
+
+enum HorseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum PhotoAngle {
+  LEFT_PROFILE
+  RIGHT_PROFILE
+  FRONT
+  REAR
+  TOP
+}
+
+enum VideoType {
+  EVALUATION      // Video de 1 min, 3 aires
+  COMPETITION     // Video de competición
+  MOVEMENT        // Video de movimiento libre
+}
+
+enum StarColor {
+  BLUE
+  AMBAR
+}
+
+enum EvaluatorType {
+  AI
+  CERTIFIER
+  COMMITTEE
+}
+
+enum EvaluationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum ServiceType {
+  ORIGIN_CERTIFICATE
+  QUALITY_CERTIFICATE
+  NAME_CHANGE
+  OWNERSHIP_TRANSFER
+  BREEDER_CODE
+  STALLION_LICENSE
+  RENEWAL
+}
+
+enum RequestStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
