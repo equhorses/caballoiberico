@@ -22,6 +22,8 @@ Mientras no haya ejemplares reales publicados se muestran fichas de **ejemplo**,
 
 **PRE, PSL y sus cruces:** microchip obligatorio. PRE/PSL aportan su nº de libro oficial; los cruces, padre y madre con su nº de registro (ANCCE, APSL o C-IBERICO). La ficha muestra la procedencia como *pendiente de acreditar* hasta que la presidencia revisa los documentos (`/evaluador` → Ejemplares); el Certificado de Origen no se puede expedir antes.
 
+**Documentación leída por IA:** el titular sube la carta genealógica o el certificado (foto o PDF) del ejemplar y, en los cruces, de padre y madre. La IA rellena el formulario de alta (campos en amarillo para revisar) y en `/evaluador` se ve cada documento junto a lo declarado, con lo que no cuadra marcado en rojo. La IA solo lee y compara; la procedencia la acredita siempre una persona. Los documentos se guardan fuera de la carpeta pública (`DOCS_DIR`, por defecto junto a `UPLOAD_DIR`: en Railway, `/data/private-docs`).
+
 **Etapas y niveles:** se valora desde los 6 meses (potro, añojo, 2, 3, 4, 5 y 6+ años). El resultado es un nivel I–V que no depende de la edad:
 sube si una nueva valoración lo mejora (con tope por etapa: II potros/añojos, III a 2–3 años, IV a 4–5, V desde 6), nunca baja por valoración,
 y la presidencia puede cambiarlo a mano por méritos deportivos (motivo obligatorio, queda en el historial).

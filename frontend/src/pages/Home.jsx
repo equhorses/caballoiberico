@@ -18,7 +18,7 @@ export default function Home() {
     <>
       {/* HERO */}
       <section className="hero">
-        <div className="hero-bg" style={{ backgroundImage: 'url(/images/hero.jpg)' }} />
+        <div className="hero-bg" style={{ backgroundImage: 'url(/images/hero.jpg)', backgroundPosition: '22% 40%' }} />
         <div className="wrap">
           <div className="hero-tag">✦ ¿Qué es C-IBERICO? La unión del caballo español y lusitano</div>
           <h1>El caballo ibérico <em>valorado por su deporte,</em> no por su etiqueta.</h1>

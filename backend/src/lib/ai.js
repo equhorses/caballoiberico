@@ -138,4 +138,4 @@ async function runEvaluation({ rubric, criteria, stage, ageMonths, photos, video
   return { runs, errors, media };
 }
 
-module.exports = { isConfigured, runEvaluation, providers };
+module.exports = { isConfigured, runEvaluation, providers, callModel, parseJson };

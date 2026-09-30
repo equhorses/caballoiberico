@@ -2,6 +2,8 @@
 const router = require('express').Router();
 const { db, SERVICES, upload, authenticate, audit, wrap } = require('../lib/common');
 
+const DOCS = require('../lib/documents');
+
 const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
 
 const VIEWS = ['LATERAL_IZQUIERDO', 'LATERAL_DERECHO', 'FRONTAL', 'TRASERA', 'SUPERIOR'];
@@ -17,17 +19,19 @@ async function ownHorse(req, res) {
 async function withRelations(horses) {
   if (!horses.length) return [];
   const ids = horses.map((h) => h.id);
-  const [photos, videos, certs, cases] = await Promise.all([
+  const [photos, videos, certs, cases, docs] = await Promise.all([
     db.query('SELECT * FROM horse_photos WHERE horse_id = ANY($1)', [ids]),
     db.query('SELECT * FROM horse_videos WHERE horse_id = ANY($1) ORDER BY uploaded_at DESC', [ids]),
     db.query('SELECT * FROM certificates WHERE horse_id = ANY($1) ORDER BY issued_at', [ids]),
     db.query('SELECT id, horse_id, status, created_at, resolved_at, summary FROM evaluation_cases WHERE horse_id = ANY($1) ORDER BY created_at DESC', [ids]),
+    db.query('SELECT id, horse_id, role, doc_type, original_name, created_at FROM horse_documents WHERE horse_id = ANY($1) ORDER BY created_at', [ids]),
   ]);
   return horses.map((h) => ({
     ...h,
     photos: photos.filter((p) => p.horseId === h.id),
     videos: videos.filter((v) => v.horseId === h.id),
     certificates: certs.filter((c) => c.horseId === h.id),
+    documents: docs.filter((d) => d.horseId === h.id),
     cases: cases.filter((c) => c.horseId === h.id),
   }));
 }
@@ -80,7 +84,11 @@ router.post('/horses', wrap(async (req, res) => {
     [b.name.trim().toUpperCase(), b.birthDate, b.sex, b.coat, b.country, b.breed, pct, b.sireName || null, b.damName || null,
       b.breederName || null, String(b.microchip).trim(), b.officialRegistry || null, req.user.id, t(b.sireRegistry) || null, t(b.damRegistry) || null],
   );
-  audit(req.user.id, 'Horse', h.id, 'CREAR', { name: h.name });
+  const docIds = Array.isArray(b.documentIds) ? b.documentIds.filter((x) => /^[0-9a-f-]{36}$/i.test(x)) : [];
+  if (docIds.length) {
+    await db.query('UPDATE horse_documents SET horse_id=$1 WHERE id = ANY($2::uuid[]) AND user_id=$3 AND horse_id IS NULL', [h.id, docIds, req.user.id]);
+  }
+  audit(req.user.id, 'Horse', h.id, 'CREAR', { name: h.name, documentos: docIds.length });
   res.status(201).json(h);
 }));
 
@@ -122,6 +130,46 @@ router.post('/horses/:id/video', upload.single('file'), wrap(async (req, res) =>
 }));
 
 // ─── Solicitudes (gestiones) ───
+// ── Documentación: se sube, la IA la lee y propone los datos (el titular revisa; la presidencia acredita) ──
+const DOC_ROLES = ['EJEMPLAR', 'PADRE', 'MADRE'];
+const DOC_MIME = /^(image\/(jpeg|png|webp)|application\/pdf)$/;
+
+async function saveDocument(req, res, horseId) {
+  const role = String(req.body?.role || 'EJEMPLAR').toUpperCase();
+  if (!req.file) return res.status(400).json({ error: 'Sube una foto (JPG/PNG) o un PDF del documento' });
+  if (!DOC_MIME.test(req.file.mimetype)) return res.status(400).json({ error: 'Formato no admitido: usa JPG, PNG, WEBP o PDF' });
+  if (!DOC_ROLES.includes(role)) return res.status(400).json({ error: 'Tipo de documento no válido' });
+  const name = DOCS.storePrivate(req.file);
+  const ex = await DOCS.extract({ name, mime: req.file.mimetype, role });
+  const d = await db.one(
+    `INSERT INTO horse_documents(user_id, horse_id, role, file, mime, original_name, doc_type, extracted, ai_model, ai_error)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id, role, doc_type, created_at`,
+    [req.user.id, horseId || null, role, name, req.file.mimetype, req.file.originalname, ex.docType || null,
+      ex.fields ? JSON.stringify({ fields: ex.fields, legible: ex.legible, notes: ex.notes }) : null, ex.model || null, ex.error || null],
+  );
+  if (horseId) audit(req.user.id, 'Horse', horseId, 'DOCUMENTO', { role, docType: ex.docType });
+  res.status(201).json({ id: d.id, role, docType: ex.docType || null, fields: ex.fields || null, legible: ex.legible, notes: ex.notes || '', aiError: ex.error || null });
+}
+
+// Antes del alta: sirve para rellenar el formulario
+router.post('/documents/extract', upload.single('file'), wrap(async (req, res) => saveDocument(req, res, null)));
+
+// Para un ejemplar ya dado de alta
+router.post('/horses/:id/documents', upload.single('file'), wrap(async (req, res) => {
+  const h = await ownHorse(req, res);
+  if (!h) return;
+  return saveDocument(req, res, h.id);
+}));
+
+// Ver el archivo: solo el titular que lo subió o la presidencia/evaluadores
+router.get('/documents/:id/file', wrap(async (req, res) => {
+  const d = await db.one('SELECT * FROM horse_documents WHERE id::text=$1', [req.params.id]);
+  if (!d || (d.userId !== req.user.id && !['ADMIN', 'EVALUADOR'].includes(req.user.role))) return res.status(404).json({ error: 'Documento no encontrado' });
+  res.setHeader('Content-Type', d.mime);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.sendFile(DOCS.privatePath(d.file));
+}));
+
 router.get('/requests', wrap(async (req, res) => {
   res.json(await db.query(
     `SELECT r.*, h.name AS horse_name,

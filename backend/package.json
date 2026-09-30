@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "private": true,
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "start": "node src/server.js",
@@ -21,6 +21,7 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "pdf-to-png-converter": "^4.2.1",
     "pg": "^8.13.1",
     "stripe": "^17.3.1"
   }

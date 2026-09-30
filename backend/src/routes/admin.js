@@ -1,5 +1,6 @@
 // Presidencia: gestiones, expedición/revocación de certificados, méritos deportivos y usuarios
 const router = require('express').Router();
+const DOCS = require('../lib/documents');
 const { db, MERIT_STARS, upload, authenticate, requireRole, audit, verificationCode, nextRegistrationNumber, wrap } = require('../lib/common');
 
 router.use(authenticate, requireRole('ADMIN', 'EVALUADOR'));
@@ -42,15 +43,17 @@ router.get('/horses/:id', wrap(async (req, res) => {
      FROM horses h JOIN users u ON u.id=h.owner_id WHERE h.id::text=$1`, [req.params.id],
   );
   if (!h) return res.status(404).json({ error: 'Ejemplar no encontrado' });
-  const [photos, videos, certificates, merits, levelHistory] = await Promise.all([
+  const [photos, videos, certificates, merits, levelHistory, docs] = await Promise.all([
     db.query('SELECT * FROM horse_photos WHERE horse_id=$1', [h.id]),
     db.query('SELECT * FROM horse_videos WHERE horse_id=$1', [h.id]),
     db.query('SELECT * FROM certificates WHERE horse_id=$1 ORDER BY issued_at', [h.id]),
     db.query('SELECT * FROM sport_merits WHERE horse_id=$1 ORDER BY date DESC', [h.id]),
     db.query(`SELECT l.*, u.first_name || ' ' || u.last_name AS decided_by_name FROM level_history l
               LEFT JOIN users u ON u.id=l.decided_by WHERE l.horse_id=$1 ORDER BY l.at DESC`, [h.id]),
+    db.query('SELECT id, role, doc_type, original_name, mime, extracted, ai_model, ai_error, created_at FROM horse_documents WHERE horse_id=$1 ORDER BY created_at', [h.id]),
   ]);
-  res.json({ ...h, photos, videos, certificates, merits, levelHistory });
+  const documents = docs.map((d) => ({ ...d, checks: DOCS.compare(h, d) }));
+  res.json({ ...h, photos, videos, certificates, merits, levelHistory, documents });
 }));
 
 // Expedir certificado. ORIGEN asigna número de registro y publica el ejemplar en el Registro.

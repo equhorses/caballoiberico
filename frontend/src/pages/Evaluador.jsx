@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { api, fileUrl, useAuth, useFetch } from '../api.jsx'
+import { api, fileUrl, openPrivateFile, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
-import { LEVEL_REASON, MERIT_LEVELS, ORIGIN, PHOTO_VIEWS, ROMAN, SERVICES, fmtDate } from '../data/content.js'
+import { DOC_ROLES, LEVEL_REASON, MERIT_LEVELS, ORIGIN, PHOTO_VIEWS, ROMAN, SERVICES, fmtDate } from '../data/content.js'
 
 const CASE_STATUS = { REVISION_MATERIAL: 'Revisión de material', EN_REVISION_HUMANA: 'En revisión humana', REQUIERE_MATERIAL: 'Requiere material', RESUELTO: 'Resuelto' }
 const MATERIAL = [['APTO', 'Apto'], ['APTO_PARCIAL', 'Apto parcialmente'], ['REQUIERE_MATERIAL', 'Requiere nuevo material'], ['NO_EVALUABLE', 'No evaluable']]
@@ -309,6 +309,40 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
             <button className="btn btn-line">{h.originStatus === 'ACREDITADO' ? 'Quitar acreditación' : 'Acreditar procedencia'}</button>
           </form>
         )}
+      </div>
+      <div className="card">
+        <h3>Documentación de procedencia</h3>
+        {!(h.documents || []).length && <p className="muted mt8">El titular no ha subido documentos todavía.</p>}
+        {(h.documents || []).map((d) => {
+          const bad = d.checks.filter((c) => c.status === 'DISTINTO').length
+          return (
+            <div key={d.id} className="doc-review mt16">
+              <div className="row between" style={{ alignItems: 'center' }}>
+                <div>
+                  <strong>{DOC_ROLES[d.role]}</strong> <span className="small muted">· {d.docType || d.originalName} · {fmtDate(d.createdAt)}{d.aiModel ? ` · leído por ${d.aiModel}` : ''}</span>
+                </div>
+                <div className="row" style={{ gap: 8 }}>
+                  {d.checks.length > 0 && <span className={`badge ${bad ? 'bad' : 'ok'}`}>{bad ? `${bad} dato(s) no cuadran` : 'Todo cuadra'}</span>}
+                  <button type="button" className="btn btn-line" onClick={() => openPrivateFile(`/my/documents/${d.id}/file`).catch((x) => notify(x.message))}>Ver documento</button>
+                </div>
+              </div>
+              {d.aiError && <p className="notice bad mt8">La IA no pudo leerlo: {d.aiError}. Revísalo a mano.</p>}
+              {d.extracted?.notes && <p className="small muted mt8">Nota de la IA: {d.extracted.notes}</p>}
+              {d.checks.length > 0 && (
+                <table className="table mt8">
+                  <thead><tr><th>Dato</th><th>Declarado por el titular</th><th>Leído en el documento</th><th></th></tr></thead>
+                  <tbody>{d.checks.map((c) => (
+                    <tr key={c.label}>
+                      <td>{c.label}</td><td>{c.declared || '—'}</td><td>{c.read || '—'}</td>
+                      <td className={`chk ${c.status}`}>{{ OK: '✓', DISTINTO: '✕ No cuadra', SIN_DATO: 'No aparece', NO_DECLARADO: 'No declarado' }[c.status]}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              )}
+            </div>
+          )
+        })}
+        <p className="small muted mt16">La IA solo lee y compara: la acreditación la decides tú con el botón de arriba, después de ver el documento.</p>
       </div>
       <div className="card">
         <div className="row between">

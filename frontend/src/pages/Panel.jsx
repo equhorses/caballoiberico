@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import { api, useAuth, useFetch } from '../api.jsx'
+import { api, openPrivateFile, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
-import { PHOTO_VIEWS, SERVICES, eur, fmtDate } from '../data/content.js'
+import { DOC_ROLES, PHOTO_VIEWS, SERVICES, eur, fmtDate } from '../data/content.js'
 
 const REQ_STATUS = {
   PENDIENTE_PAGO: ['Pendiente de pago', 'example'], PAGADA: ['Pagada', 'ok'], EN_REVISION: ['En revisión', 'light'],
@@ -62,35 +62,93 @@ export default function Panel() {
   )
 }
 
+// Qué campos del formulario rellena cada documento
+const SEXES = ['MACHO', 'HEMBRA', 'CASTRADO']
+function fieldsFromDoc(role, x) {
+  const out = {}
+  const put = (k, v) => { if (v !== null && v !== undefined && String(v).trim() !== '') out[k] = String(v).trim() }
+  if (role === 'PADRE') { put('sireName', x.name); put('sireRegistry', x.officialRegistry) }
+  else if (role === 'MADRE') { put('damName', x.name); put('damRegistry', x.officialRegistry) }
+  else {
+    ;['name', 'coat', 'microchip', 'officialRegistry', 'sireName', 'sireRegistry', 'damName', 'damRegistry', 'breederName', 'country'].forEach((k) => put(k, x[k]))
+    if (/^\d{4}-\d{2}-\d{2}$/.test(x.birthDate || '')) put('birthDate', x.birthDate)
+    if (SEXES.includes(x.sex)) put('sex', x.sex)
+    if (['PRE', 'PSL'].includes(x.breed)) put('breed', x.breed)
+  }
+  return out
+}
+
+function DocUpload({ role, doc, onFile, busy }) {
+  return (
+    <label className={`doc-slot ${doc ? (doc.aiError ? 'warn' : 'done') : ''}`}>
+      <strong>{DOC_ROLES[role]}</strong>
+      <span className="small muted">
+        {busy ? 'Leyendo el documento…'
+          : doc ? (doc.aiError ? `Subido. ${doc.aiError}` : `✓ Leído: ${doc.docType || 'documento'}${doc.notes ? ` · ${doc.notes}` : ''}`)
+          : role === 'EJEMPLAR' ? 'Carta genealógica, certificado del libro o pasaporte (foto o PDF)' : 'Su carta genealógica o certificado (foto o PDF)'}
+      </span>
+      <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(e) => onFile(e.target.files[0])} />
+    </label>
+  )
+}
+
 function NewHorse({ onDone }) {
   const [f, setF] = useState({ name: '', birthDate: '', sex: 'MACHO', breed: 'PRE', coat: '', country: 'España', ibericBloodPct: '', sireName: '', damName: '', breederName: '', microchip: '', officialRegistry: '', sireRegistry: '', damRegistry: '' })
   const cross = f.breed === 'PRE_PSL' || f.breed === 'CRUZADO'
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const [docs, setDocs] = useState({})
+  const [reading, setReading] = useState('')
+  const [aiKeys, setAiKeys] = useState([])
+  const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setAiKeys((a) => a.filter((x) => x !== k)) }
+  const ai = (k) => (aiKeys.includes(k) ? 'input ai-filled' : 'input')
+  const readDoc = async (role, file) => {
+    if (!file) return
+    setErr(''); setReading(role)
+    try {
+      const form = new FormData(); form.append('role', role); form.append('file', file)
+      const d = await api('/my/documents/extract', { method: 'POST', form })
+      setDocs((x) => ({ ...x, [role]: d }))
+      if (d.fields) {
+        const add = fieldsFromDoc(role, d.fields)
+        setF((x) => ({ ...x, ...add }))
+        setAiKeys((a) => [...new Set([...a, ...Object.keys(add)])])
+      }
+    } catch (x) { setErr(x.message) }
+    setReading('')
+  }
   const submit = async (e) => {
     e.preventDefault(); setErr(''); setBusy(true)
-    try { onDone(await api('/my/horses', { method: 'POST', body: f })) } catch (x) { setErr(x.message) }
+    try { onDone(await api('/my/horses', { method: 'POST', body: { ...f, documentIds: Object.values(docs).map((d) => d.id) } })) } catch (x) { setErr(x.message) }
     setBusy(false)
   }
   return (
     <form className="card form" onSubmit={submit} style={{ maxWidth: 860 }}>
-      <h3>Datos del ejemplar</h3>
+      <h3>1 · Sube la documentación</h3>
+      <p className="muted small">La IA lee el documento y rellena el formulario por ti. Revisa lo que ha puesto (en amarillo) antes de dar de alta: lo acreditará después la presidencia.</p>
+      <div className="doc-slots">
+        <DocUpload role="EJEMPLAR" doc={docs.EJEMPLAR} busy={reading === 'EJEMPLAR'} onFile={(file) => readDoc('EJEMPLAR', file)} />
+        {cross && <DocUpload role="PADRE" doc={docs.PADRE} busy={reading === 'PADRE'} onFile={(file) => readDoc('PADRE', file)} />}
+        {cross && <DocUpload role="MADRE" doc={docs.MADRE} busy={reading === 'MADRE'} onFile={(file) => readDoc('MADRE', file)} />}
+      </div>
+      {!cross && <p className="small muted">¿Es un cruce? Elige «Cruce» en <em>Raza</em> y aparecerán los huecos para los documentos del padre y de la madre.</p>}
+      <h3 className="mt16">2 · Revisa los datos del ejemplar</h3>
+      {aiKeys.length > 0 && <p className="small ai-note">Los campos en amarillo los ha rellenado la IA a partir del documento. Compruébalos.</p>}
       <div className="grid g3" style={{ gap: 16 }}>
-        <div className="field"><label>Nombre *</label><input className="input" required value={f.name} onChange={set('name')} /></div>
-        <div className="field"><label>Fecha de nacimiento *</label><input className="input" type="date" required value={f.birthDate} onChange={set('birthDate')} /></div>
-        <div className="field"><label>Sexo *</label><select className="select" value={f.sex} onChange={set('sex')}><option value="MACHO">Macho</option><option value="HEMBRA">Hembra</option><option value="CASTRADO">Castrado</option></select></div>
-        <div className="field"><label>Raza *</label><select className="select" value={f.breed} onChange={set('breed')}><option value="PRE">PRE</option><option value="PSL">PSL</option><option value="PRE_PSL">Cruce PRE × PSL</option><option value="CRUZADO">Cruce ibérico (hijo de cruces)</option></select></div>
-        <div className="field"><label>Capa *</label><input className="input" required value={f.coat} onChange={set('coat')} placeholder="Torda, castaña…" /></div>
-        <div className="field"><label>País *</label><input className="input" required value={f.country} onChange={set('country')} /></div>
-        <div className="field"><label>% sangre ibérica (si se conoce)</label><input className="input" type="number" min={10} max={100} value={f.ibericBloodPct} onChange={set('ibericBloodPct')} placeholder="Déjalo en blanco si no lo sabes" /></div>
-        <div className="field"><label>Padre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.sireName} onChange={set('sireName')} /></div>
-        <div className="field"><label>Nº registro del padre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.sireRegistry} onChange={set('sireRegistry')} placeholder="ANCCE, APSL o CIB-…" /></div>
-        <div className="field"><label>Madre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.damName} onChange={set('damName')} /></div>
-        <div className="field"><label>Nº registro de la madre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.damRegistry} onChange={set('damRegistry')} placeholder="ANCCE, APSL o CIB-…" /></div>
-        <div className="field"><label>Criador</label><input className="input" value={f.breederName} onChange={set('breederName')} /></div>
-        <div className="field"><label>Microchip *</label><input className="input" required value={f.microchip} onChange={set('microchip')} /></div>
-        <div className="field"><label>Nº en libro oficial (ANCCE, APSL…){cross ? '' : ' *'}</label><input className="input" required={!cross} value={f.officialRegistry} onChange={set('officialRegistry')} /></div>
+        <div className="field"><label>Nombre *</label><input className={ai('name')} required value={f.name} onChange={set('name')} /></div>
+        <div className="field"><label>Fecha de nacimiento *</label><input className={ai('birthDate')} type="date" required value={f.birthDate} onChange={set('birthDate')} /></div>
+        <div className="field"><label>Sexo *</label><select className={ai('sex').replace('input', 'select')} value={f.sex} onChange={set('sex')}><option value="MACHO">Macho</option><option value="HEMBRA">Hembra</option><option value="CASTRADO">Castrado</option></select></div>
+        <div className="field"><label>Raza *</label><select className={ai('breed').replace('input', 'select')} value={f.breed} onChange={set('breed')}><option value="PRE">PRE</option><option value="PSL">PSL</option><option value="PRE_PSL">Cruce PRE × PSL</option><option value="CRUZADO">Cruce ibérico (hijo de cruces)</option></select></div>
+        <div className="field"><label>Capa *</label><input className={ai('coat')} required value={f.coat} onChange={set('coat')} placeholder="Torda, castaña…" /></div>
+        <div className="field"><label>País *</label><input className={ai('country')} required value={f.country} onChange={set('country')} /></div>
+        <div className="field"><label>% sangre ibérica (si se conoce)</label><input className={ai('ibericBloodPct')} type="number" min={10} max={100} value={f.ibericBloodPct} onChange={set('ibericBloodPct')} placeholder="Déjalo en blanco si no lo sabes" /></div>
+        <div className="field"><label>Padre{cross ? ' *' : ''}</label><input className={ai('sireName')} required={cross} value={f.sireName} onChange={set('sireName')} /></div>
+        <div className="field"><label>Nº registro del padre{cross ? ' *' : ''}</label><input className={ai('sireRegistry')} required={cross} value={f.sireRegistry} onChange={set('sireRegistry')} placeholder="ANCCE, APSL o CIB-…" /></div>
+        <div className="field"><label>Madre{cross ? ' *' : ''}</label><input className={ai('damName')} required={cross} value={f.damName} onChange={set('damName')} /></div>
+        <div className="field"><label>Nº registro de la madre{cross ? ' *' : ''}</label><input className={ai('damRegistry')} required={cross} value={f.damRegistry} onChange={set('damRegistry')} placeholder="ANCCE, APSL o CIB-…" /></div>
+        <div className="field"><label>Criador</label><input className={ai('breederName')} value={f.breederName} onChange={set('breederName')} /></div>
+        <div className="field"><label>Microchip *</label><input className={ai('microchip')} required value={f.microchip} onChange={set('microchip')} /></div>
+        <div className="field"><label>Nº en libro oficial (ANCCE, APSL…){cross ? '' : ' *'}</label><input className={ai('officialRegistry')} required={!cross} value={f.officialRegistry} onChange={set('officialRegistry')} /></div>
       </div>
       <p className="notice info">{cross
         ? <>Un cruce puede no estar inscrito en ninguna asociación, pero <strong>sus padres sí deben estar registrados</strong> (ANCCE, APSL o C-IBERICO). Te pediremos sus documentos antes de expedir el certificado.</>
@@ -124,6 +182,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
           {h.registrationNumber && <label className="small row" style={{ gap: 8 }}><input type="checkbox" checked={h.isPublic} onChange={togglePublic} /> Ficha pública en el registro</label>}
         </div>
       </div>
+      <HorseDocs h={h} notify={notify} onChange={onChange} />
       <div className="card">
         <h3>Fotografías reglamentarias</h3>
         <p className="muted small mt8">Caballo cuadrado, fondo neutro, cámara a la altura del tronco. JPG, PNG o WEBP.</p>
@@ -159,6 +218,42 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
           {!h.registrationNumber && <button className="btn btn-gold" onClick={() => onRequest('ORIGEN')}>Solicitar Certificado de Origen</button>}
           {h.registrationNumber && <button className="btn btn-gold" onClick={() => onRequest('CALIDAD')}>Solicitar Certificado de Calidad</button>}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function HorseDocs({ h, notify, onChange }) {
+  const [role, setRole] = useState('EJEMPLAR')
+  const [busy, setBusy] = useState(false)
+  const cross = h.breed === 'PRE_PSL' || h.breed === 'CRUZADO'
+  const send = async (file) => {
+    if (!file) return
+    setBusy(true)
+    try {
+      const form = new FormData(); form.append('role', role); form.append('file', file)
+      await api(`/my/horses/${h.id}/documents`, { method: 'POST', form }); notify('Documento subido'); onChange()
+    } catch (x) { notify(x.message) }
+    setBusy(false)
+  }
+  return (
+    <div className="card">
+      <h3>Documentación de procedencia</h3>
+      <p className="muted small mt8">{cross ? 'Sube la carta genealógica o el certificado del padre y de la madre (y el del ejemplar, si lo tiene).' : 'Sube la carta genealógica o el certificado del libro oficial del ejemplar.'} Solo la ve la presidencia; no se publica.</p>
+      {(h.documents || []).map((d) => (
+        <p key={d.id} className="mt8">
+          <button type="button" className="link" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => openPrivateFile(`/my/documents/${d.id}/file`).catch((x) => notify(x.message))}>{DOC_ROLES[d.role]}</button>
+          <span className="small muted"> · {d.docType || d.originalName} · {fmtDate(d.createdAt)}</span>
+        </p>
+      ))}
+      <div className="row mt16" style={{ gap: 8 }}>
+        <select className="select" style={{ maxWidth: 260 }} value={role} onChange={(e) => setRole(e.target.value)}>
+          {Object.entries(DOC_ROLES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+        <label className="btn btn-line" style={{ cursor: 'pointer' }}>
+          {busy ? 'Leyendo…' : 'Subir documento'}
+          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" style={{ display: 'none' }} onChange={(e) => send(e.target.files[0])} />
+        </label>
       </div>
     </div>
   )

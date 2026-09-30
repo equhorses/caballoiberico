@@ -7,6 +7,7 @@ export const CONTACT = {
   phone: '+34 644 064 856',
 }
 
+export const DOC_ROLES = { EJEMPLAR: 'Documento del ejemplar', PADRE: 'Documento del padre', MADRE: 'Documento de la madre' }
 export const ORIGIN = { DECLARADO: 'Pendiente de acreditar', ACREDITADO: 'Acreditado por C-IBERICO' }
 export const BREEDS = { PRE: 'PRE', PSL: 'PSL', PRE_PSL: 'Cruce PRE × PSL', CRUZADO: 'Cruce ibérico' }
 
