@@ -75,8 +75,8 @@ router.get('/registry/:number', wrap(async (req, res) => {
   res.json({
     ...card(b),
     sex: h.sex, sireName: h.sireName, damName: h.damName, sireRegistry: h.sireRegistry, damRegistry: h.damRegistry, breederName: h.breederName, ibericBloodPct: h.ibericBloodPct, originStatus: h.originStatus,
-    photos: b.photos,
-    merits: b.merits,
+    photos: b.photos.map(({ view, url }) => ({ view, url })),
+    merits: b.merits.map(({ competition, category, level, position, score, date, starsGiven }) => ({ competition, category, level, position, score, date, starsGiven })),
     certificates: b.certificates.map(({ type, code, stars, amberStars, issuedAt }) => ({ type, code, stars, amberStars, issuedAt })),
     levelHistory: (await db.query('SELECT from_level, to_level, reason, notes, at FROM level_history WHERE horse_id=$1 ORDER BY at DESC', [h.id])),
     evaluation: c ? {
@@ -96,7 +96,7 @@ router.get('/laureados', wrap(async (req, res) => {
 
 router.get('/results', wrap(async (req, res) => {
   res.json(await db.query(
-    `SELECT m.*, h.name AS horse_name, h.registration_number FROM sport_merits m JOIN horses h ON h.id=m.horse_id
+    `SELECT m.id, m.competition, m.category, m.level, m.position, m.score, m.date, m.stars_given, h.name AS horse_name, h.registration_number FROM sport_merits m JOIN horses h ON h.id=m.horse_id
      WHERE m.verified AND h.is_public AND h.status='CERTIFICADO' ORDER BY m.date DESC LIMIT 50`,
   ));
 }));
@@ -113,7 +113,7 @@ router.get('/verify/:code', wrap(async (req, res) => {
       stars: cert.stars, horse: { name: cert.name, registrationNumber: cert.registrationNumber, breed: cert.breed, level: cert.level, originStatus: cert.originStatus },
     });
   }
-  const horse = await db.one('SELECT * FROM horses WHERE registration_number=$1', [code]);
+  const horse = await db.one("SELECT * FROM horses WHERE registration_number=$1 AND status='CERTIFICADO'", [code]);
   if (horse) {
     const certs = await db.query('SELECT type, code, status, issued_at FROM certificates WHERE horse_id=$1 ORDER BY issued_at', [horse.id]);
     return res.json({ valid: horse.status === 'CERTIFICADO', horse: { name: horse.name, registrationNumber: horse.registrationNumber, breed: horse.breed, level: horse.level, originStatus: horse.originStatus }, certificates: certs });

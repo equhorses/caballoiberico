@@ -170,6 +170,17 @@ router.get('/documents/:id/file', wrap(async (req, res) => {
   res.sendFile(DOCS.privatePath(d.file));
 }));
 
+// Descarga de un documento de una gestión: solo el titular o la presidencia/evaluadores
+router.get('/requests/:id/documents/:n', wrap(async (req, res) => {
+  const r = await db.one('SELECT * FROM service_requests WHERE id::text=$1', [req.params.id]);
+  if (!r || (r.userId !== req.user.id && !['ADMIN', 'EVALUADOR'].includes(req.user.role))) return res.status(404).json({ error: 'Documento no encontrado' });
+  const d = (r.documents || [])[Number(req.params.n)];
+  if (!d || !d.file) return res.status(404).json({ error: 'Documento no encontrado' });
+  res.setHeader('Content-Type', d.mime || 'application/octet-stream');
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.sendFile(DOCS.privatePath(d.file));
+}));
+
 router.get('/requests', wrap(async (req, res) => {
   res.json(await db.query(
     `SELECT r.*, h.name AS horse_name,
@@ -187,7 +198,8 @@ router.post('/requests', upload.array('documents', 10), wrap(async (req, res) =>
     horse = horseId && await db.one('SELECT * FROM horses WHERE id::text=$1', [horseId]);
     if (!horse || horse.ownerId !== req.user.id) return res.status(400).json({ error: 'Selecciona uno de tus ejemplares' });
   }
-  const docs = (req.files || []).map((f) => ({ name: f.originalname, url: `/uploads/${f.filename}` }));
+  // Documentación de gestiones (DNI, contratos…): carpeta privada, nunca en /uploads
+  const docs = (req.files || []).map((f) => ({ name: f.originalname, file: DOCS.storePrivate(f), mime: f.mimetype }));
   const request = await db.one(
     'INSERT INTO service_requests(user_id, horse_id, service, notes, documents) VALUES ($1,$2,$3,$4,$5) RETURNING *',
     [req.user.id, horse ? horse.id : null, service, notes || null, JSON.stringify(docs)],

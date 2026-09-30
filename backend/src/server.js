@@ -25,6 +25,8 @@ app.use(express.json({ limit: '2mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
 app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, max: 600 }));
 app.use('/api/auth/', rateLimit({ windowMs: 15 * 60 * 1000, max: 30 }));
+// La lectura de documentos con IA cuesta dinero: máximo 30 por hora desde la misma conexión
+app.use(['/api/my/documents/extract', /^\/api\/my\/horses\/[^/]+\/documents$/], rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: { error: 'Demasiados documentos seguidos. Prueba dentro de un rato.' } }));
 
 app.get('/api/health', (req, res) => res.json({ status: 'OK', service: 'C-IBERICO API', ai: ai.isConfigured() ? 'configurada' : 'pendiente de integración' }));
 app.use('/api/auth', require('./routes/auth'));

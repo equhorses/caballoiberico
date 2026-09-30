@@ -446,7 +446,9 @@ function RequestsAdmin({ notify }) {
             <td><span className="t-name">{SERVICES.find((s) => s.code === r.service)?.name}</span><div className="small muted">{fmtDate(r.createdAt)}{r.notes ? ` · ${r.notes}` : ''}</div></td>
             <td className="small">{r.userName}<div className="muted">{r.userEmail}</div></td>
             <td className="small">{r.horseName || '—'}</td>
-            <td className="small">{(r.documents || []).map((d) => <div key={d.url}><a className="link" href={fileUrl(d.url)} target="_blank" rel="noreferrer">{d.name}</a></div>)}</td>
+            <td className="small">{(r.documents || []).map((d, n) => <div key={n}>{d.file
+              ? <button type="button" className="link" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => openPrivateFile(`/my/requests/${r.id}/documents/${n}`).catch((x) => notify(x.message))}>{d.name}</button>
+              : <a className="link" href={fileUrl(d.url)} target="_blank" rel="noreferrer">{d.name}</a>}</div>)}</td>
             <td className="small">{pretty(r.paymentStatus) || '—'}</td>
             <td><select className="select" value={r.status} onChange={(e) => update(r, e.target.value)}>{REQ.map((s) => <option key={s} value={s}>{pretty(s)}</option>)}</select></td>
           </tr>
