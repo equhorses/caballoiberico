@@ -60,16 +60,25 @@ router.get('/horses', wrap(async (req, res) => {
 
 router.post('/horses', wrap(async (req, res) => {
   const b = req.body || {};
-  const pct = parseInt(b.ibericBloodPct ?? 100, 10);
+  const rawPct = b.ibericBloodPct;
+  const pct = rawPct === undefined || rawPct === null || rawPct === '' ? null : parseInt(rawPct, 10);
   if (!b.name || !b.birthDate || !SEXES.includes(b.sex) || !BREEDS.includes(b.breed) || !b.coat || !b.country) {
     return res.status(400).json({ error: 'Faltan datos obligatorios del ejemplar' });
   }
-  if (Number.isNaN(pct) || pct < 10 || pct > 100) return res.status(400).json({ error: 'Se exige un mínimo del 10 % de sangre ibérica documentada' });
+  if (!b.microchip || !String(b.microchip).trim()) return res.status(400).json({ error: 'El microchip es obligatorio: es lo que identifica al caballo, tenga o no papeles' });
+  const t = (v) => (v == null ? '' : String(v).trim());
+  if (['PRE', 'PSL'].includes(b.breed) && !t(b.officialRegistry)) {
+    return res.status(400).json({ error: 'Para un PRE o un PSL indica su número en el libro oficial (ANCCE, APSL…)' });
+  }
+  if (['PRE_PSL', 'CRUZADO'].includes(b.breed) && (!t(b.sireName) || !t(b.damName) || !t(b.sireRegistry) || !t(b.damRegistry))) {
+    return res.status(400).json({ error: 'En un cruce hay que indicar padre y madre con su número de registro (libro oficial o C-IBERICO)' });
+  }
+  if (pct !== null && (Number.isNaN(pct) || pct < 10 || pct > 100)) return res.status(400).json({ error: 'El % de sangre ibérica debe estar entre 10 y 100 (déjalo en blanco si no se conoce)' });
   const h = await db.one(
-    `INSERT INTO horses(name, birth_date, sex, coat, country, breed, iberic_blood_pct, sire_name, dam_name, breeder_name, microchip, official_registry, owner_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+    `INSERT INTO horses(name, birth_date, sex, coat, country, breed, iberic_blood_pct, sire_name, dam_name, breeder_name, microchip, official_registry, owner_id, sire_registry, dam_registry)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
     [b.name.trim().toUpperCase(), b.birthDate, b.sex, b.coat, b.country, b.breed, pct, b.sireName || null, b.damName || null,
-      b.breederName || null, b.microchip || null, b.officialRegistry || null, req.user.id],
+      b.breederName || null, String(b.microchip).trim(), b.officialRegistry || null, req.user.id, t(b.sireRegistry) || null, t(b.damRegistry) || null],
   );
   audit(req.user.id, 'Horse', h.id, 'CREAR', { name: h.name });
   res.status(201).json(h);

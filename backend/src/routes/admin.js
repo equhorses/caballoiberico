@@ -64,6 +64,9 @@ router.post('/horses/:id/certificates', requireRole('ADMIN'), wrap(async (req, r
       if (horse.status !== 'CERTIFICADO') throw Object.assign(new Error('Primero debe expedirse el Certificado de Origen'), { status: 400 });
       if (![3, 6, 12, 24].includes(Number(stars))) throw Object.assign(new Error('Estrellas: 3, 6, 12 o 24'), { status: 400 });
     }
+    if (type === 'ORIGEN' && horse.originStatus !== 'ACREDITADO') {
+      throw Object.assign(new Error('Antes de expedir el Certificado de Origen hay que acreditar la procedencia (documentos del ejemplar o de sus padres)'), { status: 400 });
+    }
     if (type === 'ORIGEN' && !horse.registrationNumber) {
       await db.query("UPDATE horses SET registration_number=$2, status='CERTIFICADO', updated_at=now() WHERE id=$1",
         [horse.id, await nextRegistrationNumber(client)], client);
@@ -106,6 +109,18 @@ router.post('/merits/:id/verify', requireRole('ADMIN'), wrap(async (req, res) =>
   if (!m) return res.status(404).json({ error: 'Resultado no encontrado' });
   audit(req.user.id, 'SportMerit', m.id, 'VERIFICAR', {});
   res.json(m);
+}));
+
+// Origen: DECLARADO (lo dice el titular) o ACREDITADO (documentos oficiales o ADN revisados). Auditado.
+router.post('/horses/:id/origin', requireRole('ADMIN'), wrap(async (req, res) => {
+  const { status, notes } = req.body || {};
+  if (!['DECLARADO', 'ACREDITADO'].includes(status)) return res.status(400).json({ error: 'Estado de origen no válido' });
+  if (!notes || notes.trim().length < 5) return res.status(400).json({ error: 'Indica qué documento o prueba se ha revisado' });
+  const h = await db.one('SELECT id, name, origin_status FROM horses WHERE id::text=$1', [req.params.id]);
+  if (!h) return res.status(404).json({ error: 'Ejemplar no encontrado' });
+  await db.query('UPDATE horses SET origin_status=$2, origin_notes=$3, updated_at=now() WHERE id=$1', [h.id, status, notes.trim()]);
+  await audit(req.user.id, 'Horse', h.id, 'ORIGEN', { ejemplar: h.name, de: h.originStatus, a: status, notes });
+  res.json({ id: h.id, originStatus: status });
 }));
 
 // Cambio manual de nivel por la presidencia (p. ej. subida por méritos deportivos). Motivo obligatorio y auditado.

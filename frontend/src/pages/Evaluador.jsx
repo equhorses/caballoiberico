@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { api, fileUrl, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
-import { LEVEL_REASON, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, SERVICES, fmtDate } from '../data/content.js'
+import { LEVEL_REASON, MERIT_LEVELS, ORIGIN, PHOTO_VIEWS, ROMAN, SERVICES, fmtDate } from '../data/content.js'
 
 const CASE_STATUS = { REVISION_MATERIAL: 'Revisión de material', EN_REVISION_HUMANA: 'En revisión humana', REQUIERE_MATERIAL: 'Requiere material', RESUELTO: 'Resuelto' }
 const MATERIAL = [['APTO', 'Apto'], ['APTO_PARCIAL', 'Apto parcialmente'], ['REQUIERE_MATERIAL', 'Requiere nuevo material'], ['NO_EVALUABLE', 'No evaluable']]
@@ -274,6 +274,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
   const [merit, setMerit] = useState({ competition: '', category: '', level: 'JOVENES_NACIONAL', position: '1º', score: '', date: '' })
   const [doc, setDoc] = useState(null)
   const [lvl, setLvl] = useState({ level: '', reason: 'MERITO', notes: '' })
+  const [originNotes, setOriginNotes] = useState('')
   if (!h) return <p className="muted">Cargando…</p>
   const call = async (fn, msg) => { try { await fn(); notify(msg); reload(); return true } catch (x) { notify(x.message); return false } }
   const issue = (type) => call(() => api(`/admin/horses/${id}/certificates`, { method: 'POST', body: { type, stars, amberStars: amber } }), 'Certificado expedido')
@@ -289,10 +290,25 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
       <button className="link" style={{ background: 'none', border: 0, cursor: 'pointer', padding: 0 }} onClick={onBack}>← Ejemplares</button>
       <div className="card">
         <div className="row between">
-          <div><h2 style={{ fontSize: '1.9rem', textTransform: 'uppercase' }}>{h.name}</h2><p className="k mt8">{h.registrationNumber || 'sin nº'} · {breedLabel(h.breed)} · {fmtDate(h.birthDate)} · {h.ibericBloodPct}% ibérico</p></div>
+          <div><h2 style={{ fontSize: '1.9rem', textTransform: 'uppercase' }}>{h.name}</h2><p className="k mt8">{h.registrationNumber || 'sin nº'} · {breedLabel(h.breed)} · {fmtDate(h.birthDate)} · {h.ibericBloodPct ? `${h.ibericBloodPct}% ibérico` : '% ibérico no documentado'} · Microchip: {h.microchip || '—'}</p></div>
           <button className="btn btn-ink" onClick={newCase}>Abrir valoración</button>
         </div>
-        <p className="small muted mt16">Titular: {h.ownerName} · {h.ownerEmail} {h.ownerPhone ? `· ${h.ownerPhone}` : ''} · Padre: {h.sireName || '—'} · Madre: {h.damName || '—'} · Libro oficial: {h.officialRegistry || '—'}</p>
+        <p className="small muted mt16">Titular: {h.ownerName} · {h.ownerEmail} {h.ownerPhone ? `· ${h.ownerPhone}` : ''} · Padre: {h.sireName || '—'}{h.sireRegistry ? ` (${h.sireRegistry})` : ''} · Madre: {h.damName || '—'}{h.damRegistry ? ` (${h.damRegistry})` : ''} · Libro oficial: {h.officialRegistry || '—'}</p>
+        <div className="row mt16" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className={`badge ${h.originStatus === 'ACREDITADO' ? 'ok' : 'example'}`}>Procedencia: {ORIGIN[h.originStatus || 'DECLARADO']}</span>
+          {h.originNotes && <span className="small muted">{h.originNotes}</span>}
+        </div>
+        {isAdmin && (
+          <form className="row mt16" style={{ gap: 8, alignItems: 'stretch' }} onSubmit={(e) => {
+            e.preventDefault()
+            const status = h.originStatus === 'ACREDITADO' ? 'DECLARADO' : 'ACREDITADO'
+            call(() => api(`/admin/horses/${id}/origin`, { method: 'POST', body: { status, notes: originNotes } }), 'Origen actualizado').then((ok) => ok && setOriginNotes(''))
+          }}>
+            <input className="input" style={{ flex: 1 }} value={originNotes} onChange={(e) => setOriginNotes(e.target.value)}
+              placeholder={h.originStatus === 'ACREDITADO' ? 'Motivo para quitar la acreditación' : 'Documentos revisados (p. ej. carta ANCCE del ejemplar, o de padre y madre…)'} />
+            <button className="btn btn-line">{h.originStatus === 'ACREDITADO' ? 'Quitar acreditación' : 'Acreditar procedencia'}</button>
+          </form>
+        )}
       </div>
       <div className="card">
         <div className="row between">

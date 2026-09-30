@@ -63,7 +63,8 @@ export default function Panel() {
 }
 
 function NewHorse({ onDone }) {
-  const [f, setF] = useState({ name: '', birthDate: '', sex: 'MACHO', breed: 'PRE', coat: '', country: 'España', ibericBloodPct: 100, sireName: '', damName: '', breederName: '', microchip: '', officialRegistry: '' })
+  const [f, setF] = useState({ name: '', birthDate: '', sex: 'MACHO', breed: 'PRE', coat: '', country: 'España', ibericBloodPct: '', sireName: '', damName: '', breederName: '', microchip: '', officialRegistry: '', sireRegistry: '', damRegistry: '' })
+  const cross = f.breed === 'PRE_PSL' || f.breed === 'CRUZADO'
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
@@ -79,16 +80,21 @@ function NewHorse({ onDone }) {
         <div className="field"><label>Nombre *</label><input className="input" required value={f.name} onChange={set('name')} /></div>
         <div className="field"><label>Fecha de nacimiento *</label><input className="input" type="date" required value={f.birthDate} onChange={set('birthDate')} /></div>
         <div className="field"><label>Sexo *</label><select className="select" value={f.sex} onChange={set('sex')}><option value="MACHO">Macho</option><option value="HEMBRA">Hembra</option><option value="CASTRADO">Castrado</option></select></div>
-        <div className="field"><label>Raza *</label><select className="select" value={f.breed} onChange={set('breed')}><option value="PRE">PRE</option><option value="PSL">PSL</option><option value="PRE_PSL">PRE/PSL</option><option value="CRUZADO">Cruzado ibérico</option></select></div>
+        <div className="field"><label>Raza *</label><select className="select" value={f.breed} onChange={set('breed')}><option value="PRE">PRE</option><option value="PSL">PSL</option><option value="PRE_PSL">Cruce PRE × PSL</option><option value="CRUZADO">Cruce ibérico (hijo de cruces)</option></select></div>
         <div className="field"><label>Capa *</label><input className="input" required value={f.coat} onChange={set('coat')} placeholder="Torda, castaña…" /></div>
         <div className="field"><label>País *</label><input className="input" required value={f.country} onChange={set('country')} /></div>
-        <div className="field"><label>% sangre ibérica *</label><input className="input" type="number" min={10} max={100} required value={f.ibericBloodPct} onChange={set('ibericBloodPct')} /></div>
-        <div className="field"><label>Padre</label><input className="input" value={f.sireName} onChange={set('sireName')} /></div>
-        <div className="field"><label>Madre</label><input className="input" value={f.damName} onChange={set('damName')} /></div>
+        <div className="field"><label>% sangre ibérica (si se conoce)</label><input className="input" type="number" min={10} max={100} value={f.ibericBloodPct} onChange={set('ibericBloodPct')} placeholder="Déjalo en blanco si no lo sabes" /></div>
+        <div className="field"><label>Padre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.sireName} onChange={set('sireName')} /></div>
+        <div className="field"><label>Nº registro del padre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.sireRegistry} onChange={set('sireRegistry')} placeholder="ANCCE, APSL o CIB-…" /></div>
+        <div className="field"><label>Madre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.damName} onChange={set('damName')} /></div>
+        <div className="field"><label>Nº registro de la madre{cross ? ' *' : ''}</label><input className="input" required={cross} value={f.damRegistry} onChange={set('damRegistry')} placeholder="ANCCE, APSL o CIB-…" /></div>
         <div className="field"><label>Criador</label><input className="input" value={f.breederName} onChange={set('breederName')} /></div>
-        <div className="field"><label>Microchip</label><input className="input" value={f.microchip} onChange={set('microchip')} /></div>
-        <div className="field"><label>Nº en libro oficial (ANCCE, APSL…)</label><input className="input" value={f.officialRegistry} onChange={set('officialRegistry')} /></div>
+        <div className="field"><label>Microchip *</label><input className="input" required value={f.microchip} onChange={set('microchip')} /></div>
+        <div className="field"><label>Nº en libro oficial (ANCCE, APSL…){cross ? '' : ' *'}</label><input className="input" required={!cross} value={f.officialRegistry} onChange={set('officialRegistry')} /></div>
       </div>
+      <p className="notice info">{cross
+        ? <>Un cruce puede no estar inscrito en ninguna asociación, pero <strong>sus padres sí deben estar registrados</strong> (ANCCE, APSL o C-IBERICO). Te pediremos sus documentos antes de expedir el certificado.</>
+        : <>Indica el número del ejemplar en su libro oficial. Te pediremos el documento antes de expedir el certificado.</>}</p>
       {err && <p className="notice bad">{err}</p>}
       <div><button className="btn btn-ink" disabled={busy}>{busy ? 'Guardando…' : 'Dar de alta'}</button></div>
     </form>

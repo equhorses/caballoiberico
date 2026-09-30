@@ -74,7 +74,7 @@ router.get('/registry/:number', wrap(async (req, res) => {
   const c = b.lastCase;
   res.json({
     ...card(b),
-    sex: h.sex, sireName: h.sireName, damName: h.damName, breederName: h.breederName, ibericBloodPct: h.ibericBloodPct,
+    sex: h.sex, sireName: h.sireName, damName: h.damName, sireRegistry: h.sireRegistry, damRegistry: h.damRegistry, breederName: h.breederName, ibericBloodPct: h.ibericBloodPct, originStatus: h.originStatus,
     photos: b.photos,
     merits: b.merits,
     certificates: b.certificates.map(({ type, code, stars, amberStars, issuedAt }) => ({ type, code, stars, amberStars, issuedAt })),
@@ -105,18 +105,18 @@ router.get('/results', wrap(async (req, res) => {
 router.get('/verify/:code', wrap(async (req, res) => {
   const code = req.params.code.trim().toUpperCase();
   const cert = await db.one(
-    `SELECT c.*, h.name, h.registration_number, h.breed, h.level FROM certificates c JOIN horses h ON h.id=c.horse_id WHERE c.code=$1`, [code],
+    `SELECT c.*, h.name, h.registration_number, h.breed, h.level, h.origin_status FROM certificates c JOIN horses h ON h.id=c.horse_id WHERE c.code=$1`, [code],
   );
   if (cert) {
     return res.json({
       valid: cert.status === 'VIGENTE', type: cert.type, code: cert.code, status: cert.status, issuedAt: cert.issuedAt, revokedAt: cert.revokedAt,
-      stars: cert.stars, horse: { name: cert.name, registrationNumber: cert.registrationNumber, breed: cert.breed, level: cert.level },
+      stars: cert.stars, horse: { name: cert.name, registrationNumber: cert.registrationNumber, breed: cert.breed, level: cert.level, originStatus: cert.originStatus },
     });
   }
   const horse = await db.one('SELECT * FROM horses WHERE registration_number=$1', [code]);
   if (horse) {
     const certs = await db.query('SELECT type, code, status, issued_at FROM certificates WHERE horse_id=$1 ORDER BY issued_at', [horse.id]);
-    return res.json({ valid: horse.status === 'CERTIFICADO', horse: { name: horse.name, registrationNumber: horse.registrationNumber, breed: horse.breed, level: horse.level }, certificates: certs });
+    return res.json({ valid: horse.status === 'CERTIFICADO', horse: { name: horse.name, registrationNumber: horse.registrationNumber, breed: horse.breed, level: horse.level, originStatus: horse.originStatus }, certificates: certs });
   }
   res.status(404).json({ valid: false, error: 'No existe ningún certificado C-IBERICO con ese código' });
 }));

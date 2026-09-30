@@ -336,3 +336,12 @@ p { margin: 0; }
 .levels-scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .levels-scale > div { background: var(--paper); border: 1px solid var(--line); padding: 18px; border-radius: var(--radius); }
 @media (max-width: 860px) { .levels-scale { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Bloque de cruces en la portada */
+.card.cruzados { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: start; }
+.card.cruzados .code { font-family: var(--serif); font-size: 2.4rem; color: var(--gold-deep); line-height: 1; }
+.origin-list { margin: 0; padding-left: 20px; }
+.origin-list li { margin-bottom: 12px; }
+@media (max-width: 860px) {
+  .card.cruzados { grid-template-columns: 1fr; gap: 32px; }
+}

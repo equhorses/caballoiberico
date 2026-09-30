@@ -24,12 +24,16 @@ export default function Reglamento() {
             <details>
               <summary>Razas admitidas y cruces</summary>
               <div className="acc-body">
-                <p>Las razas de referencia son <strong>PRE</strong> (Pura Raza Española) y <strong>PSL</strong> (Puro Sangre Lusitano). Se admiten los cruces entre ambas y los cruces ibéricos con aportes externos.</p>
+                <p>Se admiten <strong>PRE</strong> (Pura Raza Española), <strong>PSL</strong> (Puro Sangre Lusitano) y <strong>sus cruces</strong>: cruces PRE × PSL y los hijos de caballos ya registrados en C-IBERICO.</p>
+                <p>Una de las razones de ser de C-IBERICO son los cruces entre español y lusitano, que no inscribe ninguna de las dos asociaciones. Se admiten siempre que su procedencia esté controlada.</p>
                 <ul>
-                  <li>Se exige un mínimo del 10 % de sangre ibérica documentada.</li>
-                  <li>El aporte de sangre exterior no puede superar el 90 %.</li>
-                  <li>Queda prohibido el cruce con razas de tipo poni.</li>
-                  <li>La ascendencia se acredita con registro de ANCCE, APSL, DIE o pasaporte, pruebas de ADN u otro aval documental admitido por la presidencia. C-IBERICO no realiza pruebas genéticas: certifica sobre la documentación aportada.</li>
+                  <li><strong>Identificación:</strong> el microchip es obligatorio para todos los ejemplares.</li>
+                  <li><strong>PRE y PSL:</strong> se aporta su número y documento del libro oficial (ANCCE, APSL u otro libro reconocido de la raza).</li>
+                  <li><strong>Cruces:</strong> el ejemplar puede no estar inscrito en ninguna asociación, pero su padre y su madre deben estarlo (ANCCE, APSL o C-IBERICO). Se aportan sus documentos y, si la presidencia lo considera necesario, una prueba de parentesco por ADN.</li>
+                  <li><strong>Descendencia:</strong> los hijos de ejemplares registrados en C-IBERICO se inscriben con la genealogía ya comprobada.</li>
+                  <li>El Certificado de Origen solo se expide cuando la presidencia ha acreditado la procedencia. Hasta entonces la ficha la muestra como «pendiente de acreditar».</li>
+                  <li>C-IBERICO no realiza pruebas genéticas: certifica sobre la documentación aportada.</li>
+                  <li>El nivel de calidad no depende de la raza: un cruce puede alcanzar el nivel V.</li>
                 </ul>
               </div>
             </details>

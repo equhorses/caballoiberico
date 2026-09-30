@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useFetch } from '../api.jsx'
 import { HorseRow, Img, LevelBadge, Stars, breedLabel, Spinner } from '../components/ui.jsx'
-import { CRITERIA, LEVEL_REASON, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, fmtDate } from '../data/content.js'
+import { CRITERIA, LEVEL_REASON, ORIGIN, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, fmtDate } from '../data/content.js'
 import { useRegistry, filterHorses } from '../data/useRegistry.js'
 
 export function PageHero({ eyebrow, title, children, image = '/images/pista.jpg' }) {
@@ -81,10 +81,11 @@ export function HorseDetail() {
                 <dt>Sexo</dt><dd>{h.sex?.toLowerCase()}</dd>
                 <dt>Capa</dt><dd>{h.coat}</dd>
                 <dt>País</dt><dd>{h.country}</dd>
-                <dt>Padre (declarado)</dt><dd>{h.sireName || '—'}</dd>
-                <dt>Madre (declarada)</dt><dd>{h.damName || '—'}</dd>
+                <dt>Padre</dt><dd>{h.sireName || '—'}{h.sireRegistry ? ` · ${h.sireRegistry}` : ''}</dd>
+                <dt>Madre</dt><dd>{h.damName || '—'}{h.damRegistry ? ` · ${h.damRegistry}` : ''}</dd>
                 <dt>Criador</dt><dd>{h.breederName || '—'}</dd>
-                <dt>Sangre ibérica</dt><dd>{h.ibericBloodPct} %</dd>
+                <dt>Sangre ibérica</dt><dd>{h.ibericBloodPct ? `${h.ibericBloodPct} %` : 'No documentada'}</dd>
+                <dt>Procedencia</dt><dd>{ORIGIN[h.originStatus || 'DECLARADO']}</dd>
               </dl>
             </div>
             <div>

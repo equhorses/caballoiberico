@@ -20,6 +20,8 @@ Mientras no haya ejemplares reales publicados se muestran fichas de **ejemplo**,
 
 **Criterio de la casa (rúbrica 2.2):** el caballo ibérico medido con la vara de movimiento del caballo de deporte centroeuropeo; la conformación por su función, respetando el tipo PRE/PSL. El movimiento pesa el 80 %.
 
+**PRE, PSL y sus cruces:** microchip obligatorio. PRE/PSL aportan su nº de libro oficial; los cruces, padre y madre con su nº de registro (ANCCE, APSL o C-IBERICO). La ficha muestra la procedencia como *pendiente de acreditar* hasta que la presidencia revisa los documentos (`/evaluador` → Ejemplares); el Certificado de Origen no se puede expedir antes.
+
 **Etapas y niveles:** se valora desde los 6 meses (potro, añojo, 2, 3, 4, 5 y 6+ años). El resultado es un nivel I–V que no depende de la edad:
 sube si una nueva valoración lo mejora (con tope por etapa: II potros/añojos, III a 2–3 años, IV a 4–5, V desde 6), nunca baja por valoración,
 y la presidencia puede cambiarlo a mano por méritos deportivos (motivo obligatorio, queda en el historial).

@@ -33,7 +33,7 @@ export default function Home() {
             <Link className="btn btn-line-light" to="/registro">Explorar el registro</Link>
           </div>
           <div className="hero-facts">
-            <div><span>Razas admitidas</span><strong>PRE · PSL</strong></div>
+            <div><span>Admitidos</span><strong>PRE · PSL y sus cruces</strong></div>
             <div><span>Baremo</span><strong>Doma clásica</strong></div>
             <div><span>Referencia</span><strong>Centroeuropea</strong></div>
             <div><span>Trámites</span><strong>100% online</strong></div>
@@ -50,7 +50,7 @@ export default function Home() {
             <div className="card truth yes">
               <div className="label">Es</div>
               <h3 className="mt8">Un certificado privado de calidad</h3>
-              <p>Emitido por C-IBERICO, gestión privada y no asociativa. Acredita el origen documentado y el mérito deportivo del ejemplar.</p>
+              <p>Emitido por C-IBERICO, gestión privada y no asociativa. Identifica al caballo, controla su procedencia, valora su calidad deportiva y recoge sus méritos.</p>
             </div>
             <div className="card truth no">
               <div className="label">No es</div>
@@ -105,7 +105,7 @@ export default function Home() {
           <span className="eyebrow">Razas admitidas</span>
           <h2>Dos fronteras, un solo caballo de deporte</h2>
           <p className="lead">
-            El certificado trabaja con Pura Raza Española y Puro Sangre Lusitano, y con los cruces entre ambas o con aporte externo documentado.
+            El certificado trabaja con Pura Raza Española y Puro Sangre Lusitano, y con los cruces entre ambas.
             La inscripción en sus libros oficiales sigue correspondiendo a sus asociaciones; C-IBERICO certifica su calidad deportiva.
           </p>
           <div className="grid g2 mt48">
@@ -117,6 +117,21 @@ export default function Home() {
               <div className="media"><Img src="/images/psl.jpg" alt="Caballo Puro Sangre Lusitano" dark label="Imagen: PSL" /></div>
               <div className="body"><div className="code">PSL</div><h3 className="mt16">Puro Sangre Lusitano</h3><p className="muted mt8">Perfil subconvexo, grupa potente y dorso elástico. Empuje posterior y galope que sostienen el trabajo de nivel Gran Premio.</p></div>
             </article>
+          </div>
+          <div className="card cruzados mt32">
+            <div>
+              <div className="code">PRE × PSL</div>
+              <h3 className="mt16">Los cruces, con procedencia controlada</h3>
+              <p className="muted mt8">
+                Muchos buenos caballos de deporte son cruces entre español y lusitano, y ninguna de las dos asociaciones los inscribe.
+                C-IBERICO sí: les da número de registro, valoración deportiva y una ficha pública que cualquier comprador puede consultar.
+              </p>
+            </div>
+            <ul className="origin-list">
+              <li><strong>Padres documentados.</strong> El cruce puede no tener papeles, pero su padre y su madre deben estar inscritos en ANCCE, APSL o en C-IBERICO.</li>
+              <li><strong>Sus hijos, bajo nuestro control.</strong> Una vez registrado, su descendencia se inscribe en C-IBERICO con la genealogía ya comprobada.</li>
+              <li><strong>Mismo nivel de calidad.</strong> Un cruce se valora con la misma vara que un PRE o un PSL y puede llegar al nivel V.</li>
+            </ul>
           </div>
         </div>
       </section>

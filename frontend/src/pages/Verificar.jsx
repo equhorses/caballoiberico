@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api.jsx'
 import { LevelBadge, breedLabel } from '../components/ui.jsx'
-import { fmtDate } from '../data/content.js'
+import { ORIGIN, fmtDate } from '../data/content.js'
 
 const TYPE = { ORIGEN: 'Certificado de Origen', CALIDAD: 'Certificado de Calidad' }
 
@@ -41,6 +41,7 @@ export default function Verificar() {
                 <dl className="kv">
                   <dt>Nº de registro</dt><dd>{result.horse.registrationNumber || '—'}</dd>
                   <dt>Raza</dt><dd>{breedLabel(result.horse.breed)}</dd>
+                  <dt>Procedencia</dt><dd>{ORIGIN[result.horse.originStatus || 'DECLARADO']}</dd>
                   <dt>Nivel C-IBERICO</dt><dd><LevelBadge level={result.horse.level} /></dd>
                   {result.type && <><dt>Tipo</dt><dd>{TYPE[result.type]}{result.stars ? ` · ${result.stars} estrellas` : ''}</dd></>}
                   {result.code && <><dt>Código</dt><dd>{result.code}</dd></>}
