@@ -18,6 +18,12 @@ Mientras no haya ejemplares reales publicados se muestran fichas de **ejemplo**,
 
 **Panel del titular (`/panel`):** alta de ejemplares, las 5 fotos reglamentarias, vídeo, solicitudes de gestión y pago (Stripe).
 
+**Criterio de la casa (rúbrica 2.2):** el caballo ibérico medido con la vara de movimiento del caballo de deporte centroeuropeo; la conformación por su función, respetando el tipo PRE/PSL. El movimiento pesa el 80 %.
+
+**Etapas y niveles:** se valora desde los 6 meses (potro, añojo, 2, 3, 4, 5 y 6+ años). El resultado es un nivel I–V que no depende de la edad:
+sube si una nueva valoración lo mejora (con tope por etapa: II potros/añojos, III a 2–3 años, IV a 4–5, V desde 6), nunca baja por valoración,
+y la presidencia puede cambiarlo a mano por méritos deportivos (motivo obligatorio, queda en el historial).
+
 **Panel del evaluador / presidencia (`/evaluador`):**
 - Valoraciones v2: la IA **propone** por criterio (observación, nota, evidencia, confianza) y el **evaluador resuelve**
   (aceptar / corregir / rechazar / no evaluable). Revisión de material por criterio: un material malo nunca baja la nota.
@@ -36,8 +42,11 @@ Mientras no haya ejemplares reales publicados se muestran fichas de **ejemplo**,
 | `FRONTEND_URL` | la URL de Vercel, p. ej. `https://caballoiberico.vercel.app` (varias separadas por comas) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | cuenta de presidencia (se crea sola al arrancar) |
 | `UPLOAD_DIR` | `/data/uploads` (con un **Volume** montado en `/data`, si no las fotos se pierden en cada despliegue) |
-| `AI_BASE_URL` | `https://api.moonshot.ai/v1` (Kimi) u otra API compatible con OpenAI |
-| `AI_API_KEY` / `AI_MODEL` | clave y modelo con visión. Sin ellas la web muestra "IA pendiente de integración" |
+| `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` | IA principal (API compatible con OpenAI). Claude: `https://api.anthropic.com/v1` + `claude-sonnet-5`. Kimi: `https://api.moonshot.ai/v1` + `kimi-k2.6`. Sin clave la web muestra "IA pendiente de integración" |
+| `AI2_BASE_URL` / `AI2_API_KEY` / `AI2_MODEL` | opcional, **segunda IA** para doble lectura: ambas puntúan por separado y el panel marca las discrepancias |
+| `AI_VIDEO_FRAMES` | fotogramas repartidos por el vídeo (por defecto 8, máx. 16) |
+| `AI_VIDEO_BURSTS` | ráfagas de 6 fotogramas consecutivos cada 0,1 s para ver la secuencia de apoyos (por defecto 2, máx. 4) |
+| `PREVALORACION_PRICE_EUR` | precio de la pre-valoración (por defecto 0 = gratis; si es 0 no pasa por Stripe) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | opcional. Webhook: `https://TU-BACKEND/api/payments/webhook` |
 
 La base de datos se crea sola: al arrancar se aplican los `.sql` de `backend/db/migrations/` y se crea la rúbrica v2.

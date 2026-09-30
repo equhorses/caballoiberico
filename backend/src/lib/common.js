@@ -6,7 +6,9 @@ const multer = require('multer');
 const db = require('./db');
 
 // Tarifas (céntimos). Deben coincidir con la web.
+const PREVAL_PRICE = Math.max(0, Math.round(Number(process.env.PREVALORACION_PRICE_EUR || 0) * 100));
 const SERVICES = {
+  PREVALORACION: { name: 'Pre-valoración', price: PREVAL_PRICE, days: 5 },
   ORIGEN: { name: 'Certificado de Origen', price: 12000, days: 10 },
   CALIDAD: { name: 'Certificado de Calidad', price: 18000, days: 15 },
   CAMBIO_NOMBRE: { name: 'Cambio de nombre', price: 6000, days: 5 },

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { api, useAuth, useFetch } from '../api.jsx'
-import { Img, Toast, breedLabel } from '../components/ui.jsx'
+import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
 import { PHOTO_VIEWS, SERVICES, eur, fmtDate } from '../data/content.js'
 
 const REQ_STATUS = {
@@ -46,6 +46,7 @@ export default function Panel() {
                   <div className="row between"><span className="badge light">{breedLabel(h.breed)}</span><span className={`badge ${h.status === 'CERTIFICADO' ? 'ok' : 'example'}`}>{HORSE_STATUS[h.status]}</span></div>
                   <h3 className="mt16" style={{ textTransform: 'uppercase' }}>{h.name}</h3>
                   <p className="k mt8">{h.registrationNumber ? `Nº ${h.registrationNumber}` : 'Sin número todavía'}</p>
+                  <div className="mt8"><LevelBadge level={h.level} /></div>
                   <p className="small muted mt8">Fotos {h.photos.length}/5 · Vídeo {h.videos.length ? 'sí' : 'no'} · Certificados {h.certificates.filter((c) => c.status === 'VIGENTE').length}</p>
                 </button>
               ))}
@@ -112,6 +113,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
           <div>
             <h2 style={{ fontSize: '2rem', textTransform: 'uppercase' }}>{h.name}</h2>
             <p className="k mt8">{h.registrationNumber ? `Nº ${h.registrationNumber}` : 'Pendiente de Certificado de Origen'} · {breedLabel(h.breed)} · {fmtDate(h.birthDate)}</p>
+            <div className="mt8"><LevelBadge level={h.level} /> <span className="small muted">Puedes volver a presentarlo en cada cambio de etapa para subir de nivel.</span></div>
           </div>
           {h.registrationNumber && <label className="small row" style={{ gap: 8 }}><input type="checkbox" checked={h.isPublic} onChange={togglePublic} /> Ficha pública en el registro</label>}
         </div>
@@ -146,7 +148,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
         {h.certificates.length ? h.certificates.map((c) => (
           <p key={c.id} className="mt8">{c.type === 'ORIGEN' ? 'Certificado de Origen' : `Certificado de Calidad · ${c.stars} estrellas`} · <Link className="link" to={`/verificar?c=${c.code}`}>{c.code}</Link> · {c.status.toLowerCase()}</p>
         )) : <p className="muted mt8">Sin certificados todavía.</p>}
-        {h.cases.map((c) => <p key={c.id} className="small muted mt8">Valoración abierta el {fmtDate(c.createdAt)} · estado: {c.status.replace(/_/g, ' ').toLowerCase()}</p>)}
+        {h.cases.map((c) => <p key={c.id} className="small muted mt8">Valoración del {fmtDate(c.createdAt)} · {c.status.replace(/_/g, ' ').toLowerCase()}{c.summary ? ` · ${c.summary}` : ''}</p>)}
         <div className="row mt16">
           {!h.registrationNumber && <button className="btn btn-gold" onClick={() => onRequest('ORIGEN')}>Solicitar Certificado de Origen</button>}
           {h.registrationNumber && <button className="btn btn-gold" onClick={() => onRequest('CALIDAD')}>Solicitar Certificado de Calidad</button>}
@@ -157,7 +159,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
 }
 
 function Requests({ horses, requests, preset, presetHorse, notify }) {
-  const [f, setF] = useState({ service: preset || 'ORIGEN', horseId: presetHorse || '', notes: '' })
+  const [f, setF] = useState({ service: preset || 'PREVALORACION', horseId: presetHorse || '', notes: '' })
   const [files, setFiles] = useState([])
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
@@ -199,7 +201,7 @@ function Requests({ horses, requests, preset, presetHorse, notify }) {
         <div className="field"><label>Documentos (PDF o imagen, hasta 10)</label><input className="input" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => setFiles([...e.target.files])} /></div>
         <div className="field"><label>Observaciones</label><textarea className="textarea" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
         {err && <p className="notice bad">{err}</p>}
-        <button className="btn btn-gold btn-block" disabled={busy || (f.service !== 'YEGUADA' && !horses.length)}>{busy ? 'Enviando…' : `Solicitar y pagar ${svc ? eur(svc.price) : ''}`}</button>
+        <button className="btn btn-gold btn-block" disabled={busy || (f.service !== 'YEGUADA' && !horses.length)}>{busy ? 'Enviando…' : svc?.price === 0 ? 'Solicitar (gratis)' : `Solicitar y pagar ${svc ? eur(svc.price) : ''}`}</button>
         <p className="small muted">El trámite empieza cuando se recibe el pago. Plazo: {svc?.days} días hábiles.</p>
       </form>
       <div>

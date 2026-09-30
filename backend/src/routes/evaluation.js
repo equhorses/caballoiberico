@@ -4,6 +4,7 @@
 const router = require('express').Router();
 const { db, UPLOAD_DIR, authenticate, requireRole, audit, ageYears, wrap } = require('../lib/common');
 const ai = require('../lib/ai');
+const L = require('../lib/levels');
 
 router.use(authenticate, requireRole('EVALUADOR', 'ADMIN'));
 
@@ -48,7 +49,7 @@ router.patch('/rubrics/:id/status', requireRole('ADMIN'), wrap(async (req, res) 
 // ─── Ejemplares y casos ───
 router.get('/horses', wrap(async (req, res) => {
   res.json(await db.query(
-    `SELECT h.id, h.name, h.registration_number, h.breed, h.birth_date, h.status, u.first_name || ' ' || u.last_name AS owner_name,
+    `SELECT h.id, h.name, h.registration_number, h.breed, h.birth_date, h.status, h.level, u.first_name || ' ' || u.last_name AS owner_name,
        (SELECT COUNT(*)::int FROM horse_photos p WHERE p.horse_id=h.id) AS photo_count,
        (SELECT COUNT(*)::int FROM horse_videos v WHERE v.horse_id=h.id) AS video_count
      FROM horses h JOIN users u ON u.id=h.owner_id ORDER BY h.created_at DESC`,
@@ -56,13 +57,17 @@ router.get('/horses', wrap(async (req, res) => {
 }));
 
 router.get('/cases', wrap(async (req, res) => {
-  res.json(await db.query(
-    `SELECT c.*, h.name AS horse_name, h.registration_number, h.breed, r.version AS rubric_version,
-       (SELECT COUNT(*)::int FROM human_decisions d WHERE d.case_id=c.id) AS decided,
-       jsonb_array_length(r.content->'criteria') AS criteria_count
+  const rows = await db.query(
+    `SELECT c.*, h.name AS horse_name, h.registration_number, h.breed, h.level AS horse_level, r.version AS rubric_version, r.content AS rubric_content,
+       (SELECT COUNT(*)::int FROM human_decisions d WHERE d.case_id=c.id) AS decided
      FROM evaluation_cases c JOIN horses h ON h.id=c.horse_id JOIN rubrics r ON r.id=c.rubric_id
      ORDER BY (c.status='RESUELTO'), c.updated_at DESC`,
-  ));
+  );
+  res.json(rows.map(({ rubricContent, ...c }) => ({
+    ...c,
+    criteriaCount: L.criteriaFor(rubricContent, c.stage).length,
+    stageName: (L.stagesOf(rubricContent).find((x) => x.key === c.stage) || {}).name || null,
+  })));
 }));
 
 router.post('/cases', wrap(async (req, res) => {
@@ -70,9 +75,12 @@ router.post('/cases', wrap(async (req, res) => {
   if (!horse) return res.status(404).json({ error: 'Ejemplar no encontrado' });
   const rubric = await activeRubric();
   if (!rubric) return res.status(400).json({ error: 'No hay rúbrica activa' });
-  const c = await db.one('INSERT INTO evaluation_cases(horse_id, rubric_id, age_years) VALUES ($1,$2,$3) RETURNING *',
-    [horse.id, rubric.id, ageYears(horse.birthDate)]);
-  audit(req.user.id, 'EvaluationCase', c.id, 'ABRIR', { ejemplar: horse.name, rubrica: rubric.version });
+  const months = L.ageMonths(horse.birthDate);
+  const stage = L.stageFor(months, rubric.content);
+  if (!stage) return res.status(400).json({ error: 'El ejemplar debe tener al menos 6 meses para ser valorado' });
+  const c = await db.one('INSERT INTO evaluation_cases(horse_id, rubric_id, age_years, age_months, stage) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+    [horse.id, rubric.id, ageYears(horse.birthDate), months, stage.key]);
+  audit(req.user.id, 'EvaluationCase', c.id, 'ABRIR', { ejemplar: horse.name, rubrica: rubric.version, etapa: stage.name, nivelActual: horse.level });
   res.status(201).json(c);
 }));
 
@@ -90,7 +98,15 @@ router.get('/cases/:id', wrap(async (req, res) => {
     db.query(`SELECT a.*, u.first_name || ' ' || u.last_name AS user_name FROM audit_log a LEFT JOIN users u ON u.id=a.user_id
               WHERE a.entity='EvaluationCase' AND a.entity_id=$1 ORDER BY a.at DESC`, [c.id]),
   ]);
-  res.json({ ...c, horse: { ...horse, photos, videos }, rubric, material, proposals, decisions, history, aiConfigured: ai.isConfigured() });
+  const stage = L.stagesOf(rubric.content).find((x) => x.key === c.stage) || null;
+  const criteria = L.criteriaFor(rubric.content, c.stage);
+  const score = L.scoreOf(decisions, rubric.content.weights);
+  const projected = Math.min(L.levelFromScore(score, rubric.content), stage ? stage.cap : 5);
+  res.json({
+    ...c, horse: { ...horse, photos, videos }, rubric, material, proposals, decisions, history,
+    stageInfo: stage, criteria, preview: { score, level: projected, current: horse.level },
+    aiConfigured: ai.isConfigured(),
+  });
 }));
 
 const locked = (c) => c.status === 'RESUELTO';
@@ -121,39 +137,49 @@ router.post('/cases/:id/ai', wrap(async (req, res) => {
   const [rubric, photos, videos, material] = await Promise.all([
     db.one('SELECT * FROM rubrics WHERE id=$1', [c.rubricId]),
     db.query('SELECT * FROM horse_photos WHERE horse_id=$1', [c.horseId]),
-    db.query('SELECT id FROM horse_videos WHERE horse_id=$1', [c.horseId]),
+    db.query('SELECT * FROM horse_videos WHERE horse_id=$1 ORDER BY uploaded_at DESC', [c.horseId]),
     db.query('SELECT criterion_key FROM material_checks WHERE case_id=$1 AND checked_by <> $2', [c.id, 'IA']),
   ]);
   if (!photos.length) return res.status(400).json({ error: 'El ejemplar no tiene fotografías' });
 
-  const { model, result, raw } = await ai.runEvaluation({ rubric, ageYears: c.ageYears, photos, hasVideo: videos.length > 0, uploadDir: UPLOAD_DIR });
-  const keys = new Set(rubric.content.criteria.map((k) => k.key));
+  const stage = L.stagesOf(rubric.content).find((x) => x.key === c.stage) || null;
+  const criteria = L.criteriaFor(rubric.content, c.stage);
+  const { runs, errors, media } = await ai.runEvaluation({
+    rubric, criteria, stage, ageMonths: c.ageMonths, photos, video: videos[0] || null, uploadDir: UPLOAD_DIR,
+  });
+  const keys = new Set(criteria.map((k) => k.key));
   const humanChecked = new Set(material.map((m) => m.criterionKey));
+  const runId = require('crypto').randomUUID();
   let n = 0;
-  for (const item of result.criterios || []) {
-    if (!keys.has(item.criterionKey)) continue;
-    const mat = item.material || {};
-    if (!humanChecked.has(item.criterionKey) && MATERIAL.includes(mat.status)) {
+  for (const [idx, run] of runs.entries()) {
+    for (const item of run.result.criterios || []) {
+      if (!keys.has(item.criterionKey)) continue;
+      const mat = item.material || {};
+      // La revisión de material automática la fija la IA principal (la primera que responde)
+      if (idx === 0 && !humanChecked.has(item.criterionKey) && MATERIAL.includes(mat.status)) {
+        await db.query(
+          `INSERT INTO material_checks(case_id, criterion_key, status, notes, checked_by) VALUES ($1,$2,$3,$4,'IA')
+           ON CONFLICT (case_id, criterion_key) DO UPDATE SET status=EXCLUDED.status, notes=EXCLUDED.notes, checked_by='IA', created_at=now()`,
+          [c.id, item.criterionKey, mat.status, mat.notes || null],
+        );
+      }
+      const p = item.propuesta || {};
+      const allowScore = ['APTO', 'APTO_PARCIAL'].includes(mat.status) && typeof p.score === 'number' && p.score >= 0 && p.score <= 10;
       await db.query(
-        `INSERT INTO material_checks(case_id, criterion_key, status, notes, checked_by) VALUES ($1,$2,$3,$4,'IA')
-         ON CONFLICT (case_id, criterion_key) DO UPDATE SET status=EXCLUDED.status, notes=EXCLUDED.notes, checked_by='IA', created_at=now()`,
-        [c.id, item.criterionKey, mat.status, mat.notes || null],
+        `INSERT INTO ai_proposals(case_id, criterion_key, observation, score, confidence, evidence, limitations, source_label, rubric_version, model, raw)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        [c.id, item.criterionKey, String(p.observation || 'Sin observación'), allowScore ? Math.round(p.score * 2) / 2 : null,
+          CONF.includes(p.confidence) ? p.confidence : 'ABSTENCION', JSON.stringify(p.evidence || []), p.limitations || null,
+          p.sourceLabel || null, rubric.version, run.model, JSON.stringify({ ...item, runId, material: mat })],
       );
+      n += 1;
     }
-    const p = item.propuesta || {};
-    const allowScore = ['APTO', 'APTO_PARCIAL'].includes(mat.status) && typeof p.score === 'number' && p.score >= 0 && p.score <= 10;
-    await db.query(
-      `INSERT INTO ai_proposals(case_id, criterion_key, observation, score, confidence, evidence, limitations, source_label, rubric_version, model, raw)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-      [c.id, item.criterionKey, String(p.observation || 'Sin observación'), allowScore ? Math.round(p.score * 2) / 2 : null,
-        CONF.includes(p.confidence) ? p.confidence : 'ABSTENCION', JSON.stringify(p.evidence || []), p.limitations || null,
-        p.sourceLabel || null, rubric.version, model, JSON.stringify(item)],
-    );
-    n += 1;
   }
   await touch(c.id, 'EN_REVISION_HUMANA');
-  audit(req.user.id, 'EvaluationCase', c.id, 'PROPUESTA_IA', { model, criterios: n, uso: raw.usage || null });
-  res.json({ ok: true, proposals: n });
+  audit(req.user.id, 'EvaluationCase', c.id, 'PROPUESTA_IA', {
+    modelos: runs.map((r) => r.model), criterios: n, video: media, errores: errors.length ? errors : undefined, uso: runs.map((r) => r.usage),
+  });
+  res.json({ ok: true, proposals: n, models: runs.map((r) => r.model), errors });
 }));
 
 router.put('/cases/:id/decisions/:key', wrap(async (req, res) => {
@@ -208,13 +234,31 @@ router.post('/cases/:id/resolve', wrap(async (req, res) => {
     return res.json({ ok: true });
   }
   const rubric = await db.one('SELECT content FROM rubrics WHERE id=$1', [c.rubricId]);
-  const decided = new Set((await db.query('SELECT criterion_key FROM human_decisions WHERE case_id=$1', [c.id])).map((d) => d.criterionKey));
-  const missing = rubric.content.criteria.filter((k) => !decided.has(k.key)).map((k) => k.name);
+  const decisions = await db.query('SELECT * FROM human_decisions WHERE case_id=$1', [c.id]);
+  const decided = new Set(decisions.map((d) => d.criterionKey));
+  const missing = L.criteriaFor(rubric.content, c.stage).filter((k) => !decided.has(k.key)).map((k) => k.name);
   if (missing.length) return res.status(400).json({ error: `Falta decidir: ${missing.join(', ')}` });
   if (!summary) return res.status(400).json({ error: 'Escribe la conclusión del evaluador' });
-  const r = await db.one("UPDATE evaluation_cases SET status='RESUELTO', summary=$2, guidance=$3, resolved_at=now(), updated_at=now() WHERE id=$1 RETURNING *",
-    [c.id, summary, guidance || null]);
-  audit(req.user.id, 'EvaluationCase', c.id, 'RESOLVER', { summary, guidance });
+
+  const stage = L.stagesOf(rubric.content).find((x) => x.key === c.stage);
+  const score = L.scoreOf(decisions, rubric.content.weights);
+  const earned = Math.min(L.levelFromScore(score, rubric.content), stage ? stage.cap : 5);
+
+  const r = await db.tx(async (client) => {
+    const horse = await db.one('SELECT id, level FROM horses WHERE id=$1 FOR UPDATE', [c.horseId], client);
+    const out = await db.one(
+      `UPDATE evaluation_cases SET status='RESUELTO', summary=$2, guidance=$3, final_score=$4, level_awarded=$5, resolved_at=now(), updated_at=now()
+       WHERE id=$1 RETURNING *`, [c.id, summary, guidance || null, score, earned], client,
+    );
+    // El nivel solo sube; si no mejora, se queda en el que tenía
+    if (earned > horse.level) {
+      await db.query('UPDATE horses SET level=$2, updated_at=now() WHERE id=$1', [horse.id, earned], client);
+      await db.query(`INSERT INTO level_history(horse_id, from_level, to_level, reason, case_id, notes, decided_by)
+                      VALUES ($1,$2,$3,'VALORACION',$4,$5,$6)`, [horse.id, horse.level, earned, c.id, `Valoración ${stage ? stage.name : ''}: ${score}/100`, req.user.id], client);
+    }
+    await audit(req.user.id, 'EvaluationCase', c.id, 'RESOLVER', { summary, guidance, nota: score, nivelObtenido: earned, nivelAnterior: horse.level, sube: earned > horse.level }, client);
+    return { ...out, previousLevel: horse.level, newLevel: Math.max(earned, horse.level) };
+  });
   res.json(r);
 }));
 

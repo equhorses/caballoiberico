@@ -1,6 +1,7 @@
 // Rutas públicas: Registro C-IBERICO, laureados, resultados y verificación de certificados
 const router = require('express').Router();
 const { db, SERVICES, ageYears, starsOf, wrap } = require('../lib/common');
+const L = require('../lib/levels');
 
 // Carga fotos, méritos verificados, certificados vigentes y la última valoración resuelta
 async function bundles(horses) {
@@ -23,16 +24,7 @@ async function bundles(horses) {
 }
 
 // Nota final (sobre 100) = media ponderada de las notas decididas por el evaluador humano
-function finalScore(c) {
-  if (!c) return null;
-  const w = c.weights || {};
-  let sum = 0; let wsum = 0;
-  c.decisions.forEach((d) => {
-    if (d.finalScore == null || !w[d.criterionKey]) return;
-    sum += d.finalScore * w[d.criterionKey]; wsum += w[d.criterionKey];
-  });
-  return wsum ? Math.round((sum / wsum) * 100) / 10 : null;
-}
+const finalScore = (c) => (c ? (c.finalScore ?? L.scoreOf(c.decisions, c.weights || {})) : null);
 
 const card = (h) => ({
   id: h.id,
@@ -47,6 +39,7 @@ const card = (h) => ({
   damName: h.damName,
   breederName: h.breederName,
   photo: (h.photos.find((p) => p.view === 'LATERAL_IZQUIERDO') || h.photos[0])?.url || null,
+  level: h.level || 0,
   stars: starsOf(h.merits),
   amberStars: h.certificates.reduce((m, c) => Math.max(m, c.amberStars), 0),
   score: finalScore(h.lastCase),
@@ -66,6 +59,7 @@ router.get('/registry', wrap(async (req, res) => {
   const horses = (await bundles(await db.query(`SELECT * FROM horses WHERE ${where}`, params))).map(card);
   const sorters = {
     score: (a, b) => (b.score ?? -1) - (a.score ?? -1),
+    level: (a, b) => b.level - a.level || (b.score ?? -1) - (a.score ?? -1),
     stars: (a, b) => b.stars - a.stars,
     name: (a, b) => a.name.localeCompare(b.name),
     age: (a, b) => a.age - b.age,
@@ -84,8 +78,9 @@ router.get('/registry/:number', wrap(async (req, res) => {
     photos: b.photos,
     merits: b.merits,
     certificates: b.certificates.map(({ type, code, stars, amberStars, issuedAt }) => ({ type, code, stars, amberStars, issuedAt })),
+    levelHistory: (await db.query('SELECT from_level, to_level, reason, notes, at FROM level_history WHERE horse_id=$1 ORDER BY at DESC', [h.id])),
     evaluation: c ? {
-      rubricVersion: c.rubricVersion, resolvedAt: c.resolvedAt, summary: c.summary,
+      rubricVersion: c.rubricVersion, resolvedAt: c.resolvedAt, summary: c.summary, stage: c.stage, levelAwarded: c.levelAwarded,
       criteria: c.decisions.map((d) => ({ key: d.criterionKey, score: d.finalScore, action: d.action })),
     } : null,
   });
@@ -110,18 +105,18 @@ router.get('/results', wrap(async (req, res) => {
 router.get('/verify/:code', wrap(async (req, res) => {
   const code = req.params.code.trim().toUpperCase();
   const cert = await db.one(
-    `SELECT c.*, h.name, h.registration_number, h.breed FROM certificates c JOIN horses h ON h.id=c.horse_id WHERE c.code=$1`, [code],
+    `SELECT c.*, h.name, h.registration_number, h.breed, h.level FROM certificates c JOIN horses h ON h.id=c.horse_id WHERE c.code=$1`, [code],
   );
   if (cert) {
     return res.json({
       valid: cert.status === 'VIGENTE', type: cert.type, code: cert.code, status: cert.status, issuedAt: cert.issuedAt, revokedAt: cert.revokedAt,
-      stars: cert.stars, horse: { name: cert.name, registrationNumber: cert.registrationNumber, breed: cert.breed },
+      stars: cert.stars, horse: { name: cert.name, registrationNumber: cert.registrationNumber, breed: cert.breed, level: cert.level },
     });
   }
   const horse = await db.one('SELECT * FROM horses WHERE registration_number=$1', [code]);
   if (horse) {
     const certs = await db.query('SELECT type, code, status, issued_at FROM certificates WHERE horse_id=$1 ORDER BY issued_at', [horse.id]);
-    return res.json({ valid: horse.status === 'CERTIFICADO', horse: { name: horse.name, registrationNumber: horse.registrationNumber, breed: horse.breed }, certificates: certs });
+    return res.json({ valid: horse.status === 'CERTIFICADO', horse: { name: horse.name, registrationNumber: horse.registrationNumber, breed: horse.breed, level: horse.level }, certificates: certs });
   }
   res.status(404).json({ valid: false, error: 'No existe ningún certificado C-IBERICO con ese código' });
 }));

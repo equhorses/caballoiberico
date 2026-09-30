@@ -20,7 +20,7 @@ export default function Gestiones() {
                   <div className="row between" style={{ alignItems: 'flex-start' }}>
                     <div>
                       <span className="eyebrow">{s.num} · {s.tag}</span>
-                      <h3 style={{ fontSize: '1.7rem' }}>{s.name}</h3>
+                      <h3 style={{ fontSize: '1.7rem' }}>{s.name} {s.launch && <span className="badge example" style={{ verticalAlign: 'middle' }}>Lanzamiento</span>}</h3>
                     </div>
                     <div className="price"><strong>{eur(s.price)}</strong><span>◷ {s.days} días hábiles</span></div>
                   </div>

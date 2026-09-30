@@ -137,6 +137,11 @@ router.post('/requests', upload.array('documents', 10), wrap(async (req, res) =>
   );
   audit(req.user.id, 'ServiceRequest', request.id, 'CREAR', { service });
 
+  // Servicio gratuito (p. ej. pre-valoración de lanzamiento): entra directamente en revisión
+  if (svc.price === 0) {
+    await db.query("UPDATE service_requests SET status='EN_REVISION' WHERE id=$1", [request.id]);
+    return res.status(201).json({ request: { ...request, status: 'EN_REVISION' }, checkoutUrl: null, message: 'Solicitud recibida. La revisaremos y te daremos una orientación de su nivel probable.' });
+  }
   // Abono previo: no se inicia ningún trámite sin el pago
   if (!stripe) return res.status(201).json({ request, checkoutUrl: null, message: 'Solicitud registrada. El pago online aún no está activo: la presidencia te contactará para el abono.' });
   const session = await stripe.checkout.sessions.create({

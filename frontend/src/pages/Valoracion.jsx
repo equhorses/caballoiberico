@@ -1,26 +1,42 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../api.jsx'
 import { PageHero } from './Registry.jsx'
-import { AGE_WHEEL, AI_RULES, CRITERIA, PHOTO_VIEWS } from '../data/content.js'
+import { AGE_WHEEL, AI_RULES, CRITERIA, LEVELS, PHOTO_VIEWS, STANDARD_TEXT } from '../data/content.js'
+import { LevelBadge } from '../components/ui.jsx'
 
 export default function Valoracion() {
   const { user, isStaff } = useAuth()
   return (
     <>
       <PageHero eyebrow="Inteligencia artificial C-IBERICO" title={<>Valoración morfo-deportiva<br />del ejemplar</>} image="/images/valoracion.jpg">
-        Nueve bloques puntuados de 0 a 10 según el reglamento de doma clásica y los criterios de selección centroeuropeos.
-        La nota global pondera el movimiento y la aptitud por encima del volumen barroco.
+        Desde los 6 meses. Nueve bloques puntuados de 0 a 10 según el reglamento de doma clásica y los criterios de selección
+        centroeuropeos, calibrados por la edad. El resultado es un nivel de calidad, del I al V, que el ejemplar conserva y puede mejorar.
       </PageHero>
 
       <section className="section white">
+        <div className="wrap split" style={{ alignItems: 'start' }}>
+          <div>
+            <span className="eyebrow">Nuestra vara de medir</span>
+            <h2>{STANDARD_TEXT.title}</h2>
+            <p className="lead">{STANDARD_TEXT.lead}</p>
+          </div>
+          <div className="card soft">
+            <ul style={{ paddingLeft: 20, margin: 0 }}>{STANDARD_TEXT.points.map((t) => <li key={t} className="mt8">{t}</li>)}</ul>
+            <p className="notice mt24">{STANDARD_TEXT.honest}</p>
+            <Link to="/gestiones#prevaloracion" className="btn btn-gold mt24">Pide una pre-valoración gratis</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
         <div className="wrap">
           <span className="eyebrow">Cómo funciona</span>
           <h2>La IA propone, el evaluador resuelve</h2>
           <div className="steps mt48">
-            <div><h3>Material</h3><p>El titular sube las cinco fotografías reglamentarias y el vídeo montado en los tres aires (máx. 1 minuto).</p></div>
+            <div><h3>Material</h3><p>El titular sube las cinco fotografías reglamentarias y un vídeo de máximo un minuto: montado desde los 3 años; a la mano o en libertad en potros.</p></div>
             <div><h3>Revisión del material</h3><p>Se comprueba, criterio por criterio, si el material permite valorar. Si no, se pide material nuevo: nunca se penaliza.</p></div>
-            <div><h3>Propuesta de la IA</h3><p>Para cada bloque, una observación, una nota provisional, la evidencia que la sustenta y su nivel de confianza.</p></div>
-            <div><h3>Decisión humana</h3><p>El evaluador acepta, corrige o rechaza cada propuesta. Solo entonces la nota es firme y pasa al expediente.</p></div>
+            <div><h3>Propuesta de la IA</h3><p>La IA analiza las fotos y fotogramas del vídeo. Para cada bloque da una observación, una nota provisional, la foto o el minuto que la sustenta y su nivel de confianza.</p></div>
+            <div><h3>Decisión humana</h3><p>El evaluador ve el vídeo completo y acepta, corrige o rechaza cada propuesta. Solo entonces la nota es firme y se asigna el nivel.</p></div>
           </div>
         </div>
       </section>
@@ -38,11 +54,11 @@ export default function Valoracion() {
           </div>
           <div>
             <span className="eyebrow">Rueda de edad</span>
-            <h2>Se exige según la edad</h2>
-            <p className="muted mt16">La misma ejecución no vale lo mismo a los 4 que a los 6 años. Antes de puntuar, el movimiento se calibra con lo que es razonable pedir a esa edad.</p>
+            <h2>Se exige según la etapa</h2>
+            <p className="muted mt16">La misma ejecución no vale lo mismo a los 4 que a los 6 años. Antes de puntuar se calibra con lo que es razonable pedir a esa edad, y cada etapa tiene un nivel máximo.</p>
             <table className="table mt24">
-              <thead><tr><th>Edad</th><th>Qué se espera para un 7</th></tr></thead>
-              <tbody>{AGE_WHEEL.map(([a, t]) => <tr key={a}><td className="t-name" style={{ whiteSpace: 'nowrap' }}>{a}</td><td className="muted">{t}</td></tr>)}</tbody>
+              <thead><tr><th>Etapa</th><th>Qué se valora</th><th>Nivel máx.</th></tr></thead>
+              <tbody>{AGE_WHEEL.map(([a, t, cap]) => <tr key={a}><td className="t-name" style={{ whiteSpace: 'nowrap' }}>{a}</td><td className="muted">{t}</td><td style={{ textAlign: 'center', fontWeight: 700 }}>{cap}</td></tr>)}</tbody>
             </table>
             <p className="small muted mt16">Interpretación propia de C-IBERICO inspirada en las pruebas de caballos jóvenes; no es un baremo de la FEI.</p>
           </div>
@@ -50,6 +66,18 @@ export default function Valoracion() {
       </section>
 
       <section className="section white">
+        <div className="wrap">
+          <span className="eyebrow">Niveles de calidad</span>
+          <h2>Un nivel que se conserva y se mejora</h2>
+          <p className="lead">El nivel no depende de la edad. En cada cambio de etapa el ejemplar puede volver a presentarse: si mejora, sube; si no, conserva el que tenía. Nunca baja por una nueva valoración. Los méritos deportivos acreditados también pueden subirlo, por decisión de la presidencia.</p>
+          <div className="levels-scale mt32">
+            {LEVELS.map((l) => <div key={l.n}><LevelBadge level={l.n} /><p className="small muted mt8">Nota desde {l.min}/100</p></div>)}
+          </div>
+          <p className="small muted mt16">Umbrales en fase experimental, pendientes de validación con evaluadores.</p>
+        </div>
+      </section>
+
+      <section className="section">
         <div className="wrap grid g2" style={{ gap: 48, alignItems: 'start' }}>
           <div>
             <span className="eyebrow">Garantías</span>
@@ -61,7 +89,7 @@ export default function Valoracion() {
             <h2>Las cinco vistas y el vídeo</h2>
             <ul className="mt24" style={{ paddingLeft: 20 }}>
               {PHOTO_VIEWS.map((v) => <li key={v.key} className="mt8">{v.label}</li>)}
-              <li className="mt8">Vídeo montado en los tres aires, máximo un minuto</li>
+              <li className="mt8">Vídeo en los tres aires, máximo un minuto: montado desde los 3 años; a la mano o en libertad antes</li>
             </ul>
             <p className="small muted mt16">Fotografías con el caballo cuadrado, sobre fondo neutro y a la altura del tronco. Un material deficiente retrasa la valoración, pero nunca la empeora.</p>
           </div>

@@ -3,15 +3,15 @@
 // Para quitarlos del todo: deja estos arrays vacíos.
 
 export const EXAMPLE_HORSES = [
-  { slug: 'jerusalem', name: 'Jerusalem', registrationNumber: 'EJ-15986', breed: 'PRE_PSL', birthDate: '2019-03-15', coat: 'Torda', country: 'España', stars: 24, amberStars: 3, score: 91.2, photo: '/images/ejemplo-doma.jpg' },
-  { slug: 'escarmiento-real', name: 'Escarmiento Real', registrationNumber: 'EJ-15330', breed: 'PRE_PSL', birthDate: '2013-02-28', coat: 'Torda oscura', country: 'España', stars: 12, amberStars: 1, score: 86.7, photo: '/images/ejemplo-doma.jpg' },
-  { slug: 'alcazar-del-puerto', name: 'Alcázar del Puerto', registrationNumber: 'EJ-16104', breed: 'PRE', birthDate: '2020-04-22', coat: 'Torda', country: 'España', stars: 6, amberStars: 0, score: 84.5, photo: '/images/pre.jpg' },
-  { slug: 'escarmiento-xii', name: 'Escarmiento XII', registrationNumber: 'EJ-15201', breed: 'PSL', birthDate: '2006-04-12', coat: 'Castaña', country: 'Portugal', stars: 12, amberStars: 2, score: 82.4, photo: '/images/psl.jpg' },
-  { slug: 'veleta-do-tejo', name: 'Veleta do Tejo', registrationNumber: 'EJ-15331', breed: 'PSL', birthDate: '2014-04-08', coat: 'Castaña', country: 'Portugal', stars: 6, amberStars: 1, score: 81.9, photo: null },
-  { slug: 'urre-do-tejo', name: 'Urre do Tejo', registrationNumber: 'EJ-15410', breed: 'PSL', birthDate: '2012-05-02', coat: 'Castaña', country: 'Portugal', stars: 6, amberStars: 1, score: 80.1, photo: null },
-  { slug: 'lusa-warendorf', name: 'Lusa Warendorf', registrationNumber: 'EJ-16220', breed: 'PSL', birthDate: '2021-03-10', coat: 'Negra', country: 'Alemania', stars: 3, amberStars: 0, score: 79.8, photo: null },
-  { slug: 'veleta-de-oro', name: 'Veleta de Oro', registrationNumber: 'EJ-15502', breed: 'PRE', birthDate: '2015-06-01', coat: 'Baya', country: 'España', stars: 6, amberStars: 1, score: 78.6, photo: null },
-  { slug: 'tejo-novo', name: 'Tejo Novo', registrationNumber: 'EJ-16301', breed: 'PRE_PSL', birthDate: '2022-02-14', coat: 'Torda', country: 'Portugal', stars: 3, amberStars: 0, score: 72.5, photo: null },
+  { slug: 'jerusalem', level: 5, name: 'Jerusalem', registrationNumber: 'EJ-15986', breed: 'PRE_PSL', birthDate: '2019-03-15', coat: 'Torda', country: 'España', stars: 24, amberStars: 3, score: 91.2, photo: '/images/ejemplo-doma.jpg' },
+  { slug: 'escarmiento-real', level: 4, name: 'Escarmiento Real', registrationNumber: 'EJ-15330', breed: 'PRE_PSL', birthDate: '2013-02-28', coat: 'Torda oscura', country: 'España', stars: 12, amberStars: 1, score: 86.7, photo: '/images/ejemplo-doma.jpg' },
+  { slug: 'alcazar-del-puerto', level: 4, name: 'Alcázar del Puerto', registrationNumber: 'EJ-16104', breed: 'PRE', birthDate: '2020-04-22', coat: 'Torda', country: 'España', stars: 6, amberStars: 0, score: 84.5, photo: '/images/pre.jpg' },
+  { slug: 'escarmiento-xii', level: 4, name: 'Escarmiento XII', registrationNumber: 'EJ-15201', breed: 'PSL', birthDate: '2006-04-12', coat: 'Castaña', country: 'Portugal', stars: 12, amberStars: 2, score: 82.4, photo: '/images/psl.jpg' },
+  { slug: 'veleta-do-tejo', level: 4, name: 'Veleta do Tejo', registrationNumber: 'EJ-15331', breed: 'PSL', birthDate: '2014-04-08', coat: 'Castaña', country: 'Portugal', stars: 6, amberStars: 1, score: 81.9, photo: null },
+  { slug: 'urre-do-tejo', level: 4, name: 'Urre do Tejo', registrationNumber: 'EJ-15410', breed: 'PSL', birthDate: '2012-05-02', coat: 'Castaña', country: 'Portugal', stars: 6, amberStars: 1, score: 80.1, photo: null },
+  { slug: 'lusa-warendorf', level: 3, name: 'Lusa Warendorf', registrationNumber: 'EJ-16220', breed: 'PSL', birthDate: '2021-03-10', coat: 'Negra', country: 'Alemania', stars: 3, amberStars: 0, score: 79.8, photo: null },
+  { slug: 'veleta-de-oro', level: 3, name: 'Veleta de Oro', registrationNumber: 'EJ-15502', breed: 'PRE', birthDate: '2015-06-01', coat: 'Baya', country: 'España', stars: 6, amberStars: 1, score: 78.6, photo: null },
+  { slug: 'tejo-novo', level: 3, name: 'Tejo Novo', registrationNumber: 'EJ-16301', breed: 'PRE_PSL', birthDate: '2022-02-14', coat: 'Torda', country: 'Portugal', stars: 3, amberStars: 0, score: 72.5, photo: null },
 ].map((h) => ({ ...h, example: true, age: new Date().getFullYear() - Number(h.birthDate.slice(0, 4)) }))
 
 export const EXAMPLE_RESULTS = [

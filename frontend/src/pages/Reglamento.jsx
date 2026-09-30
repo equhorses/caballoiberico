@@ -43,10 +43,23 @@ export default function Reglamento() {
             <details>
               <summary>Valoración morfo-deportiva</summary>
               <div className="acc-body">
-                <p>La valoración se realiza sobre cinco fotografías reglamentarias (lateral izquierdo, lateral derecho, frontal, trasera y tronco desde arriba) y un vídeo montado en los tres aires de duración máxima de un minuto.</p>
+                <p>La valoración se realiza sobre cinco fotografías reglamentarias (lateral izquierdo, lateral derecho, frontal, trasera y tronco desde arriba) y un vídeo en los tres aires de duración máxima de un minuto: montado desde los 3 años, y a la mano o en libertad en ejemplares más jóvenes.</p>
                 <p>Se puntúan nueve bloques de 0 a 10: cabeza y cuello, tronco y dorso, grupa, aplomos y extremidades, paso, trote, galope, reunión y giros, y aptitud para ser montado. El movimiento y la aptitud deportiva pesan por encima del volumen barroco.</p>
+                <p><strong>Vara de medir:</strong> el movimiento se valora con el estándar de las pruebas de caballos jóvenes y de selección centroeuropeas; la conformación, por su función en el caballo de deporte, sin penalizar los rasgos de tipo PRE o PSL que no limiten el movimiento. El movimiento pesa el 80 % de la nota. Es un criterio propio de C-IBERICO, inspirado en esos sistemas de selección y sin vínculo con ninguno de ellos.</p>
                 <p>La inteligencia artificial elabora una propuesta con su evidencia y su nivel de confianza; <strong>la nota la resuelve siempre un evaluador humano</strong>. Los pesos de cada bloque se encuentran en fase experimental de validación.</p>
-                <p>El ejemplar debe tener tres años cumplidos a la fecha de la solicitud del Certificado de Calidad.</p>
+                <p>Pueden valorarse ejemplares desde los 6 meses. La exigencia se calibra por etapas (potro, añojo, 2, 3, 4, 5 y 6 años o más); la aptitud para ser montado solo se evalúa desde los 3 años.</p>
+              </div>
+            </details>
+            <details>
+              <summary>Niveles de calidad</summary>
+              <div className="acc-body">
+                <p>El resultado de la valoración se expresa en un nivel de calidad del I al V, independiente de la edad. Cada etapa tiene un nivel máximo: II para potros y añojos, III a los 2 y 3 años, IV a los 4 y 5 años y V a partir de los 6.</p>
+                <ul>
+                  <li>En cada cambio de etapa el ejemplar puede volver a presentarse. Si mejora, sube de nivel; si no, conserva el que tenía.</li>
+                  <li>El nivel nunca baja por una nueva valoración.</li>
+                  <li>La presidencia puede subir el nivel por méritos deportivos acreditados con documentación oficial. Todo cambio queda registrado con su motivo.</li>
+                  <li>La presidencia puede revisar el nivel si se acredita falsedad en la documentación aportada.</li>
+                </ul>
               </div>
             </details>
             <details>

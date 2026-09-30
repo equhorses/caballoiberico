@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useFetch } from '../api.jsx'
-import { HorseRow, Img, Stars, breedLabel, Spinner } from '../components/ui.jsx'
-import { CRITERIA, MERIT_LEVELS, PHOTO_VIEWS, fmtDate } from '../data/content.js'
+import { HorseRow, Img, LevelBadge, Stars, breedLabel, Spinner } from '../components/ui.jsx'
+import { CRITERIA, LEVEL_REASON, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, fmtDate } from '../data/content.js'
 import { useRegistry, filterHorses } from '../data/useRegistry.js'
 
 export function PageHero({ eyebrow, title, children, image = '/images/pista.jpg' }) {
@@ -36,6 +36,7 @@ export default function Registry() {
             <input className="input" placeholder="Buscar por nombre, número de registro, padre, madre o criador" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar en el registro" />
             <select className="select" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Ordenar">
               <option value="score">Mejor valoración</option>
+              <option value="level">Nivel más alto</option>
               <option value="stars">Más estrellas</option>
               <option value="name">Nombre</option>
               <option value="age">Más jóvenes</option>
@@ -74,7 +75,7 @@ export function HorseDetail() {
               <span className="badge">{breedLabel(h.breed)}</span>
               <h1 className="mt16" style={{ textTransform: 'uppercase', fontSize: 'clamp(2rem,4.5vw,3.4rem)' }}>{h.name}</h1>
               <p className="k mt8">Nº {h.registrationNumber}</p>
-              <div className="mt16"><Stars n={h.stars} amber={h.amberStars} max={24} /></div>
+              <div className="row mt16" style={{ gap: 12 }}><LevelBadge level={h.level} big /><Stars n={h.stars} amber={h.amberStars} max={24} /></div>
               <dl className="kv">
                 <dt>Nacimiento</dt><dd>{fmtDate(h.birthDate)} · {h.age} años</dd>
                 <dt>Sexo</dt><dd>{h.sex?.toLowerCase()}</dd>
@@ -115,7 +116,7 @@ export function HorseDetail() {
                   </tbody>
                 </table>
                 {h.evaluation.summary && <p className="mt16">{h.evaluation.summary}</p>}
-                <p className="small muted mt16">Resuelto por evaluador el {fmtDate(h.evaluation.resolvedAt)} · rúbrica v{h.evaluation.rubricVersion} (pesos en fase experimental).</p>
+                <p className="small muted mt16">Resuelto por evaluador el {fmtDate(h.evaluation.resolvedAt)} · rúbrica v{h.evaluation.rubricVersion} (pesos en fase experimental). Criterios no evaluables por la edad no cuentan en la nota.</p>
               </>
             ) : <p className="muted">Este ejemplar aún no tiene una valoración resuelta.</p>}
           </div>
@@ -129,6 +130,17 @@ export function HorseDetail() {
                 </div>
               )) : <p className="muted">Sin certificados vigentes.</p>}
             </div>
+            {h.levelHistory?.length > 0 && (
+              <div className="card">
+                <span className="eyebrow">Evolución de nivel</span>
+                {h.levelHistory.map((l, i) => (
+                  <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
+                    <strong>Nivel {ROMAN[l.fromLevel]} → {ROMAN[l.toLevel]}</strong> · {LEVEL_REASON[l.reason]}
+                    <div className="small muted">{fmtDate(l.at)}{l.notes ? ` · ${l.notes}` : ''}</div>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="card">
               <span className="eyebrow">Méritos deportivos acreditados</span>
               {h.merits.length ? h.merits.map((m) => (

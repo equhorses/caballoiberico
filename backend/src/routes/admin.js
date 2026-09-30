@@ -42,13 +42,15 @@ router.get('/horses/:id', wrap(async (req, res) => {
      FROM horses h JOIN users u ON u.id=h.owner_id WHERE h.id::text=$1`, [req.params.id],
   );
   if (!h) return res.status(404).json({ error: 'Ejemplar no encontrado' });
-  const [photos, videos, certificates, merits] = await Promise.all([
+  const [photos, videos, certificates, merits, levelHistory] = await Promise.all([
     db.query('SELECT * FROM horse_photos WHERE horse_id=$1', [h.id]),
     db.query('SELECT * FROM horse_videos WHERE horse_id=$1', [h.id]),
     db.query('SELECT * FROM certificates WHERE horse_id=$1 ORDER BY issued_at', [h.id]),
     db.query('SELECT * FROM sport_merits WHERE horse_id=$1 ORDER BY date DESC', [h.id]),
+    db.query(`SELECT l.*, u.first_name || ' ' || u.last_name AS decided_by_name FROM level_history l
+              LEFT JOIN users u ON u.id=l.decided_by WHERE l.horse_id=$1 ORDER BY l.at DESC`, [h.id]),
   ]);
-  res.json({ ...h, photos, videos, certificates, merits });
+  res.json({ ...h, photos, videos, certificates, merits, levelHistory });
 }));
 
 // Expedir certificado. ORIGEN asigna número de registro y publica el ejemplar en el Registro.
@@ -104,6 +106,26 @@ router.post('/merits/:id/verify', requireRole('ADMIN'), wrap(async (req, res) =>
   if (!m) return res.status(404).json({ error: 'Resultado no encontrado' });
   audit(req.user.id, 'SportMerit', m.id, 'VERIFICAR', {});
   res.json(m);
+}));
+
+// Cambio manual de nivel por la presidencia (p. ej. subida por méritos deportivos). Motivo obligatorio y auditado.
+router.post('/horses/:id/level', requireRole('ADMIN'), wrap(async (req, res) => {
+  const level = Number(req.body?.level);
+  const { reason = 'MERITO', notes } = req.body || {};
+  if (!Number.isInteger(level) || level < 0 || level > 5) return res.status(400).json({ error: 'El nivel debe estar entre 0 y V' });
+  if (!['MERITO', 'MANUAL'].includes(reason)) return res.status(400).json({ error: 'Motivo no válido' });
+  if (!notes || notes.trim().length < 5) return res.status(400).json({ error: 'Explica el motivo (competición, resultado, documento…)' });
+  const out = await db.tx(async (client) => {
+    const h = await db.one('SELECT id, name, level FROM horses WHERE id::text=$1 FOR UPDATE', [req.params.id], client);
+    if (!h) throw Object.assign(new Error('Ejemplar no encontrado'), { status: 404 });
+    if (h.level === level) throw Object.assign(new Error('El ejemplar ya tiene ese nivel'), { status: 400 });
+    await db.query('UPDATE horses SET level=$2, updated_at=now() WHERE id=$1', [h.id, level], client);
+    await db.query('INSERT INTO level_history(horse_id, from_level, to_level, reason, notes, decided_by) VALUES ($1,$2,$3,$4,$5,$6)',
+      [h.id, h.level, level, reason, notes.trim(), req.user.id], client);
+    await audit(req.user.id, 'Horse', h.id, 'NIVEL', { ejemplar: h.name, de: h.level, a: level, reason, notes }, client);
+    return { id: h.id, level, previous: h.level };
+  });
+  res.json(out);
 }));
 
 router.get('/users', requireRole('ADMIN'), wrap(async (req, res) => {

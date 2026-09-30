@@ -28,7 +28,7 @@ export default function Home() {
             Cada certificado lleva número único y se verifica públicamente, como un certificado SSL.
           </p>
           <div className="row mt32">
-            <Link className="btn btn-gold" to="/gestiones#calidad">Valorar mi ejemplar →</Link>
+            <Link className="btn btn-gold" to="/gestiones#prevaloracion">Pre-valoración gratis →</Link>
             <Link className="btn btn-line-light" to="/registro">Explorar el registro</Link>
           </div>
           <div className="hero-facts">
@@ -72,6 +72,10 @@ export default function Home() {
           <div>
             <span className="eyebrow">Nuevo concepto de valoración</span>
             <h2>La IA lee el ejemplar antes que el expediente</h2>
+            <p className="lead">
+              Con la vara del caballo de deporte centroeuropeo: el movimiento se mide como en las pruebas de caballos jóvenes de allí,
+              y la conformación por su función, respetando el tipo ibérico.
+            </p>
             <p className="lead">
               Tener un caballo de calidad no puede depender del sí o no de unas reglas desactualizadas. Aporta las cinco vistas
               reglamentarias y el vídeo montado en los tres aires: la IA prepara una propuesta por bloques con su evidencia,

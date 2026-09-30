@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { api, fileUrl, useAuth, useFetch } from '../api.jsx'
-import { Img, Toast, breedLabel } from '../components/ui.jsx'
-import { MERIT_LEVELS, PHOTO_VIEWS, SERVICES, fmtDate } from '../data/content.js'
+import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
+import { LEVEL_REASON, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, SERVICES, fmtDate } from '../data/content.js'
 
 const CASE_STATUS = { REVISION_MATERIAL: 'Revisión de material', EN_REVISION_HUMANA: 'En revisión humana', REQUIERE_MATERIAL: 'Requiere material', RESUELTO: 'Resuelto' }
 const MATERIAL = [['APTO', 'Apto'], ['APTO_PARCIAL', 'Apto parcialmente'], ['REQUIERE_MATERIAL', 'Requiere nuevo material'], ['NO_EVALUABLE', 'No evaluable']]
@@ -60,13 +60,14 @@ function Cases({ open }) {
   return (
     <div className="table-scroll">
       <table className="table">
-        <thead><tr><th>Ejemplar</th><th>Estado</th><th>Decididos</th><th>Rúbrica</th><th>Actualizado</th><th /></tr></thead>
+        <thead><tr><th>Ejemplar</th><th>Estado</th><th>Decididos</th><th>Nivel</th><th>Rúbrica</th><th>Actualizado</th><th /></tr></thead>
         <tbody>
           {data.map((c) => (
             <tr key={c.id}>
-              <td><span className="t-name">{c.horseName}</span><div className="k">{c.registrationNumber || 'sin nº'} · {breedLabel(c.breed)} · {c.ageYears} años</div></td>
+              <td><span className="t-name">{c.horseName}</span><div className="k">{c.registrationNumber || 'sin nº'} · {breedLabel(c.breed)} · {c.stageName || `${c.ageYears} años`}</div></td>
               <td><span className={`badge ${c.status === 'RESUELTO' ? 'ok' : c.status === 'REQUIERE_MATERIAL' ? 'bad' : 'light'}`}>{CASE_STATUS[c.status]}</span></td>
               <td>{c.decided} / {c.criteriaCount}</td>
+              <td>{c.status === 'RESUELTO' ? <span className="small">obtenido {ROMAN[c.levelAwarded || 0]}</span> : <LevelBadge level={c.horseLevel} />}</td>
               <td>v{c.rubricVersion}</td>
               <td className="small">{fmtDate(c.updatedAt)}</td>
               <td><button className="btn btn-line btn-sm" onClick={() => open(c.id)}>Abrir</button></td>
@@ -85,7 +86,7 @@ function CaseView({ id, onBack, notify }) {
   if (loading && !c) return <p className="muted">Cargando…</p>
   if (error) return <p className="notice bad">{error.message}</p>
   const locked = c.status === 'RESUELTO'
-  const criteria = c.rubric.content.criteria
+  const criteria = c.criteria || c.rubric.content.criteria
 
   const runAI = async () => {
     setAiBusy(true)
@@ -93,7 +94,11 @@ function CaseView({ id, onBack, notify }) {
     setAiBusy(false)
   }
   const doResolve = async (requiresMaterial) => {
-    try { await api(`/eval/cases/${id}/resolve`, { method: 'POST', body: { ...resolve, requiresMaterial } }); notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : 'Valoración resuelta'); reload() } catch (x) { notify(x.message) }
+    try {
+      const r = await api(`/eval/cases/${id}/resolve`, { method: 'POST', body: { ...resolve, requiresMaterial } })
+      notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : r.newLevel > r.previousLevel ? `Valoración resuelta: sube a nivel ${ROMAN[r.newLevel]}` : `Valoración resuelta: conserva nivel ${ROMAN[r.newLevel]}`)
+      reload()
+    } catch (x) { notify(x.message) }
   }
 
   return (
@@ -103,7 +108,11 @@ function CaseView({ id, onBack, notify }) {
         <div className="row between">
           <div>
             <h2 style={{ fontSize: '1.9rem', textTransform: 'uppercase' }}>{c.horse.name}</h2>
-            <p className="k mt8">{c.horse.registrationNumber || 'sin nº'} · {breedLabel(c.horse.breed)} · {c.ageYears} años · rúbrica v{c.rubric.version} ({c.rubric.status.toLowerCase()})</p>
+            <p className="k mt8">{c.horse.registrationNumber || 'sin nº'} · {breedLabel(c.horse.breed)} · {c.stageInfo ? c.stageInfo.name : `${c.ageYears} años`} · rúbrica v{c.rubric.version} ({c.rubric.status.toLowerCase()})</p>
+            <div className="row mt8" style={{ gap: 10 }}>
+              <span className="small">Nivel actual</span><LevelBadge level={c.horse.level} />
+              {c.stageInfo && <span className="small muted">· tope de esta etapa: {ROMAN[c.stageInfo.cap]}{c.stageInfo.ridden ? '' : ' · sin montar: no se evalúa la aptitud para ser montado'}</span>}
+            </div>
           </div>
           <span className={`badge ${locked ? 'ok' : 'light'}`}>{CASE_STATUS[c.status]}</span>
         </div>
@@ -113,7 +122,8 @@ function CaseView({ id, onBack, notify }) {
             return <a key={v.key} className="slot" href={p ? fileUrl(p.url) : undefined} target="_blank" rel="noreferrer">{p ? <Img src={p.url} alt={v.label} /> : 'Falta'}<span className="slot-label">{v.label}</span></a>
           })}
         </div>
-        {c.horse.videos[0] ? <video className="mt16" src={fileUrl(c.horse.videos[0].url)} controls style={{ width: '100%', maxHeight: 420, background: '#000' }} /> : <p className="notice mt16">El titular no ha subido vídeo: los criterios de movimiento no son evaluables.</p>}
+        {c.rubric.content.ageWheel && c.stage && <p className="notice info small mt16"><strong>Qué se espera en esta etapa:</strong> {c.rubric.content.ageWheel[c.stage]}</p>}
+        {c.horse.videos[0] ? <video className="mt16" src={fileUrl(c.horse.videos[0].url)} controls style={{ width: '100%', maxHeight: 420, background: '#000' }} /> : <p className="notice mt16">El titular no ha subido vídeo: los criterios de movimiento requieren vídeo (a la mano o en libertad en potros).</p>}
         {!locked && (
           <div className="row mt16">
             <button className="btn btn-ink" onClick={runAI} disabled={aiBusy || !c.aiConfigured}>{aiBusy ? 'La IA está analizando…' : c.proposals.length ? 'Volver a lanzar la IA' : 'Lanzar propuesta de la IA'}</button>
@@ -129,12 +139,16 @@ function CaseView({ id, onBack, notify }) {
       {!locked ? (
         <div className="card form">
           <h3>Resolución del evaluador</h3>
+          <p className="notice info">
+            Nota provisional con lo decidido: <strong>{c.preview?.score != null ? `${c.preview.score}/100` : '—'}</strong> → nivel <strong>{ROMAN[c.preview?.level || 0]}</strong>.{' '}
+            {c.preview && c.preview.level > c.preview.current ? `Al resolver, el ejemplar subirá de ${ROMAN[c.preview.current]} a ${ROMAN[c.preview.level]}.` : `No supera su nivel actual (${ROMAN[c.preview?.current || 0]}): lo conservará.`}
+          </p>
           <div className="field"><label>Conclusión (se publica en la ficha)</label><textarea className="textarea" value={resolve.summary} onChange={(e) => setResolve({ ...resolve, summary: e.target.value })} /></div>
           <div className="field"><label>Orientación (la emite el evaluador, nunca la IA)</label><textarea className="textarea" value={resolve.guidance} onChange={(e) => setResolve({ ...resolve, guidance: e.target.value })} /></div>
           <div className="row"><button className="btn btn-gold" onClick={() => doResolve(false)}>Resolver valoración</button><button className="btn btn-line" onClick={() => doResolve(true)}>Pedir nuevo material</button></div>
         </div>
       ) : (
-        <div className="card"><h3>Resolución</h3><p className="mt8">{c.summary}</p>{c.guidance && <p className="muted mt8"><strong>Orientación:</strong> {c.guidance}</p>}<p className="small muted mt8">Resuelto el {fmtDate(c.resolvedAt)}</p></div>
+        <div className="card"><h3>Resolución</h3><p className="mt8">Nota {c.finalScore ?? '—'}/100 · nivel obtenido {ROMAN[c.levelAwarded || 0]}</p><p className="mt8">{c.summary}</p>{c.guidance && <p className="muted mt8"><strong>Orientación:</strong> {c.guidance}</p>}<p className="small muted mt8">Resuelto el {fmtDate(c.resolvedAt)}</p></div>
       )}
 
       <div className="card history">
@@ -147,19 +161,25 @@ function CaseView({ id, onBack, notify }) {
 
 function Criterion({ k, c, locked, reload, notify }) {
   const mat = c.material.find((m) => m.criterionKey === k.key)
-  const prop = c.proposals.find((p) => p.criterionKey === k.key)
+  // Última ejecución de la IA (una o dos IAs en doble lectura)
+  const lastRun = c.proposals[0]?.raw?.runId
+  const props = c.proposals.filter((p) => p.criterionKey === k.key && (!lastRun || p.raw?.runId === lastRun))
+  const prop = props[0]
+  const scored = props.filter((p) => p.score != null)
+  const mean = scored.length ? Math.round((scored.reduce((a, p) => a + p.score, 0) / scored.length) * 2) / 2 : null
+  const disagree = scored.length > 1 && Math.max(...scored.map((p) => p.score)) - Math.min(...scored.map((p) => p.score)) > 1
   const dec = c.decisions.find((d) => d.criterionKey === k.key)
   const [m, setM] = useState({ status: mat?.status || '', notes: mat?.notes || '' })
   const [d, setD] = useState({ score: dec?.finalScore ?? prop?.score ?? '', notes: dec?.notes || '' })
   useEffect(() => { setM({ status: mat?.status || '', notes: mat?.notes || '' }) }, [mat?.status, mat?.notes])
-  useEffect(() => { if (!dec && prop?.score != null) setD((x) => ({ ...x, score: prop.score })) }, [prop?.id])
+  useEffect(() => { if (!dec && mean != null) setD((x) => ({ ...x, score: mean })) }, [prop?.id])
 
   const saveMat = async (status) => {
     try { await api(`/eval/cases/${c.id}/material/${k.key}`, { method: 'PUT', body: { status, notes: m.notes } }); reload() } catch (x) { notify(x.message) }
   }
-  const decide = async (action) => {
+  const decide = async (action, chosen = prop, override = {}) => {
     try {
-      await api(`/eval/cases/${c.id}/decisions/${k.key}`, { method: 'PUT', body: { action, proposalId: prop?.id, finalScore: d.score, notes: d.notes } })
+      await api(`/eval/cases/${c.id}/decisions/${k.key}`, { method: 'PUT', body: { action, proposalId: chosen?.id, finalScore: d.score, notes: d.notes, ...override } })
       notify('Decisión guardada'); reload()
     } catch (x) { notify(x.message) }
   }
@@ -183,14 +203,19 @@ function Criterion({ k, c, locked, reload, notify }) {
         </div>
         <div>
           <h4>2 · Propuesta de la IA</h4>
+          {props.length > 1 && <p className={`badge ${disagree ? 'bad' : 'ok'}`} style={{ marginBottom: 10 }}>{disagree ? '⚠ Las IAs discrepan: revisar' : '✓ Las IAs coinciden'}</p>}
           {prop ? (
-            <>
-              <p>{prop.observation}</p>
-              <p className="mt8"><strong style={{ fontSize: '1.3rem' }}>{prop.score ?? '—'}</strong> <span className={`small conf-${prop.confidence}`}>· confianza {prop.confidence.toLowerCase()}</span></p>
-              {prop.evidence?.length > 0 && <p className="small muted mt8">Evidencia: {prop.evidence.map((e) => [e.fuente, e.t].filter(Boolean).join(' ')).join(' · ')}</p>}
-              {prop.limitations && <p className="small muted mt8">Limitaciones: {prop.limitations}</p>}
-              <p className="small muted mt8">{prop.sourceLabel ? `${prop.sourceLabel} · ` : ''}{prop.model} · v{prop.rubricVersion}</p>
-            </>
+            props.map((pp) => (
+              <div key={pp.id} style={{ paddingBottom: 10, marginBottom: 10, borderBottom: props.length > 1 ? '1px dashed var(--line)' : 0 }}>
+                {props.length > 1 && <p className="small" style={{ fontWeight: 700 }}>{pp.model}</p>}
+                <p>{pp.observation}</p>
+                <p className="mt8"><strong style={{ fontSize: '1.3rem' }}>{pp.score ?? '—'}</strong> <span className={`small conf-${pp.confidence}`}>· confianza {pp.confidence.toLowerCase()}</span></p>
+                {pp.evidence?.length > 0 && <p className="small muted mt8">Evidencia: {pp.evidence.map((e) => [e.fuente, e.t].filter(Boolean).join(' ')).join(' · ')}</p>}
+                {pp.limitations && <p className="small muted mt8">Limitaciones: {pp.limitations}</p>}
+                <p className="small muted mt8">{pp.sourceLabel ? `${pp.sourceLabel} · ` : ''}{props.length > 1 ? '' : `${pp.model} · `}v{pp.rubricVersion}</p>
+                {!locked && props.length > 1 && pp.score != null && <button className="btn btn-line btn-sm mt8" onClick={() => decide('ACEPTAR', pp)}>Aceptar {pp.score} de esta IA</button>}
+              </div>
+            ))
           ) : <p className="muted small">Sin propuesta.</p>}
         </div>
         <div>
@@ -202,7 +227,8 @@ function Criterion({ k, c, locked, reload, notify }) {
                 <input className="input" style={{ flex: 1, minWidth: 120 }} placeholder="Motivo / nota" value={d.notes} onChange={(e) => setD({ ...d, notes: e.target.value })} />
               </div>
               <div className="row mt8" style={{ gap: 6 }}>
-                {prop?.score != null && <button className="btn btn-ink btn-sm" onClick={() => decide('ACEPTAR')}>Aceptar {prop.score}</button>}
+                {props.length === 1 && prop?.score != null && <button className="btn btn-ink btn-sm" onClick={() => decide('ACEPTAR')}>Aceptar {prop.score}</button>}
+                {props.length > 1 && mean != null && <button className="btn btn-ink btn-sm" onClick={() => decide('CORREGIR', prop, { finalScore: mean, notes: d.notes || `Media de ${scored.length} IAs (${scored.map((p) => p.score).join(' y ')})` })}>Aceptar media {mean}</button>}
                 <button className="btn btn-gold btn-sm" onClick={() => decide('CORREGIR')}>{prop ? 'Corregir' : 'Puntuar'}</button>
                 {prop && <button className="btn btn-line btn-sm" onClick={() => decide('RECHAZAR')}>Rechazar</button>}
                 <button className="btn btn-line btn-sm" onClick={() => decide('NO_EVALUABLE')}>No evaluable</button>
@@ -225,12 +251,13 @@ function Horses({ notify, openCase, isAdmin }) {
   return (
     <div className="table-scroll">
       <table className="table">
-        <thead><tr><th>Ejemplar</th><th>Titular</th><th>Estado</th><th>Material</th><th /></tr></thead>
+        <thead><tr><th>Ejemplar</th><th>Titular</th><th>Estado</th><th>Nivel</th><th>Material</th><th /></tr></thead>
         <tbody>{data.map((h) => (
           <tr key={h.id}>
             <td><span className="t-name">{h.name}</span><div className="k">{h.registrationNumber || 'sin nº'} · {breedLabel(h.breed)}</div></td>
             <td className="small">{h.ownerName}</td>
             <td><span className={`badge ${h.status === 'CERTIFICADO' ? 'ok' : 'example'}`}>{pretty(h.status)}</span></td>
+            <td><LevelBadge level={h.level} /></td>
             <td className="small">Fotos {h.photoCount}/5 · Vídeo {h.videoCount ? 'sí' : 'no'}</td>
             <td><button className="btn btn-line btn-sm" onClick={() => setSel(h.id)}>Gestionar</button></td>
           </tr>
@@ -246,8 +273,9 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
   const [amber, setAmber] = useState(0)
   const [merit, setMerit] = useState({ competition: '', category: '', level: 'JOVENES_NACIONAL', position: '1º', score: '', date: '' })
   const [doc, setDoc] = useState(null)
+  const [lvl, setLvl] = useState({ level: '', reason: 'MERITO', notes: '' })
   if (!h) return <p className="muted">Cargando…</p>
-  const call = async (fn, msg) => { try { await fn(); notify(msg); reload() } catch (x) { notify(x.message) } }
+  const call = async (fn, msg) => { try { await fn(); notify(msg); reload(); return true } catch (x) { notify(x.message); return false } }
   const issue = (type) => call(() => api(`/admin/horses/${id}/certificates`, { method: 'POST', body: { type, stars, amberStars: amber } }), 'Certificado expedido')
   const addMerit = (e) => {
     e.preventDefault()
@@ -265,6 +293,35 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
           <button className="btn btn-ink" onClick={newCase}>Abrir valoración</button>
         </div>
         <p className="small muted mt16">Titular: {h.ownerName} · {h.ownerEmail} {h.ownerPhone ? `· ${h.ownerPhone}` : ''} · Padre: {h.sireName || '—'} · Madre: {h.damName || '—'} · Libro oficial: {h.officialRegistry || '—'}</p>
+      </div>
+      <div className="card">
+        <div className="row between">
+          <h3>Nivel de calidad</h3>
+          <LevelBadge level={h.level} big />
+        </div>
+        <p className="small muted mt8">Sube solo con una valoración que lo mejore o por decisión de la presidencia (méritos deportivos). Nunca baja por una nueva valoración.</p>
+        {isAdmin && (
+          <form className="row mt16" style={{ gap: 8, alignItems: 'stretch' }} onSubmit={(e) => { e.preventDefault(); call(() => api(`/admin/horses/${id}/level`, { method: 'POST', body: { ...lvl, level: Number(lvl.level) } }), 'Nivel actualizado').then((ok) => ok && setLvl({ level: '', reason: 'MERITO', notes: '' })) }}>
+            <select className="select" style={{ width: 150 }} required value={lvl.level} onChange={(e) => setLvl({ ...lvl, level: e.target.value })}>
+              <option value="">Nuevo nivel…</option>
+              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n} disabled={n === h.level}>Nivel {ROMAN[n]}</option>)}
+              <option value="0">Sin nivel</option>
+            </select>
+            <select className="select" style={{ width: 200 }} value={lvl.reason} onChange={(e) => setLvl({ ...lvl, reason: e.target.value })}>
+              <option value="MERITO">Mérito deportivo</option>
+              <option value="MANUAL">Otra decisión de presidencia</option>
+            </select>
+            <input className="input" style={{ flex: 1, minWidth: 220 }} required placeholder="Motivo: competición, resultado, documento…" value={lvl.notes} onChange={(e) => setLvl({ ...lvl, notes: e.target.value })} />
+            <button className="btn btn-gold">Cambiar nivel</button>
+          </form>
+        )}
+        {h.levelHistory?.length > 0 && (
+          <ul className="history mt16" style={{ padding: 0 }}>
+            {h.levelHistory.map((l) => (
+              <li key={l.id}><strong>{ROMAN[l.fromLevel]} → {ROMAN[l.toLevel]}</strong> · {LEVEL_REASON[l.reason]} · {l.decidedByName || '—'} · {new Date(l.at).toLocaleString('es-ES')}<div className="muted">{l.notes}</div></li>
+            ))}
+          </ul>
+        )}
       </div>
       <div className="grid g2" style={{ alignItems: 'start' }}>
         <div className="card">

@@ -22,6 +22,7 @@ export function filterHorses(horses, { q = '', breed = '', sort = 'score' }) {
   const n = norm(q.trim())
   const sorters = {
     score: (a, b) => (b.score ?? -1) - (a.score ?? -1),
+    level: (a, b) => (b.level || 0) - (a.level || 0) || (b.score ?? -1) - (a.score ?? -1),
     stars: (a, b) => b.stars - a.stars || (b.score ?? -1) - (a.score ?? -1),
     name: (a, b) => a.name.localeCompare(b.name),
     age: (a, b) => a.age - b.age,
