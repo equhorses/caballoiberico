@@ -20,12 +20,13 @@ export default function Home() {
       <section className="hero">
         <div className="hero-bg" style={{ backgroundImage: 'url(/images/hero.jpg)' }} />
         <div className="wrap">
-          <div className="hero-tag">✦ Certificado privado de calidad · PRE y PSL</div>
+          <div className="hero-tag">✦ ¿Qué es C-IBERICO? La unión del caballo español y lusitano</div>
           <h1>El caballo ibérico <em>valorado por su deporte,</em> no por su etiqueta.</h1>
           <p className="lead">
-            C-IBERICO certifica la calidad deportiva del caballo ibérico —PRE, PSL y sus cruces— con una valoración de la morfología
+            C-IBERICO certifica la calidad deportiva del caballo ibérico, con una valoración de la morfología
             y los tres aires según el reglamento de doma clásica y los criterios de selección centroeuropeos.
-            Cada certificado lleva número único y se verifica públicamente, como un certificado SSL.
+            Cada caballo recibe un número único y una ficha pública: cualquiera puede comprobar en esta web
+            su certificado y su nivel de calidad.
           </p>
           <div className="row mt32">
             <Link className="btn btn-gold" to="/gestiones#prevaloracion">Pre-valoración gratis →</Link>
