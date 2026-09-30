@@ -29,7 +29,7 @@ const isConfigured = () => providers().length > 0;
 const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 const fileOf = (uploadDir, url) => path.join(uploadDir, path.basename(url));
 
-// Las fotos del móvil pesan mucho: se reducen antes de enviarlas (Claude admite hasta 5 MB por imagen)
+// Las fotos del móvil pueden pasar de 10 MB y de la resolución que la IA aprovecha: se ajustan a 2000 px por lado
 async function photoToDataUrl(uploadDir, url) {
   const file = fileOf(uploadDir, url);
   const mime = MIME[path.extname(file).toLowerCase()];

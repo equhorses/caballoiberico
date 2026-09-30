@@ -28,7 +28,8 @@ async function toImages(file, mime) {
     const pages = await pdfToPng(file, { pagesToProcess: [1, 2], viewportScale: 2 });
     return pages.map((p) => `data:image/png;base64,${p.content.toString('base64')}`);
   }
-  return [`data:${mime};base64,${fs.readFileSync(file).toString('base64')}`];
+  const { resizeImage } = require('./frames');
+  return [(await resizeImage(file)) || `data:${mime};base64,${fs.readFileSync(file).toString('base64')}`];
 }
 
 const ROLE_TEXT = {

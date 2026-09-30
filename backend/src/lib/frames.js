@@ -32,7 +32,7 @@ async function extractFrames(file, count = 8) {
       const t = Math.min(dur - 0.1, (dur * (i + 0.5)) / count);
       const out = path.join(dir, `f${i}.jpg`);
       // eslint-disable-next-line no-await-in-loop
-      await run(['-hide_banner', '-loglevel', 'error', '-ss', t.toFixed(2), '-i', file, '-frames:v', '1', '-vf', 'scale=768:-2', '-q:v', '4', '-y', out]);
+      await run(['-hide_banner', '-loglevel', 'error', '-ss', t.toFixed(2), '-i', file, '-frames:v', '1', '-vf', "scale='min(1280,iw)':-2", '-q:v', '4', '-y', out]);
       if (fs.existsSync(out)) frames.push({ t: mmss(t), dataUrl: `data:image/jpeg;base64,${fs.readFileSync(out).toString('base64')}` });
     }
   } finally {
@@ -54,7 +54,7 @@ async function extractBursts(file, { bursts = 2, len = 6, fps = 10 } = {}) {
       const start = Math.max(0, Math.min(dur - len / fps - 0.1, (dur * (b + 1)) / (bursts + 1) - len / fps / 2));
       const pattern = path.join(dir, `b${b}_%02d.jpg`);
       // eslint-disable-next-line no-await-in-loop
-      await run(['-hide_banner', '-loglevel', 'error', '-ss', start.toFixed(2), '-i', file, '-vf', `fps=${fps},scale=640:-2`, '-frames:v', String(len), '-q:v', '4', '-y', pattern]);
+      await run(['-hide_banner', '-loglevel', 'error', '-ss', start.toFixed(2), '-i', file, '-vf', `fps=${fps},scale='min(960,iw)':-2`, '-frames:v', String(len), '-q:v', '4', '-y', pattern]);
       const frames = [];
       for (let i = 1; i <= len; i += 1) {
         const f = path.join(dir, `b${b}_${String(i).padStart(2, '0')}.jpg`);
@@ -68,8 +68,8 @@ async function extractBursts(file, { bursts = 2, len = 6, fps = 10 } = {}) {
   return out;
 }
 
-// Reduce una foto a un tamaño que acepten las IAs (lado mayor 1568 px, JPEG). Devuelve dataUrl o null.
-async function resizeImage(file, max = 1568) {
+// Ajusta una foto al máximo que Claude aprovecha cuando van más de 20 imágenes en una petición (2000 px por lado). Devuelve dataUrl o null.
+async function resizeImage(file, max = 2000) {
   if (!file || !fs.existsSync(file)) return null;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cib-img-'));
   const out = path.join(dir, 'r.jpg');
