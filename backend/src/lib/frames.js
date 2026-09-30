@@ -68,4 +68,18 @@ async function extractBursts(file, { bursts = 2, len = 6, fps = 10 } = {}) {
   return out;
 }
 
-module.exports = { extractFrames, extractBursts, mmss };
+// Reduce una foto a un tamaño que acepten las IAs (lado mayor 1568 px, JPEG). Devuelve dataUrl o null.
+async function resizeImage(file, max = 1568) {
+  if (!file || !fs.existsSync(file)) return null;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cib-img-'));
+  const out = path.join(dir, 'r.jpg');
+  try {
+    await run(['-hide_banner', '-loglevel', 'error', '-i', file, '-vf', `scale='min(${max},iw)':'min(${max},ih)':force_original_aspect_ratio=decrease`, '-q:v', '3', '-frames:v', '1', '-y', out]);
+    if (!fs.existsSync(out)) return null;
+    return `data:image/jpeg;base64,${fs.readFileSync(out).toString('base64')}`;
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+module.exports = { resizeImage, extractFrames, extractBursts, mmss };

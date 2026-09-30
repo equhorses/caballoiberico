@@ -4,7 +4,7 @@
 // Si no hay ninguna configurada, la web muestra "pendiente de integración": nunca se inventan resultados.
 const fs = require('fs');
 const path = require('path');
-const { extractFrames, extractBursts } = require('./frames');
+const { extractFrames, extractBursts, resizeImage } = require('./frames');
 
 const num = (v, def, min, max) => Math.min(Math.max(parseInt(v ?? def, 10) || def, min), max);
 
@@ -29,11 +29,12 @@ const isConfigured = () => providers().length > 0;
 const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 const fileOf = (uploadDir, url) => path.join(uploadDir, path.basename(url));
 
-function photoToDataUrl(uploadDir, url) {
+// Las fotos del móvil pesan mucho: se reducen antes de enviarlas (Claude admite hasta 5 MB por imagen)
+async function photoToDataUrl(uploadDir, url) {
   const file = fileOf(uploadDir, url);
   const mime = MIME[path.extname(file).toLowerCase()];
   if (!mime || !fs.existsSync(file)) return null;
-  return `data:${mime};base64,${fs.readFileSync(file).toString('base64')}`;
+  return (await resizeImage(file)) || `data:${mime};base64,${fs.readFileSync(file).toString('base64')}`;
 }
 
 function buildPrompt({ rubric, criteria, stage, ageMonths, views, spreadTimes, bursts }) {
@@ -78,7 +79,43 @@ Responde SOLO con JSON válido con esta forma exacta:
 {"criterios":[{"criterionKey":"...","material":{"status":"APTO","notes":"..."},"propuesta":{"observation":"...","score":7.5,"confidence":"MEDIA","evidence":[{"fuente":"foto:LATERAL_IZQUIERDO"}],"limitations":"...","sourceLabel":"criterio C-IBERICO"}}]}`;
 }
 
+// ── Claude con su API nativa (la capa "compatible con OpenAI" de Anthropic no está pensada para producción) ──
+const isAnthropic = (p) => /anthropic\.com/.test(p.baseUrl);
+
+function toAnthropicContent(content) {
+  if (typeof content === 'string') return content;
+  return content.map((c) => {
+    if (c.type === 'image_url') {
+      const m = /^data:([^;]+);base64,(.*)$/s.exec(c.image_url.url);
+      return m ? { type: 'image', source: { type: 'base64', media_type: m[1], data: m[2] } } : { type: 'image', source: { type: 'url', url: c.image_url.url } };
+    }
+    return { type: 'text', text: c.text };
+  });
+}
+
+async function callAnthropic(p, body) {
+  const res = await fetch(`${p.baseUrl}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': p.apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: body.model,
+      max_tokens: 8000,
+      temperature: 0.2,
+      messages: body.messages.map((m) => ({ role: m.role, content: toAnthropicContent(m.content) })),
+    }),
+  });
+  if (!res.ok) {
+    const txt = (await res.text()).slice(0, 400);
+    const hint = res.status === 401 ? ' (clave no válida)' : /credit balance|billing/i.test(txt) ? ' (saldo insuficiente en la cuenta de Claude)' : res.status === 404 ? ' (revisa el nombre del modelo en AI_MODEL)' : '';
+    throw Object.assign(new Error(`Error de ${p.model} ${res.status}${hint}: ${txt}`), { status: 502 });
+  }
+  const data = await res.json();
+  // Se devuelve con la misma forma que las APIs tipo OpenAI para no cambiar el resto del código
+  return { choices: [{ message: { content: (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('') } }], usage: data.usage || null };
+}
+
 async function callModel(p, body) {
+  if (isAnthropic(p)) return callAnthropic(p, body);
   const post = (b) => fetch(`${p.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${p.apiKey}` },
@@ -108,7 +145,7 @@ async function runEvaluation({ rubric, criteria, stage, ageMonths, photos, video
   const list = providers();
   if (!list.length) throw Object.assign(new Error('IA pendiente de integración: falta AI_API_KEY o AI_MODEL'), { status: 503 });
 
-  const images = photos.map((p) => ({ view: p.view, dataUrl: photoToDataUrl(uploadDir, p.url) })).filter((p) => p.dataUrl);
+  const images = (await Promise.all(photos.map(async (p) => ({ view: p.view, dataUrl: await photoToDataUrl(uploadDir, p.url) })))).filter((p) => p.dataUrl);
   const videoFile = video ? fileOf(uploadDir, video.url) : null;
   const spread = videoFile ? await extractFrames(videoFile, num(process.env.AI_VIDEO_FRAMES, 8, 0, 16)) : [];
   const bursts = videoFile ? await extractBursts(videoFile, { bursts: num(process.env.AI_VIDEO_BURSTS, 2, 0, 4) }) : [];
