@@ -126,7 +126,7 @@ export function HorseDetail() {
               <span className="eyebrow">Certificados vigentes</span>
               {h.certificates.length ? h.certificates.map((c) => (
                 <div key={c.code} className="row between" style={{ padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
-                  <div><strong>{c.type === 'ORIGEN' ? 'Certificado de Origen' : `Certificado de Calidad · ${c.stars} estrellas`}</strong><div className="small muted">Expedido el {fmtDate(c.issuedAt)}</div></div>
+                  <div><strong>{c.type === 'ORIGEN' ? 'Certificado de Origen' : `Certificado de Calidad · Nivel ${ROMAN[h.level] || '—'}`}</strong><div className="small muted">Expedido el {fmtDate(c.issuedAt)}</div></div>
                   <Link to={`/verificar?c=${c.code}`} className="badge ok" style={{ textDecoration: 'none' }}>{c.code}</Link>
                 </div>
               )) : <p className="muted">Sin certificados vigentes.</p>}

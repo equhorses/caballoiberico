@@ -28,6 +28,16 @@ export async function openPrivateFile(path) {
   setTimeout(() => URL.revokeObjectURL(url), 60000)
 }
 
+// Descarga un archivo privado (p. ej. exportación CSV) con la sesión del usuario
+export async function downloadPrivate(path, filename) {
+  const token = getToken()
+  const res = await fetch(`${API_BASE}/api${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  if (!res.ok) throw new Error('No se pudo descargar')
+  const url = URL.createObjectURL(await res.blob())
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 30000)
+}
+
 const AuthCtx = createContext(null)
 
 export function AuthProvider({ children }) {

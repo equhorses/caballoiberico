@@ -159,12 +159,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ESTRELLAS */}
+      {/* DOS CERTIFICADOS */}
       <section className="section white">
         <div className="wrap">
-          <span className="eyebrow">Certificado de Calidad</span>
-          <h2>El mérito se cuenta en estrellas</h2>
-          <p className="lead">Un ejemplar puede obtener cualquiera de estos niveles sin necesidad de haber alcanzado el anterior. Las veinticuatro estrellas conceden una estrella ámbar a todos sus ascendientes.</p>
+          <span className="eyebrow">Dos certificados, dos pasos</span>
+          <h2>Primero quién es. Después cuánto vale.</h2>
+          <div className="grid g2 mt32 cert-steps">
+            <div className="card">
+              <div className="step-n">1</div>
+              <h3>Certificado de Origen</h3>
+              <p className="muted mt8">Para cualquier caballo, de cualquier edad. Acredita su identidad (microchip) y su procedencia comprobada, y le da su número de registro CIB. Es único y no caduca.</p>
+              <Link to="/gestiones#origen" className="link mt16" style={{ display: 'inline-block' }}>Cómo se solicita →</Link>
+            </div>
+            <div className="card">
+              <div className="step-n">2</div>
+              <h3>Certificado de Calidad</h3>
+              <p className="muted mt8">Desde los 6 meses. Valoración morfo-deportiva según su etapa y <strong>nivel de calidad del I al V</strong>, con sus resultados deportivos. Es un certificado vivo: cuando el caballo sube de nivel, el mismo certificado se actualiza y su QR lo muestra.</p>
+              <Link to="/valoracion" className="link mt16" style={{ display: 'inline-block' }}>Cómo se valora →</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MÉRITOS */}
+      <section className="section">
+        <div className="wrap">
+          <span className="eyebrow">Méritos deportivos</span>
+          <h2>Los resultados en pista, en estrellas</h2>
+          <p className="lead">Las estrellas reconocen resultados deportivos verificados con documento oficial. Aparecen en la ficha del caballo y en su Certificado de Calidad, y pueden servir para subir su nivel. Las veinticuatro estrellas conceden una estrella ámbar a todos sus ascendientes.</p>
           <div className="stars-grid mt48">
             {STAR_LEVELS.map((s) => (
               <div key={s.n}><div className="n">{s.n}</div><h3>{s.name}</h3><div className="lvl">{s.level}</div><p>{s.desc}</p></div>
@@ -178,7 +200,7 @@ export default function Home() {
       </section>
 
       {/* MEJOR VALORADOS */}
-      <section className="section">
+      <section className="section white">
         <div className="wrap">
           <div className="row between" style={{ alignItems: 'flex-end' }}>
             <div><span className="eyebrow">Registro C-IBERICO</span><h2>Ejemplares mejor valorados</h2></div>

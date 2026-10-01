@@ -41,7 +41,9 @@ const card = (h) => ({
   photo: (h.photos.find((p) => p.view === 'LATERAL_IZQUIERDO') || h.photos[0])?.url || null,
   level: h.level || 0,
   stars: starsOf(h.merits),
-  amberStars: h.certificates.reduce((m, c) => Math.max(m, c.amberStars), 0),
+  amberStars: h.amberStars || 0,
+  laureado: Boolean(h.laureado || (h.amberStars || 0) >= 3),
+  hasQuality: h.certificates.some((c) => c.type === 'CALIDAD'),
   score: finalScore(h.lastCase),
 });
 
@@ -77,7 +79,7 @@ router.get('/registry/:number', wrap(async (req, res) => {
     sex: h.sex, sireName: h.sireName, damName: h.damName, sireRegistry: h.sireRegistry, damRegistry: h.damRegistry, breederName: h.breederName, ibericBloodPct: h.ibericBloodPct, originStatus: h.originStatus,
     photos: b.photos.map(({ view, url }) => ({ view, url })),
     merits: b.merits.map(({ competition, category, level, position, score, date, starsGiven }) => ({ competition, category, level, position, score, date, starsGiven })),
-    certificates: b.certificates.map(({ type, code, stars, amberStars, issuedAt }) => ({ type, code, stars, amberStars, issuedAt })),
+    certificates: b.certificates.map(({ type, code, issuedAt }) => ({ type, code, issuedAt })),
     levelHistory: (await db.query('SELECT from_level, to_level, reason, notes, at FROM level_history WHERE horse_id=$1 ORDER BY at DESC', [h.id])),
     evaluation: c ? {
       rubricVersion: c.rubricVersion, resolvedAt: c.resolvedAt, summary: c.summary, stage: c.stage, levelAwarded: c.levelAwarded,
@@ -89,7 +91,7 @@ router.get('/registry/:number', wrap(async (req, res) => {
 router.get('/laureados', wrap(async (req, res) => {
   const horses = (await bundles(await db.query(`SELECT * FROM horses WHERE ${PUBLIC}`))).map(card);
   res.json({
-    laureados: horses.filter((h) => h.amberStars >= 3),
+    laureados: horses.filter((h) => h.laureado),
     ranking: horses.filter((h) => h.stars > 0).sort((a, b) => b.stars - a.stars || (b.score ?? 0) - (a.score ?? 0)),
   });
 }));
@@ -102,21 +104,45 @@ router.get('/results', wrap(async (req, res) => {
 }));
 
 // Verificación pública (como comprobar un certificado SSL): por código o por nº de registro
+// Lo que muestra el QR / la verificación. El Certificado de Calidad es "vivo": enseña siempre el nivel actual.
+async function qualityInfo(horseId) {
+  const [hist, kase, merits] = await Promise.all([
+    db.one('SELECT to_level, reason, at FROM level_history WHERE horse_id=$1 ORDER BY at DESC LIMIT 1', [horseId]),
+    db.one("SELECT stage, resolved_at FROM evaluation_cases WHERE horse_id=$1 AND status='RESUELTO' ORDER BY resolved_at DESC LIMIT 1", [horseId]),
+    db.query('SELECT competition, category, level, position, score, date, stars_given FROM sport_merits WHERE horse_id=$1 AND verified ORDER BY date DESC', [horseId]),
+  ]);
+  return {
+    levelUpdatedAt: hist?.at || null,
+    levelReason: hist?.reason || null,
+    lastValuation: kase ? { stage: kase.stage, stageName: L.DEFAULT_STAGES.find((s) => s.key === kase.stage)?.name || kase.stage, resolvedAt: kase.resolvedAt } : null,
+    merits,
+    stars: starsOf(merits),
+  };
+}
+
 router.get('/verify/:code', wrap(async (req, res) => {
   const code = req.params.code.trim().toUpperCase();
   const cert = await db.one(
-    `SELECT c.*, h.name, h.registration_number, h.breed, h.level, h.origin_status FROM certificates c JOIN horses h ON h.id=c.horse_id WHERE c.code=$1`, [code],
+    `SELECT c.*, h.id AS hid, h.name, h.registration_number, h.breed, h.level, h.origin_status, h.status AS horse_status
+     FROM certificates c JOIN horses h ON h.id=c.horse_id WHERE c.code=$1`, [code],
   );
   if (cert) {
-    return res.json({
-      valid: cert.status === 'VIGENTE', type: cert.type, code: cert.code, status: cert.status, issuedAt: cert.issuedAt, revokedAt: cert.revokedAt,
-      stars: cert.stars, horse: { name: cert.name, registrationNumber: cert.registrationNumber, breed: cert.breed, level: cert.level, originStatus: cert.originStatus },
-    });
+    const out = {
+      valid: cert.status === 'VIGENTE' && cert.horseStatus !== 'BAJA', type: cert.type, code: cert.code, status: cert.status,
+      issuedAt: cert.issuedAt, revokedAt: cert.revokedAt,
+      horse: { name: cert.name, registrationNumber: cert.registrationNumber, breed: cert.breed, level: cert.level, originStatus: cert.originStatus },
+    };
+    if (cert.type === 'CALIDAD') out.quality = await qualityInfo(cert.hid);
+    return res.json(out);
   }
   const horse = await db.one("SELECT * FROM horses WHERE registration_number=$1 AND status='CERTIFICADO'", [code]);
   if (horse) {
     const certs = await db.query('SELECT type, code, status, issued_at FROM certificates WHERE horse_id=$1 ORDER BY issued_at', [horse.id]);
-    return res.json({ valid: horse.status === 'CERTIFICADO', horse: { name: horse.name, registrationNumber: horse.registrationNumber, breed: horse.breed, level: horse.level, originStatus: horse.originStatus }, certificates: certs });
+    const hasQuality = certs.some((c) => c.type === 'CALIDAD' && c.status === 'VIGENTE');
+    return res.json({
+      valid: true, horse: { name: horse.name, registrationNumber: horse.registrationNumber, breed: horse.breed, level: horse.level, originStatus: horse.originStatus },
+      certificates: certs, quality: hasQuality ? await qualityInfo(horse.id) : null,
+    });
   }
   res.status(404).json({ valid: false, error: 'No existe ningún certificado C-IBERICO con ese código' });
 }));

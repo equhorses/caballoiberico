@@ -360,3 +360,19 @@ p { margin: 0; }
 .chk.DISTINTO { color: var(--bad); font-weight: 700; }
 .chk.SIN_DATO, .chk.NO_DECLARADO { color: var(--muted); }
 @media (max-width: 860px) { .doc-slots { grid-template-columns: 1fr; } }
+
+/* Portada: los dos certificados */
+.cert-steps .card { position: relative; padding-top: 36px; }
+.step-n { font-family: var(--serif); font-size: 2.6rem; line-height: 1; color: var(--gold-deep); margin-bottom: 8px; }
+.quality-box { background: var(--gold-soft); border: 1px solid #e2c27e; padding: 16px; border-radius: var(--radius); }
+
+/* Panel de presidencia: inicio */
+.dash-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dash-tile { text-align: left; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; cursor: pointer; font: inherit; color: inherit; display: flex; flex-direction: column; gap: 4px; transition: border-color .15s; }
+.dash-tile:hover:not(:disabled) { border-color: var(--gold); }
+.dash-tile:disabled { cursor: default; }
+.dash-tile strong { font-family: var(--serif); font-size: 1.9rem; color: var(--ink); line-height: 1.1; }
+.dash-tile span { font-weight: 700; font-size: .9rem; }
+.dash-tile em { font-style: normal; font-size: .8rem; color: var(--muted); }
+.tabs { flex-wrap: wrap; }
+@media (max-width: 860px) { .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

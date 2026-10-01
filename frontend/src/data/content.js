@@ -23,23 +23,23 @@ export const SERVICES = [
   },
   {
     code: 'ORIGEN', slug: 'origen', num: '01', tag: 'Origen', name: 'Certificado de Origen', price: 120, days: 10,
-    desc: 'Alta del ejemplar en el Registro C-IBERICO con número de registro único, código de verificación público y ascendencia documentada.',
+    desc: 'El primer paso, para cualquier edad. Acredita quién es el caballo y de dónde viene: microchip, procedencia comprobada y número de registro CIB con verificación pública. Es único y no caduca.',
     docs: [
-      'Documentación del padre (registro PRE de ANCCE, PSL de APSL, DIE/pasaporte, ADN u otro aval)',
-      'Documentación de la madre en las mismas condiciones',
-      'Certificado de cubrición o justificación de la procedencia paterna',
-      'Cinco fotografías reglamentarias del ejemplar',
-      'Datos del titular e identificación oficial del país',
+      'Microchip del ejemplar',
+      'PRE o PSL: carta genealógica o certificado de su libro oficial (ANCCE, APSL…)',
+      'Cruces: documentación del padre y de la madre (ANCCE, APSL o C-IBERICO)',
+      'Fotografías del ejemplar para su identificación',
+      'Datos del titular',
     ],
   },
   {
     code: 'CALIDAD', slug: 'calidad', num: '02', tag: 'Calidad', name: 'Certificado de Calidad', price: 180, days: 15,
-    desc: 'Reconocimiento de calidad con estrellas por mérito deportivo contrastado en doma clásica o disciplina avalada, junto a la valoración morfo-deportiva.',
+    desc: 'El segundo paso, desde los 6 meses. Valoración morfo-deportiva según su etapa de edad y nivel de calidad del I al V. Es un certificado vivo: se actualiza cuando el caballo sube de nivel en una nueva etapa o por sus resultados deportivos.',
     docs: [
       'Certificado de Origen C-IBERICO ya expedido',
-      'Ejemplar con al menos 6 meses (la exigencia se calibra por etapas de edad)',
+      'Ejemplar con al menos 6 meses (la exigencia y el nivel máximo dependen de la etapa)',
       'Cinco fotografías reglamentarias y vídeo de máx. 1 minuto (montado desde los 3 años; a la mano o en libertad antes)',
-      'Documentación oficial del organismo que acredita el resultado deportivo',
+      'Opcional: resultados deportivos con documento oficial del organismo, para incluirlos',
     ],
   },
   {
@@ -64,6 +64,7 @@ export const SERVICES = [
   },
 ]
 
+// Las estrellas reconocen méritos deportivos verificados. No forman parte del Certificado de Calidad (que es el nivel I–V).
 export const STAR_LEVELS = [
   { n: 3, name: 'Tres estrellas', level: 'Mérito nacional — categoría jóvenes', desc: 'Vencedor de la prueba más alta de la categoría de caballos jóvenes en doma clásica o disciplina avalada.' },
   { n: 6, name: 'Seis estrellas', level: 'Mérito nacional absoluto', desc: 'Vencedor de la prueba más alta de la disciplina presentada a nivel nacional.' },

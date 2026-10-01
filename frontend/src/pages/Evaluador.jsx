@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { api, fileUrl, openPrivateFile, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
+import { AdminHorses, CertificatesAdmin, Dashboard, ExportButton, HorseEditCard, MeritsAdmin, PaymentsAdmin, UsersAdmin } from './AdminParts.jsx'
 import { DOC_ROLES, LEVEL_REASON, MERIT_LEVELS, ORIGIN, PHOTO_VIEWS, ROMAN, SERVICES, fmtDate } from '../data/content.js'
 
 const CASE_STATUS = { REVISION_MATERIAL: 'Revisión de material', EN_REVISION_HUMANA: 'En revisión humana', REQUIERE_MATERIAL: 'Requiere material', RESUELTO: 'Resuelto' }
@@ -11,16 +12,18 @@ const pretty = (s) => (s || '').replace(/_/g, ' ').toLowerCase()
 
 export default function Evaluador() {
   const { user, isStaff, isAdmin } = useAuth()
-  const [tab, setTab] = useState('casos')
+  const [tab, setTab] = useState(isAdmin ? 'inicio' : 'casos')
   const [caseId, setCaseId] = useState(null)
+  const [horseId, setHorseId] = useState(null)
   const [toast, setToast] = useState('')
-  const stats = useFetch(isStaff ? '/admin/stats' : null, [tab, caseId])
   if (!user) return <Navigate to="/acceder?next=/evaluador" replace />
   if (!isStaff) return <Navigate to="/panel" replace />
 
-  const tabs = [['casos', 'Valoraciones'], ['ejemplares', 'Ejemplares'], ['gestiones', 'Gestiones'], ['rubrica', 'Rúbrica']]
-  if (isAdmin) tabs.push(['usuarios', 'Usuarios'], ['auditoria', 'Auditoría'])
-  const s = stats.data
+  const tabs = isAdmin
+    ? [['inicio', 'Inicio'], ['casos', 'Valoraciones'], ['ejemplares', 'Ejemplares'], ['gestiones', 'Gestiones'], ['certificados', 'Certificados'], ['meritos', 'Méritos'], ['pagos', 'Pagos'], ['usuarios', 'Usuarios'], ['rubrica', 'Rúbrica'], ['auditoria', 'Auditoría']]
+    : [['casos', 'Valoraciones'], ['ejemplares', 'Ejemplares'], ['gestiones', 'Gestiones'], ['meritos', 'Méritos'], ['rubrica', 'Rúbrica']]
+  const go = (k) => { setTab(k); setCaseId(null); setHorseId(null) }
+  const openHorse = (id) => { setTab('ejemplares'); setCaseId(null); setHorseId(id) }
 
   return (
     <div className="app-shell">
@@ -28,24 +31,21 @@ export default function Evaluador() {
         <div className="wrap">
           <span className="eyebrow">{isAdmin ? 'Presidencia' : 'Evaluador'}</span>
           <h2 style={{ fontSize: '2rem' }}>Panel de gestión</h2>
-          {s && (
-            <div className="kpis mt24">
-              <div className="kpi"><strong>{s.horses}</strong><span>Ejemplares</span></div>
-              <div className="kpi"><strong>{s.certified}</strong><span>Certificados</span></div>
-              <div className="kpi"><strong>{s.pending}</strong><span>Gestiones abiertas</span></div>
-              <div className="kpi"><strong>{s.openCases}</strong><span>Valoraciones abiertas</span></div>
-              <div className="kpi"><strong>{Number(s.revenue).toLocaleString('es-ES')} €</strong><span>Cobrado</span></div>
-            </div>
-          )}
-          <div className="tabs">{tabs.map(([k, l]) => <button key={k} className={`tab ${tab === k ? 'on' : ''}`} onClick={() => { setTab(k); setCaseId(null) }}>{l}</button>)}</div>
+          <div className="tabs">{tabs.map(([k, l]) => <button key={k} className={`tab ${tab === k ? 'on' : ''}`} onClick={() => go(k)}>{l}</button>)}</div>
         </div>
       </div>
       <div className="wrap section tight">
+        {tab === 'inicio' && <Dashboard go={go} />}
         {tab === 'casos' && (caseId ? <CaseView id={caseId} onBack={() => setCaseId(null)} notify={setToast} /> : <Cases open={setCaseId} />)}
-        {tab === 'ejemplares' && <Horses notify={setToast} openCase={(id) => { setTab('casos'); setCaseId(id) }} isAdmin={isAdmin} />}
-        {tab === 'gestiones' && <RequestsAdmin notify={setToast} />}
+        {tab === 'ejemplares' && (horseId
+          ? <HorseAdmin id={horseId} onBack={() => setHorseId(null)} notify={setToast} openCase={(id) => { setTab('casos'); setCaseId(id) }} isAdmin={isAdmin} />
+          : <AdminHorses isAdmin={isAdmin} notify={setToast} open={setHorseId} />)}
+        {tab === 'gestiones' && <RequestsAdmin notify={setToast} isAdmin={isAdmin} />}
+        {tab === 'certificados' && <CertificatesAdmin notify={setToast} openHorse={openHorse} />}
+        {tab === 'meritos' && <MeritsAdmin notify={setToast} isAdmin={isAdmin} openHorse={openHorse} />}
+        {tab === 'pagos' && <PaymentsAdmin notify={setToast} />}
         {tab === 'rubrica' && <Rubrics isAdmin={isAdmin} notify={setToast} />}
-        {tab === 'usuarios' && <Users notify={setToast} me={user.id} />}
+        {tab === 'usuarios' && <UsersAdmin notify={setToast} me={user.id} />}
         {tab === 'auditoria' && <Audit />}
       </div>
       <Toast msg={toast} onDone={() => setToast('')} />
@@ -242,42 +242,16 @@ function Criterion({ k, c, locked, reload, notify }) {
   )
 }
 
-function Horses({ notify, openCase, isAdmin }) {
-  const { data, loading, reload } = useFetch('/eval/horses')
-  const [sel, setSel] = useState(null)
-  if (loading && !data) return <p className="muted">Cargando…</p>
-  if (sel) return <HorseAdmin id={sel} onBack={() => { setSel(null); reload() }} notify={notify} openCase={openCase} isAdmin={isAdmin} />
-  if (!data.length) return <div className="empty">Aún no hay ejemplares dados de alta.</div>
-  return (
-    <div className="table-scroll">
-      <table className="table">
-        <thead><tr><th>Ejemplar</th><th>Titular</th><th>Estado</th><th>Nivel</th><th>Material</th><th /></tr></thead>
-        <tbody>{data.map((h) => (
-          <tr key={h.id}>
-            <td><span className="t-name">{h.name}</span><div className="k">{h.registrationNumber || 'sin nº'} · {breedLabel(h.breed)}</div></td>
-            <td className="small">{h.ownerName}</td>
-            <td><span className={`badge ${h.status === 'CERTIFICADO' ? 'ok' : 'example'}`}>{pretty(h.status)}</span></td>
-            <td><LevelBadge level={h.level} /></td>
-            <td className="small">Fotos {h.photoCount}/5 · Vídeo {h.videoCount ? 'sí' : 'no'}</td>
-            <td><button className="btn btn-line btn-sm" onClick={() => setSel(h.id)}>Gestionar</button></td>
-          </tr>
-        ))}</tbody>
-      </table>
-    </div>
-  )
-}
-
 function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
   const { data: h, reload } = useFetch(`/admin/horses/${id}`)
-  const [stars, setStars] = useState(3)
-  const [amber, setAmber] = useState(0)
   const [merit, setMerit] = useState({ competition: '', category: '', level: 'JOVENES_NACIONAL', position: '1º', score: '', date: '' })
   const [doc, setDoc] = useState(null)
   const [lvl, setLvl] = useState({ level: '', reason: 'MERITO', notes: '' })
   const [originNotes, setOriginNotes] = useState('')
   if (!h) return <p className="muted">Cargando…</p>
   const call = async (fn, msg) => { try { await fn(); notify(msg); reload(); return true } catch (x) { notify(x.message); return false } }
-  const issue = (type) => call(() => api(`/admin/horses/${id}/certificates`, { method: 'POST', body: { type, stars, amberStars: amber } }), 'Certificado expedido')
+  const issue = (type) => call(() => api(`/admin/horses/${id}/certificates`, { method: 'POST', body: { type } }), 'Certificado expedido')
+  const hasQuality = h.certificates.some((c) => c.type === 'CALIDAD' && c.status === 'VIGENTE')
   const addMerit = (e) => {
     e.preventDefault()
     const form = new FormData(); Object.entries(merit).forEach(([k, v]) => form.append(k, v)); if (doc) form.append('document', doc)
@@ -310,6 +284,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
           </form>
         )}
       </div>
+      {isAdmin && <HorseEditCard h={h} notify={notify} reload={reload} />}
       <div className="card">
         <h3>Documentación de procedencia</h3>
         {!(h.documents || []).length && <p className="muted mt8">El titular no ha subido documentos todavía.</p>}
@@ -378,7 +353,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
           <h3>Certificados</h3>
           {h.certificates.map((c) => (
             <div key={c.id} className="row between mt8" style={{ borderBottom: '1px solid var(--line)', paddingBottom: 8 }}>
-              <span>{c.type === 'ORIGEN' ? 'Origen' : `Calidad · ${c.stars}★`}{c.amberStars ? ` · ${c.amberStars} ámbar` : ''} · {c.code}</span>
+              <span>{c.type === 'ORIGEN' ? 'Origen' : `Calidad · nivel ${ROMAN[h.level] || '—'} (vivo)`} · {c.code}</span>
               {c.status === 'VIGENTE' && isAdmin
                 ? <button className="btn btn-line btn-sm" onClick={() => { const reason = window.prompt('Motivo de la revocación'); if (reason) call(() => api(`/admin/certificates/${c.id}/revoke`, { method: 'POST', body: { reason } }), 'Certificado revocado') }}>Revocar</button>
                 : <span className={`badge ${c.status === 'VIGENTE' ? 'ok' : 'bad'}`}>{c.status.toLowerCase()}</span>}
@@ -386,15 +361,19 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
           ))}
           {isAdmin ? (
             <div className="mt16 stack">
-              {!h.registrationNumber && <button className="btn btn-gold" onClick={() => issue('ORIGEN')}>Expedir Certificado de Origen</button>}
-              {h.registrationNumber && (
-                <div className="row">
-                  <select className="select" style={{ width: 130 }} value={stars} onChange={(e) => setStars(Number(e.target.value))}>{[3, 6, 12, 24].map((n) => <option key={n} value={n}>{n} estrellas</option>)}</select>
-                  <input className="input" style={{ width: 110 }} type="number" min="0" max="9" value={amber} onChange={(e) => setAmber(e.target.value)} aria-label="Estrellas ámbar" title="Estrellas ámbar" />
-                  <button className="btn btn-gold" onClick={() => issue('CALIDAD')}>Expedir Calidad</button>
-                </div>
+              {!h.registrationNumber && (
+                <>
+                  <button className="btn btn-gold" disabled={h.originStatus !== 'ACREDITADO'} onClick={() => issue('ORIGEN')}>1 · Expedir Certificado de Origen</button>
+                  {h.originStatus !== 'ACREDITADO' && <p className="small muted">Antes acredita la procedencia (arriba).</p>}
+                </>
               )}
-              <p className="small muted">Las estrellas se asignan por méritos deportivos verificados, nunca por la nota de la IA.</p>
+              {h.registrationNumber && !hasQuality && (
+                <>
+                  <button className="btn btn-gold" disabled={!h.level} onClick={() => issue('CALIDAD')}>2 · Expedir Certificado de Calidad</button>
+                  {!h.level && <p className="small muted">Antes necesita nivel: resuelve una valoración o asígnalo por méritos.</p>}
+                </>
+              )}
+              {hasQuality && <p className="small muted">El Certificado de Calidad es vivo: se actualiza solo cuando cambia el nivel.</p>}
             </div>
           ) : <p className="small muted mt16">Solo la presidencia expide certificados.</p>}
         </div>
@@ -429,7 +408,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
   )
 }
 
-function RequestsAdmin({ notify }) {
+function RequestsAdmin({ notify, isAdmin }) {
   const { data, loading, reload } = useFetch('/admin/requests')
   if (loading && !data) return <p className="muted">Cargando…</p>
   if (!data.length) return <div className="empty">Sin solicitudes.</div>
@@ -438,6 +417,8 @@ function RequestsAdmin({ notify }) {
     try { await api(`/admin/requests/${r.id}`, { method: 'PATCH', body: { status, adminNotes } }); notify('Estado actualizado'); reload() } catch (x) { notify(x.message) }
   }
   return (
+    <div className="stack">
+    {isAdmin && <div className="row" style={{ justifyContent: 'flex-end' }}><ExportButton kind="gestiones" notify={notify} /></div>}
     <div className="table-scroll">
       <table className="table">
         <thead><tr><th>Gestión</th><th>Titular</th><th>Ejemplar</th><th>Documentos</th><th>Pago</th><th>Estado</th></tr></thead>
@@ -454,6 +435,7 @@ function RequestsAdmin({ notify }) {
           </tr>
         ))}</tbody>
       </table>
+    </div>
     </div>
   )
 }
@@ -499,25 +481,6 @@ function Rubrics({ isAdmin, notify }) {
   )
 }
 const bump = (v) => { const p = v.split('.').map(Number); p[2] = (p[2] || 0) + 1; return p.join('.') }
-
-function Users({ notify, me }) {
-  const { data, loading, reload } = useFetch('/admin/users')
-  if (loading && !data) return <p className="muted">Cargando…</p>
-  const setRole = async (u, role) => { try { await api(`/admin/users/${u.id}/role`, { method: 'PATCH', body: { role } }); notify('Rol actualizado'); reload() } catch (x) { notify(x.message) } }
-  return (
-    <table className="table">
-      <thead><tr><th>Usuario</th><th>País</th><th>Alta</th><th>Rol</th></tr></thead>
-      <tbody>{data.map((u) => (
-        <tr key={u.id}>
-          <td><span className="t-name">{u.firstName} {u.lastName}</span><div className="small muted">{u.email}</div></td>
-          <td className="small">{u.country}</td>
-          <td className="small">{fmtDate(u.createdAt)}</td>
-          <td><select className="select" value={u.role} disabled={u.id === me} onChange={(e) => setRole(u, e.target.value)}><option value="TITULAR">Titular</option><option value="EVALUADOR">Evaluador</option><option value="ADMIN">Presidencia</option></select></td>
-        </tr>
-      ))}</tbody>
-    </table>
-  )
-}
 
 function Audit() {
   const { data, loading } = useFetch('/admin/audit')

@@ -43,11 +43,30 @@ export default function Verificar() {
                   <dt>Raza</dt><dd>{breedLabel(result.horse.breed)}</dd>
                   <dt>Procedencia</dt><dd>{ORIGIN[result.horse.originStatus || 'DECLARADO']}</dd>
                   <dt>Nivel C-IBERICO</dt><dd><LevelBadge level={result.horse.level} /></dd>
-                  {result.type && <><dt>Tipo</dt><dd>{TYPE[result.type]}{result.stars ? ` · ${result.stars} estrellas` : ''}</dd></>}
+                  {result.type && <><dt>Tipo</dt><dd>{TYPE[result.type]}</dd></>}
                   {result.code && <><dt>Código</dt><dd>{result.code}</dd></>}
                   {result.issuedAt && <><dt>Expedido</dt><dd>{fmtDate(result.issuedAt)}</dd></>}
                   {result.revokedAt && <><dt>Revocado</dt><dd>{fmtDate(result.revokedAt)}</dd></>}
                 </dl>
+                {result.quality && (
+                  <div className="quality-box mt16">
+                    <span className="eyebrow">Certificado de Calidad · estado actual</span>
+                    <div className="row mt8" style={{ gap: 12, alignItems: 'center' }}>
+                      <LevelBadge level={result.horse.level} big />
+                      {result.quality.levelUpdatedAt && <span className="small muted">Nivel vigente desde el {fmtDate(result.quality.levelUpdatedAt)}{result.quality.levelReason === 'MERITO' ? ' (por méritos deportivos)' : ''}</span>}
+                    </div>
+                    {result.quality.lastValuation && <p className="small mt8">Última valoración: etapa {result.quality.lastValuation.stageName}, resuelta el {fmtDate(result.quality.lastValuation.resolvedAt)}.</p>}
+                    {result.quality.merits.length > 0 && (
+                      <div className="mt8">
+                        <strong className="small">Resultados deportivos verificados{result.quality.stars ? ` · ${result.quality.stars} estrellas` : ''}</strong>
+                        <ul className="small" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                          {result.quality.merits.slice(0, 6).map((m, i) => <li key={i}>{m.competition} · {m.category} · {m.position}{m.score ? ` · ${m.score}%` : ''} · {fmtDate(m.date)}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    <p className="small muted mt8">Este certificado es vivo: muestra siempre el nivel vigente del ejemplar.</p>
+                  </div>
+                )}
                 {result.certificates && (
                   <div className="mt16">{result.certificates.map((c) => (
                     <div key={c.code} className="row between" style={{ padding: '10px 0', borderTop: '1px solid var(--line)' }}>

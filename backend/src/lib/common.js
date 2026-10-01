@@ -34,12 +34,14 @@ const upload = multer({
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Sesión requerida' });
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    res.status(401).json({ error: 'Sesión caducada' });
-  }
+  let payload;
+  try { payload = jwt.verify(token, process.env.JWT_SECRET); } catch { return res.status(401).json({ error: 'Sesión caducada' }); }
+  // Se comprueba la cuenta en cada petición: un usuario bloqueado o con el rol cambiado lo nota al momento
+  db.one('SELECT id, role, is_active FROM users WHERE id=$1', [payload.id]).then((u) => {
+    if (!u || !u.isActive) return res.status(401).json({ error: 'Cuenta desactivada. Contacta con C-IBERICO.' });
+    req.user = { ...payload, role: u.role };
+    return next();
+  }).catch(next);
 };
 
 const optionalAuth = (req, res, next) => {

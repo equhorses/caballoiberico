@@ -3,12 +3,11 @@ const router = require('express').Router();
 const { db, SERVICES, upload, authenticate, audit, wrap } = require('../lib/common');
 
 const DOCS = require('../lib/documents');
+const { validateHorse } = require('../lib/horses');
 
 const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
 
 const VIEWS = ['LATERAL_IZQUIERDO', 'LATERAL_DERECHO', 'FRONTAL', 'TRASERA', 'SUPERIOR'];
-const BREEDS = ['PRE', 'PSL', 'PRE_PSL', 'CRUZADO'];
-const SEXES = ['MACHO', 'HEMBRA', 'CASTRADO'];
 
 async function ownHorse(req, res) {
   const h = await db.one('SELECT * FROM horses WHERE id::text=$1', [req.params.id]);
@@ -64,25 +63,12 @@ router.get('/horses', wrap(async (req, res) => {
 
 router.post('/horses', wrap(async (req, res) => {
   const b = req.body || {};
-  const rawPct = b.ibericBloodPct;
-  const pct = rawPct === undefined || rawPct === null || rawPct === '' ? null : parseInt(rawPct, 10);
-  if (!b.name || !b.birthDate || !SEXES.includes(b.sex) || !BREEDS.includes(b.breed) || !b.coat || !b.country) {
-    return res.status(400).json({ error: 'Faltan datos obligatorios del ejemplar' });
-  }
-  if (!b.microchip || !String(b.microchip).trim()) return res.status(400).json({ error: 'El microchip es obligatorio: es lo que identifica al caballo, tenga o no papeles' });
-  const t = (v) => (v == null ? '' : String(v).trim());
-  if (['PRE', 'PSL'].includes(b.breed) && !t(b.officialRegistry)) {
-    return res.status(400).json({ error: 'Para un PRE o un PSL indica su número en el libro oficial (ANCCE, APSL…)' });
-  }
-  if (['PRE_PSL', 'CRUZADO'].includes(b.breed) && (!t(b.sireName) || !t(b.damName) || !t(b.sireRegistry) || !t(b.damRegistry))) {
-    return res.status(400).json({ error: 'En un cruce hay que indicar padre y madre con su número de registro (libro oficial o C-IBERICO)' });
-  }
-  if (pct !== null && (Number.isNaN(pct) || pct < 10 || pct > 100)) return res.status(400).json({ error: 'El % de sangre ibérica debe estar entre 10 y 100 (déjalo en blanco si no se conoce)' });
+  const v = validateHorse(b);
+  if (v.error) return res.status(400).json({ error: v.error });
+  const cols = Object.keys(v.data);
   const h = await db.one(
-    `INSERT INTO horses(name, birth_date, sex, coat, country, breed, iberic_blood_pct, sire_name, dam_name, breeder_name, microchip, official_registry, owner_id, sire_registry, dam_registry)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
-    [b.name.trim().toUpperCase(), b.birthDate, b.sex, b.coat, b.country, b.breed, pct, b.sireName || null, b.damName || null,
-      b.breederName || null, String(b.microchip).trim(), b.officialRegistry || null, req.user.id, t(b.sireRegistry) || null, t(b.damRegistry) || null],
+    `INSERT INTO horses(${cols.join(', ')}, owner_id) VALUES (${cols.map((_, n) => `$${n + 1}`).join(',')}, $${cols.length + 1}) RETURNING *`,
+    [...cols.map((k) => v.data[k]), req.user.id],
   );
   const docIds = Array.isArray(b.documentIds) ? b.documentIds.filter((x) => /^[0-9a-f-]{36}$/i.test(x)) : [];
   if (docIds.length) {

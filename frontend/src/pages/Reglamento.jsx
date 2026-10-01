@@ -38,9 +38,18 @@ export default function Reglamento() {
               </div>
             </details>
             <details>
+              <summary>Los dos certificados: Origen y Calidad</summary>
+              <div className="acc-body">
+                <p><strong>1. Certificado de Origen.</strong> Es el primero y se expide a ejemplares de cualquier edad. Acredita la identidad del caballo (microchip) y su procedencia, una vez comprobada por la presidencia, y le asigna su número de registro CIB. Es único y no caduca.</p>
+                <p><strong>2. Certificado de Calidad.</strong> Requiere el Certificado de Origen y una valoración morfo-deportiva resuelta, desde los 6 meses de edad. Expresa el <strong>nivel de calidad del I al V</strong> alcanzado según la etapa de edad, e incluye los resultados deportivos verificados.</p>
+                <p>El Certificado de Calidad es único y vivo: no se expide uno nuevo cada vez, sino que se actualiza cuando el ejemplar sube de nivel, ya sea por una nueva valoración en otra etapa o por méritos deportivos. La verificación pública y el código QR muestran siempre el nivel vigente.</p>
+                <p>Las estrellas no forman parte del Certificado de Calidad: reconocen los méritos deportivos.</p>
+              </div>
+            </details>
+            <details>
               <summary>Estructura del registro</summary>
               <div className="acc-body">
-                <p>Existe un único registro digital organizado en secciones: potros de 0 a 3 años, caballos y yeguas de 3 años en adelante, y las secciones de mérito de tres, seis, doce y veinticuatro estrellas, más la Lista Laureada Ámbar.</p>
+                <p>Existe un único registro digital. Cada ejemplar tiene su ficha con su procedencia, su nivel de calidad, sus resultados deportivos y, en su caso, su inclusión en la Lista Laureada Ámbar.</p>
                 <p>Cada ejemplar recibe un número de registro único (CIB-xxxxx) al expedirse su Certificado de Origen, y cada certificado un código de verificación propio. La ficha es pública salvo solicitud expresa del titular.</p>
               </div>
             </details>
@@ -67,9 +76,9 @@ export default function Reglamento() {
               </div>
             </details>
             <details>
-              <summary>Sistema de estrellas</summary>
+              <summary>Méritos deportivos y estrellas</summary>
               <div className="acc-body">
-                <p>Las estrellas reconocen mérito deportivo contrastado con documentación oficial del organismo competente. Un ejemplar puede obtener cualquiera de los niveles sin haber obtenido el anterior, y las estrellas no se acumulan entre niveles: prevalece el nivel más alto conseguido.</p>
+                <p>Las estrellas reconocen mérito deportivo contrastado con documentación oficial del organismo competente. No son un certificado ni sustituyen al nivel de calidad: figuran en la ficha y en el Certificado de Calidad, y la presidencia puede tenerlas en cuenta para subir el nivel del ejemplar. Un ejemplar puede obtener cualquiera de estas distinciones sin haber obtenido la anterior; prevalece la más alta conseguida.</p>
                 {STAR_LEVELS.map((s) => (
                   <div key={s.n} style={{ borderLeft: '3px solid var(--gold)', paddingLeft: 16 }}>
                     <strong>{s.name} — {s.level}</strong>

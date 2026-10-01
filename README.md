@@ -28,6 +28,10 @@ Mientras no haya ejemplares reales publicados se muestran fichas de **ejemplo**,
 sube si una nueva valoración lo mejora (con tope por etapa: II potros/añojos, III a 2–3 años, IV a 4–5, V desde 6), nunca baja por valoración,
 y la presidencia puede cambiarlo a mano por méritos deportivos (motivo obligatorio, queda en el historial).
 
+**Dos certificados:** 1) *Origen*, para cualquier edad: identidad (microchip), procedencia acreditada y nº CIB; único. 2) *Calidad*, desde los 6 meses y con una valoración resuelta (o nivel por méritos): nivel I–V con sus resultados deportivos; único y **vivo** (la verificación/QR muestra siempre el nivel vigente). Las estrellas solo reconocen méritos deportivos; no forman parte del certificado.
+
+**Panel de la presidencia:** inicio con cifras y pendientes; ejemplares (alta directa con o sin cuenta de titular, edición completa revalidada con el reglamento, traspaso, publicar/ocultar, baja, Lista Laureada y estrellas ámbar); usuarios (crear con contraseña provisional, editar, bloquear, nueva contraseña, rol); certificados, méritos, pagos y gestiones con buscador; exportación a Excel (CSV). Un usuario bloqueado o con el rol cambiado lo nota al instante.
+
 **Panel del evaluador / presidencia (`/evaluador`):**
 - Valoraciones v2: la IA **propone** por criterio (observación, nota, evidencia, confianza) y el **evaluador resuelve**
   (aceptar / corregir / rechazar / no evaluable). Revisión de material por criterio: un material malo nunca baja la nota.
