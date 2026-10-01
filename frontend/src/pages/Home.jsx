@@ -159,25 +159,38 @@ export default function Home() {
         </div>
       </section>
 
-      {/* DOS CERTIFICADOS */}
+      {/* EL CAMINO DE UN CABALLO */}
       <section className="section white">
         <div className="wrap">
-          <span className="eyebrow">Dos certificados, dos pasos</span>
-          <h2>Primero quién es. Después cuánto vale.</h2>
-          <div className="grid g2 mt32 cert-steps">
-            <div className="card">
-              <div className="step-n">1</div>
+          <span className="eyebrow">Cómo funciona</span>
+          <h2>El camino de un caballo en C-IBERICO</h2>
+          <p className="lead">Cuatro pasos, cada uno con su sentido. Los dos primeros son los certificados; los otros dos, su reconocimiento deportivo.</p>
+          <ol className="path mt32">
+            <li>
+              <span className="path-tag">Su DNI</span>
               <h3>Certificado de Origen</h3>
-              <p className="muted mt8">Para cualquier caballo, de cualquier edad. Acredita su identidad (microchip) y su procedencia comprobada, y le da su número de registro CIB. Es único y no caduca.</p>
-              <Link to="/gestiones#origen" className="link mt16" style={{ display: 'inline-block' }}>Cómo se solicita →</Link>
-            </div>
-            <div className="card">
-              <div className="step-n">2</div>
+              <p>Quién es y de dónde viene: microchip, procedencia comprobada y número de registro CIB.</p>
+              <em>Cualquier edad · una sola vez</em>
+            </li>
+            <li>
+              <span className="path-tag">Su nota</span>
               <h3>Certificado de Calidad</h3>
-              <p className="muted mt8">Desde los 6 meses. Valoración morfo-deportiva según su etapa y <strong>nivel de calidad del I al V</strong>, con sus resultados deportivos. Es un certificado vivo: cuando el caballo sube de nivel, el mismo certificado se actualiza y su QR lo muestra.</p>
-              <Link to="/valoracion" className="link mt16" style={{ display: 'inline-block' }}>Cómo se valora →</Link>
-            </div>
-          </div>
+              <p>Nivel del I al V según cómo es y cómo se mueve, valorado para su edad. El mismo certificado se actualiza si sube de nivel.</p>
+              <em>Desde los 6 meses · puede subir en cada etapa</em>
+            </li>
+            <li>
+              <span className="path-tag">Sus medallas</span>
+              <h3>Estrellas</h3>
+              <p>Los resultados que gana en competición, verificados con documento oficial. Aparecen en su ficha y en su certificado.</p>
+              <em>Cada vez que gana algo</em>
+            </li>
+            <li>
+              <span className="path-tag">Su salón de la fama</span>
+              <h3>Lista Laureada</h3>
+              <p>El máximo reconocimiento C-IBERICO, para los caballos que han marcado la diferencia en pista o como reproductores.</p>
+              <Link to="/laureados" className="link">Ver la Lista Laureada →</Link>
+            </li>
+          </ol>
         </div>
       </section>
 

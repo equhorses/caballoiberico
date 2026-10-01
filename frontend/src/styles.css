@@ -376,3 +376,15 @@ p { margin: 0; }
 .dash-tile em { font-style: normal; font-size: .8rem; color: var(--muted); }
 .tabs { flex-wrap: wrap; }
 @media (max-width: 860px) { .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Portada: el camino de un caballo */
+.path { list-style: none; padding: 0; margin: 40px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; counter-reset: paso; }
+.path li { counter-increment: paso; position: relative; background: var(--paper); border: 1px solid var(--line); border-top: 3px solid var(--gold); border-radius: var(--radius); padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 8px; }
+.path li::before { content: counter(paso); font-family: var(--serif); font-size: 2.2rem; line-height: 1; color: var(--gold-deep); }
+.path li:not(:last-child)::after { content: '→'; position: absolute; right: -14px; top: 28px; color: var(--gold-deep); font-weight: 700; }
+.path-tag { align-self: flex-start; font-size: .68rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); background: var(--gold-soft); border: 1px solid #e2c27e; padding: 3px 8px; border-radius: 2px; }
+.path h3 { margin: 0; }
+.path p { margin: 0; color: var(--muted); font-size: .95rem; }
+.path em { font-style: normal; font-size: .8rem; font-weight: 700; color: var(--ink-soft); margin-top: auto; }
+@media (max-width: 960px) { .path { grid-template-columns: 1fr 1fr; } .path li::after { display: none; } }
+@media (max-width: 560px) { .path { grid-template-columns: 1fr; } }
