@@ -95,7 +95,7 @@ export const CRITERIA = [
   { key: 'paso', name: 'Paso', area: 'Movimiento' },
   { key: 'trote', name: 'Trote', area: 'Movimiento' },
   { key: 'galope', name: 'Galope', area: 'Movimiento' },
-  { key: 'reunion_giros', name: 'Equilibrio y capacidad de reunión', area: 'Funcionalidad' },
+  { key: 'reunion_giros', name: 'Ejercicios: equilibrio y reunión', area: 'Funcionalidad' },
   { key: 'comportamiento_montable', name: 'Aptitud para ser montado', area: 'Doma (desde 3 años)' },
 ]
 

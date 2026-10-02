@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../api.jsx'
 import { PageHero } from './Registry.jsx'
-import { AGE_WHEEL, AI_RULES, AI_TRUST, CRITERIA, LEVELS, PHOTO_VIEWS, STANDARD_TEXT } from '../data/content.js'
+import { AGE_WHEEL, AI_RULES, AI_TRUST, CRITERIA, LEVELS, PHOTO_VIEWS, STANDARD_TEXT, SERVICES, eur } from '../data/content.js'
 import { LevelBadge } from '../components/ui.jsx'
 
 export default function Valoracion() {
@@ -85,7 +85,7 @@ export default function Valoracion() {
         <div className="wrap">
           <span className="eyebrow">Niveles de calidad</span>
           <h2>Un nivel que se conserva y se mejora</h2>
-          <p className="lead">El nivel no depende de la edad. En cada cambio de etapa el ejemplar puede volver a presentarse: si mejora, sube; si no, conserva el que tenía. Nunca baja por una nueva valoración. Los méritos deportivos acreditados también pueden subirlo, por decisión de la presidencia.</p>
+          <p className="lead">El nivel no depende de la edad. En cada cambio de etapa el ejemplar puede volver a presentarse (una nueva valoración, {eur(SERVICES.find((s) => s.code === 'CALIDAD').price)}): si mejora, sube; si no, conserva el que tenía. Nunca baja por una nueva valoración. Los méritos deportivos acreditados también pueden subirlo, por decisión de la presidencia.</p>
           <div className="levels-scale mt32">
             {LEVELS.map((l) => <div key={l.n}><LevelBadge level={l.n} /><p className="small muted mt8">Nota desde {l.min}/100</p></div>)}
           </div>
