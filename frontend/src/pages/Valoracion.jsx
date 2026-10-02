@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../api.jsx'
 import { PageHero } from './Registry.jsx'
-import { AGE_WHEEL, AI_RULES, CRITERIA, LEVELS, PHOTO_VIEWS, STANDARD_TEXT } from '../data/content.js'
+import { AGE_WHEEL, AI_RULES, AI_TRUST, CRITERIA, LEVELS, PHOTO_VIEWS, STANDARD_TEXT } from '../data/content.js'
 import { LevelBadge } from '../components/ui.jsx'
 
 export default function Valoracion() {
@@ -37,6 +37,21 @@ export default function Valoracion() {
             <div><h3>Revisión del material</h3><p>Se comprueba, criterio por criterio, si el material permite valorar. Si no, se pide material nuevo: nunca se penaliza.</p></div>
             <div><h3>Valoración de la IA</h3><p>La IA analiza las fotos y el vídeo con la misma rúbrica para todos. Para cada bloque da una observación, una nota, la foto o el minuto que la sustenta y su nivel de confianza.</p></div>
             <div><h3>Ficha final</h3><p>Comprobamos que el material es del caballo y es válido, y expedimos la ficha con el resultado de la IA tal cual. La nota y el nivel no los retoca nadie.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section white">
+        <div className="wrap">
+          <span className="eyebrow">Confianza</span>
+          <h2>Cómo trabaja nuestra IA</h2>
+          <div className="trust-grid mt32">
+            {AI_TRUST.map((t) => (
+              <div key={t.title} className={`trust ${t.ready ? '' : 'soon'}`}>
+                <h3>{t.title} {!t.ready && <span className="badge example">En preparación</span>}</h3>
+                <p>{t.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

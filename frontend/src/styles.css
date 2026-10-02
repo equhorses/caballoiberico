@@ -388,3 +388,11 @@ p { margin: 0; }
 .path em { font-style: normal; font-size: .8rem; font-weight: 700; color: var(--ink-soft); margin-top: auto; }
 @media (max-width: 960px) { .path { grid-template-columns: 1fr 1fr; } .path li::after { display: none; } }
 @media (max-width: 560px) { .path { grid-template-columns: 1fr; } }
+
+/* Valoración: cómo trabaja nuestra IA */
+.trust-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.trust { background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: var(--radius); padding: 18px; }
+.trust h3 { font-size: 1.1rem; margin: 0; }
+.trust p { margin: 8px 0 0; color: var(--muted); font-size: .95rem; }
+.trust.soon { background: var(--cream); border-left-color: var(--line-strong); }
+.trust.soon p { color: var(--muted); }

@@ -128,6 +128,18 @@ export const STANDARD_TEXT = {
   honest: 'Es una vara exigente: la mayoría de los caballos ibéricos obtienen niveles I y II, y los niveles IV y V son excepcionales. Por eso tienen valor.',
 }
 
+// "Cómo trabaja nuestra IA". Solo se afirma lo que ya es verdad: lo que está en marcha va como "En preparación".
+// Cuando algo esté hecho, cambiar ready a true y poner la cifra real en el texto.
+export const AI_TRUST = [
+  { ready: true, title: 'Un mismo criterio para todos', text: 'Cada caballo se valora con la misma rúbrica C-IBERICO, versionada y pública en el Reglamento: mismos bloques, mismas anclas y la misma exigencia según su edad.' },
+  { ready: true, title: 'Cita sus pruebas', text: 'Cada nota indica en qué foto o en qué segundo del vídeo se basa, y con qué grado de confianza.' },
+  { ready: true, title: 'Doble lectura', text: 'Cuando trabajan dos IAs, cada una valora por separado: se usa la media y se marca cualquier discrepancia.' },
+  { ready: true, title: 'No inventa', text: 'Si el material no permite valorar un bloque, no pone nota: se pide nuevo material.' },
+  { ready: true, title: 'Trazable', text: 'Cada valoración queda ligada a la versión de la rúbrica utilizada y a un historial que no se borra.' },
+  { ready: false, title: 'Reglamentos de referencia', text: 'Instruida con el reglamento FEI de doma clásica y de caballos jóvenes y con los estándares del PRE y del PSL.' },
+  { ready: false, title: 'Calibrada con caballos de referencia', text: 'Contrastada con caballos valorados por jinetes y jueces, para que sus niveles coincidan con el criterio de los expertos.' },
+]
+
 export const AI_RULES = [
   'La nota es de la IA, siempre con la misma rúbrica para todos. La secretaría solo comprueba que el material es del caballo y es válido, y acepta el resultado: no modifica notas.',
   'Un material deficiente nunca se convierte en una nota baja: se pide nuevo material o se marca como no evaluable.',
