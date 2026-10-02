@@ -12,7 +12,13 @@ export default function Gestiones() {
         Solicita, documenta, abona la tarifa y sigue el estado del expediente desde el mismo panel. Mismo precio en cualquier país, sin cuotas de socio ni recargos.
       </PageHero>
       <section className="section">
-        <div className="wrap grid g2">
+        <div className="wrap">
+          <div className="card price-note">
+            <span className="eyebrow">Tarifas claras y ajustadas</span>
+            <p className="mt8">Antes de fijar nuestros precios estudiamos las tarifas de los principales libros genealógicos de caballos de deporte de Europa. El resultado: <strong>un solo precio para cualquier país, sin cuotas de socio, sin recargos y con plazos de días, no de semanas.</strong></p>
+          </div>
+        </div>
+        <div className="wrap grid g2 mt32">
           {SERVICES.map((s, i) => (
             <article key={s.code} id={s.slug} className="card" style={{ gridColumn: i === 0 ? '1 / -1' : undefined, scrollMarginTop: 100 }}>
               <div className={i === 0 ? 'grid g2' : ''} style={{ gap: 40 }}>

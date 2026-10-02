@@ -142,7 +142,7 @@ export default function Home() {
             <div>
               <span className="eyebrow">Gestiones online</span>
               <h2>Todo el expediente,<br />sin salir de casa</h2>
-              <p className="lead">Aquí se solicita, se documenta, se abona la tarifa y se sigue el estado del expediente desde el mismo panel.</p>
+              <p className="lead">Aquí se solicita, se documenta, se abona la tarifa y se sigue el estado del expediente desde el mismo panel. Precios ajustados tras estudiar las tarifas de los principales libros genealógicos europeos: el mismo para cualquier país, sin cuotas de socio ni recargos.</p>
             </div>
             <Link to="/gestiones" className="btn btn-line">Ver todos los servicios</Link>
           </div>
