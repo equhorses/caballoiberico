@@ -399,3 +399,4 @@ p { margin: 0; }
 .preval.hl { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
 .price-note { border-left: 3px solid var(--gold); }
 .price-note p { margin-bottom: 0; }
+.merits-box { border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 14px; background: var(--cream); }

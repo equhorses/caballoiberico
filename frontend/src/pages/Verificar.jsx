@@ -60,7 +60,7 @@ export default function Verificar() {
                       <div className="mt8">
                         <strong className="small">Resultados deportivos verificados{result.quality.stars ? ` · ${result.quality.stars} estrellas` : ''}</strong>
                         <ul className="small" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-                          {result.quality.merits.slice(0, 6).map((m, i) => <li key={i}>{m.competition} · {m.category} · {m.position}{m.score ? ` · ${m.score}%` : ''} · {fmtDate(m.date)}</li>)}
+                          {result.quality.merits.slice(0, 6).map((m, i) => <li key={i}>{m.competition} · {m.category} · {m.position}{m.score ? ` · ${m.score}${m.score > 10 ? ' %' : ''}` : ''} · {fmtDate(m.date)}</li>)}
                         </ul>
                       </div>
                     )}

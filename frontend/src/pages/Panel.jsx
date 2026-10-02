@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { api, openPrivateFile, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
-import { BREEDS, DOC_ROLES, PHOTO_VIEWS, ROMAN, SERVICES, eur, fmtDate } from '../data/content.js'
+import { BREEDS, DOC_ROLES, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, SERVICES, eur, fmtDate } from '../data/content.js'
 
 const REQ_STATUS = {
   PENDIENTE_PAGO: ['Pendiente de pago', 'example'], PAGADA: ['Pagada', 'ok'], EN_REVISION: ['En revisión', 'light'],
@@ -55,7 +55,7 @@ export default function Panel() {
         )}
         {tab === 'ejemplares' && current && <HorseManager h={current} onBack={() => setSelected(null)} onChange={horses.reload} notify={setToast} onRequest={(code) => { setParams({ gestion: code, caballo: current.id }); setTab('gestiones') }} />}
         {tab === 'nuevo' && <NewHorse onDone={(h) => { horses.reload(); setSelected(h.id); setTab('ejemplares'); setToast('Ejemplar dado de alta. Ahora sube sus fotografías.') }} />}
-        {tab === 'gestiones' && <Requests horses={list} requests={requests} preset={params.get('gestion')} presetHorse={params.get('caballo')} notify={setToast} />}
+        {tab === 'gestiones' && <Requests horses={list} reloadHorses={horses.reload} requests={requests} preset={params.get('gestion')} presetHorse={params.get('caballo')} notify={setToast} />}
       </div>
       <Toast msg={toast} onDone={() => setToast('')} />
     </div>
@@ -183,6 +183,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
         </div>
       </div>
       <HorseDocs h={h} notify={notify} onChange={onChange} />
+      <OwnerMerits h={h} notify={notify} onChange={onChange} />
       <div className="card">
         <h3>Fotografías reglamentarias</h3>
         <p className="muted small mt8">Caballo cuadrado, fondo neutro, cámara a la altura del tronco. JPG, PNG o WEBP.</p>
@@ -220,6 +221,52 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
         </div>
       </div>
     </div>
+  )
+}
+
+// Resultados deportivos: el titular los aporta con su documento; la presidencia los verifica y entonces suman estrellas
+const EMPTY_MERIT = { competition: '', category: '', level: 'JOVENES_NACIONAL', position: '', score: '', date: '' }
+function OwnerMerits({ h, notify, onChange, compact }) {
+  const [m, setM] = useState(EMPTY_MERIT)
+  const [doc, setDoc] = useState(null)
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const set = (k) => (e) => setM({ ...m, [k]: e.target.value })
+  const add = async () => {
+    if (!m.competition || !m.category || !m.position || !m.date) return notify('Rellena competición, prueba, puesto y fecha')
+    if (!doc) return notify('Adjunta el documento oficial del resultado')
+    setBusy(true)
+    try {
+      const form = new FormData(); Object.entries(m).forEach(([k, v]) => form.append(k, v)); form.append('document', doc)
+      await api(`/my/horses/${h.id}/merits`, { method: 'POST', form }); notify('Resultado añadido: queda pendiente de verificar'); setM(EMPTY_MERIT); setDoc(null); setOpen(false); onChange?.()
+    } catch (x) { notify(x.message) }
+    setBusy(false)
+  }
+  const Wrap = compact ? 'div' : 'div'
+  return (
+    <Wrap className={compact ? 'merits-box' : 'card'}>
+      <h3 style={compact ? { fontSize: '1rem' } : undefined}>Resultados deportivos {compact && <span className="small muted">(opcional)</span>}</h3>
+      <p className="small muted mt8">Añade los resultados en competición con su documento oficial. Una vez verificados aparecen en su ficha y en el Certificado de Calidad, y pueden subir su nivel.</p>
+      {(h.merits || []).map((x) => (
+        <p key={x.id} className="small mt8">{x.competition} · {x.category} · {x.position}{x.score ? ` · ${x.score}${x.score > 10 ? ' %' : ''}` : ''} · {fmtDate(x.date)} <span className={`badge ${x.verified ? 'ok' : 'example'}`}>{x.verified ? 'verificado' : 'pendiente'}</span></p>
+      ))}
+      {!open ? <button type="button" className="btn btn-line btn-sm mt16" onClick={() => setOpen(true)}>+ Añadir resultado</button> : (
+        <div className="stack mt16" style={{ gap: 8 }}>
+          <input className="input" placeholder="Competición (p. ej. Campeonato de España de Caballos Jóvenes)" value={m.competition} onChange={set('competition')} />
+          <div className="row" style={{ gap: 8 }}>
+            <input className="input" style={{ flex: 1 }} placeholder="Prueba / categoría" value={m.category} onChange={set('category')} />
+            <select className="select" style={{ flex: 1 }} value={m.level} onChange={set('level')}>{Object.entries(MERIT_LEVELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <input className="input" style={{ width: 110 }} placeholder="Puesto" value={m.position} onChange={set('position')} />
+            <input className="input" style={{ width: 160 }} placeholder="Nota (8,4 o 72,5 %)" value={m.score} onChange={set('score')} />
+            <input className="input" style={{ flex: 1 }} type="date" value={m.date} onChange={set('date')} />
+          </div>
+          <label className="small">Documento oficial (clasificación, acta o certificado) <input className="input mt8" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => setDoc(e.target.files[0])} /></label>
+          <div className="row" style={{ gap: 8 }}><button type="button" className="btn btn-ink btn-sm" disabled={busy} onClick={add}>{busy ? 'Guardando…' : 'Guardar resultado'}</button><button type="button" className="btn btn-line btn-sm" onClick={() => setOpen(false)}>Cancelar</button></div>
+        </div>
+      )}
+    </Wrap>
   )
 }
 
@@ -327,7 +374,7 @@ function PrevalResult({ r, onCalidad, highlight }) {
   )
 }
 
-function Requests({ horses, requests, preset, presetHorse, notify }) {
+function Requests({ horses, reloadHorses, requests, preset, presetHorse, notify }) {
   const [f, setF] = useState({ service: preset || 'PREVALORACION', horseId: presetHorse || '', notes: '' })
   const [files, setFiles] = useState([])
   const [err, setErr] = useState('')
@@ -370,6 +417,7 @@ function Requests({ horses, requests, preset, presetHorse, notify }) {
             ) : <p className="notice">Primero da de alta un ejemplar.</p>}
           </div>
         )}
+        {f.service === 'CALIDAD' && horses.find((h) => h.id === f.horseId) && <OwnerMerits h={horses.find((h) => h.id === f.horseId)} notify={notify} onChange={reloadHorses} compact />}
         {svc && <div className="notice info small"><strong>Documentación requerida:</strong><ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>{svc.docs.map((d) => <li key={d}>{d}</li>)}</ul></div>}
         <div className="field"><label>Documentos (PDF o imagen, hasta 10)</label><input className="input" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => setFiles([...e.target.files])} /></div>
         <div className="field"><label>Observaciones</label><textarea className="textarea" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>

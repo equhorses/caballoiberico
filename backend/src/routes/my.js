@@ -1,6 +1,6 @@
 // Panel del titular: sus ejemplares, fotos/vídeo, solicitudes y pagos
 const router = require('express').Router();
-const { db, SERVICES, upload, authenticate, audit, wrap } = require('../lib/common');
+const { db, SERVICES, MERIT_STARS, upload, authenticate, audit, wrap } = require('../lib/common');
 
 const DOCS = require('../lib/documents');
 const { validateHorse } = require('../lib/horses');
@@ -21,12 +21,13 @@ async function ownHorse(req, res) {
 async function withRelations(horses) {
   if (!horses.length) return [];
   const ids = horses.map((h) => h.id);
-  const [photos, videos, certs, cases, docs] = await Promise.all([
+  const [photos, videos, certs, cases, docs, merits] = await Promise.all([
     db.query('SELECT * FROM horse_photos WHERE horse_id = ANY($1)', [ids]),
     db.query('SELECT * FROM horse_videos WHERE horse_id = ANY($1) ORDER BY uploaded_at DESC', [ids]),
     db.query('SELECT * FROM certificates WHERE horse_id = ANY($1) ORDER BY issued_at', [ids]),
     db.query('SELECT id, horse_id, status, created_at, resolved_at, summary FROM evaluation_cases WHERE horse_id = ANY($1) ORDER BY created_at DESC', [ids]),
     db.query('SELECT id, horse_id, role, doc_type, original_name, created_at FROM horse_documents WHERE horse_id = ANY($1) ORDER BY created_at', [ids]),
+    db.query('SELECT id, horse_id, competition, category, level, position, score, date, stars_given, verified FROM sport_merits WHERE horse_id = ANY($1) ORDER BY date DESC', [ids]),
   ]);
   return horses.map((h) => ({
     ...h,
@@ -34,6 +35,7 @@ async function withRelations(horses) {
     videos: videos.filter((v) => v.horseId === h.id),
     certificates: certs.filter((c) => c.horseId === h.id),
     documents: docs.filter((d) => d.horseId === h.id),
+    merits: merits.filter((m) => m.horseId === h.id),
     cases: cases.filter((c) => c.horseId === h.id),
   }));
 }
@@ -119,6 +121,22 @@ router.post('/horses/:id/video', upload.single('file'), wrap(async (req, res) =>
 }));
 
 // ─── Solicitudes (gestiones) ───
+// Resultados deportivos aportados por el titular: quedan pendientes hasta que la presidencia los verifica
+router.post('/horses/:id/merits', upload.single('document'), wrap(async (req, res) => {
+  const h = await ownHorse(req, res);
+  if (!h) return;
+  const { competition, category, level, position, score, date } = req.body || {};
+  if (!competition || !category || !MERIT_STARS[level] || !position || !date) return res.status(400).json({ error: 'Faltan datos del resultado' });
+  if (!req.file) return res.status(400).json({ error: 'Adjunta el documento oficial del resultado (clasificación, acta o certificado)' });
+  const m = await db.one(
+    `INSERT INTO sport_merits(horse_id, competition, category, level, position, score, date, stars_given, document_url, verified)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,FALSE) RETURNING id, competition, category, level, position, score, date, stars_given, verified`,
+    [h.id, competition, category, level, position, score ? Number(score) : null, date, MERIT_STARS[level], `/uploads/${req.file.filename}`],
+  );
+  audit(req.user.id, 'SportMerit', m.id, 'APORTAR_TITULAR', { ejemplar: h.name, competition, level });
+  res.status(201).json(m);
+}));
+
 // ── Pre-valoración automática (gratis): vídeo + foto de perfil → la IA responde al momento ──
 // Es orientativa: usa una sola IA y el material es mínimo. Límite para controlar el coste de la IA.
 const PREVAL_LIMIT = Math.max(1, parseInt(process.env.PREVALORACION_LIMIT_30D || '3', 10));
