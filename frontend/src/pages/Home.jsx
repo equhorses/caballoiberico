@@ -74,18 +74,17 @@ export default function Home() {
             <span className="eyebrow">Nuevo concepto de valoración</span>
             <h2>La IA lee el ejemplar antes que el expediente</h2>
             <p className="lead">
-              Con la vara del caballo de deporte centroeuropeo: el movimiento se mide como en las pruebas de caballos jóvenes de allí,
-              y la conformación por su función, respetando el tipo ibérico.
+              Con los estándares del caballo de deporte centroeuropeo: el movimiento se mide como en las pruebas de caballos
+              de estos studbooks, y la conformación por su función, respetando el tipo ibérico.
             </p>
             <p className="lead">
-              Tener un caballo de calidad no puede depender del sí o no de unas reglas desactualizadas. Aporta las cinco vistas
-              reglamentarias y el vídeo montado en los tres aires: la IA prepara una propuesta por bloques con su evidencia,
-              y un evaluador la revisa y resuelve.
+              Tener un caballo de calidad no puede depender del sí o no de alguien, ni de unas reglas desactualizadas y obsoletas.
+              Aporta las cinco vistas reglamentarias y el vídeo según su rango de edad: la IA prepara una propuesta por bloques con su evidencia.
             </p>
             <div className="mt32">
-              <div className="feature"><span className="icon-dot">{I.scan}</span><div><h3>Nueve bloques puntuados de 0 a 10</h3><p>Cabeza y cuello, tronco y dorso, grupa, aplomos, paso, trote, galope, reunión y giros, y aptitud para ser montado.</p></div></div>
+              <div className="feature"><span className="icon-dot">{I.scan}</span><div><h3>Nueve bloques puntuados de 0 a 10</h3><p>Cabeza y cuello, tronco y dorso, grupa, aplomos, paso, trote, galope, ejercicios y aptitud para ser montado, según su edad y etapa de doma.</p></div></div>
               <div className="feature"><span className="icon-dot">{I.book}</span><div><h3>Doble lectura reglamentaria</h3><p>Cada informe traduce el resultado al lenguaje de la doma clásica y al de las pruebas de aptitud centroeuropeas.</p></div></div>
-              <div className="feature"><span className="icon-dot">{I.user}</span><div><h3>La IA propone, el evaluador resuelve</h3><p>La valoración se adjunta al expediente y la presidencia resuelve sobre datos, no sobre impresiones.</p></div></div>
+              <div className="feature"><span className="icon-dot">{I.user}</span><div><h3>La IA propone y el evaluador resuelve con una ficha final</h3><p>La valoración se adjunta al expediente y el evaluador resuelve sobre datos, no sobre impresiones.</p></div></div>
             </div>
             <Link to="/valoracion" className="btn btn-line mt32">Cómo funciona la valoración</Link>
           </div>
