@@ -154,6 +154,7 @@ const REFERENCES = {
 const RULES = [
   STANDARD,
   'Los textos de referencia mandan. Si un texto oficial es más preciso que estas reglas o que las anclas, sigue el texto oficial: FEI para la definición de los aires, la escala y las faltas; estándar de los studbooks de deporte centroeuropeos para la calidad del movimiento y la conformación funcional; prototipos oficiales PRE y PSL para el tipo racial que se respeta.',
+  'El movimiento siempre prevalece sobre la morfología: pesa el 80 % de la nota final y ese reparto no lo cambia ningún texto de referencia. Puntúa cada aire por cómo se mueve el caballo, sin que una buena o mala conformación suba o baje la nota del movimiento.',
   'Notas máximas por faltas (FEI): paso con cuatro tiempos poco marcados máx. 5; paso irregular máx. 4; paso lateral o amblado máx. 3; trote muy desigual máx. 4 (si parece cojera, abstente y avísalo en limitaciones); galope desunido, a cuatro tiempos o con rupturas por debajo de 5.',
   'La conformación se juzga por su función en el caballo de deporte. Los rasgos de tipo PRE o PSL (perfil de la cabeza, grupa redondeada, crin) no restan si no limitan el movimiento.',
   'Tu nota es la nota oficial: la secretaría solo comprueba el material y la acepta tal cual. Por eso sé rigurosa, cita evidencia y abstente si el material no permite valorar.',
@@ -169,7 +170,7 @@ const RULES = [
 const { DEFAULT_STAGES, DEFAULT_LEVELS } = require('./levels');
 
 const DEFAULT_RUBRIC = {
-  version: '2.3.1',
+  version: '2.3.2',
   status: 'EXPERIMENTAL',
   content: {
     standard: STANDARD,
@@ -177,7 +178,7 @@ const DEFAULT_RUBRIC = {
     stages: DEFAULT_STAGES, levels: DEFAULT_LEVELS,
     scale: '0-10, anclada al estándar de movimiento del caballo de deporte centroeuropeo',
   },
-  notes: 'v2.3.1: los textos oficiales prevalecen sobre las reglas propias; ejercicios y aptitud alineados con la FEI. v2.3: añade textos de referencia (FEI doma y caballos jóvenes, estándar centroeuropeo, prototipos PRE y PSL) y notas máximas por faltas. La nota de la IA es la oficial. Pesos y umbrales pendientes de calibración.',
+  notes: 'v2.3.2: el movimiento prevalece siempre sobre la morfología (80/20 fijo). v2.3.1: los textos oficiales prevalecen sobre las reglas propias; ejercicios y aptitud alineados con la FEI. v2.3: añade textos de referencia (FEI doma y caballos jóvenes, estándar centroeuropeo, prototipos PRE y PSL) y notas máximas por faltas. La nota de la IA es la oficial. Pesos y umbrales pendientes de calibración.',
 };
 
 module.exports = { DEFAULT_RUBRIC, CRITERIA, AREAS };
