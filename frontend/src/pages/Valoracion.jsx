@@ -31,12 +31,12 @@ export default function Valoracion() {
       <section className="section">
         <div className="wrap">
           <span className="eyebrow">Cómo funciona</span>
-          <h2>La IA valora, la secretaría certifica</h2>
+          <h2>La IA valora, C-IBERICO expide</h2>
           <div className="steps mt48">
             <div><h3>Material</h3><p>El titular sube las cinco fotografías reglamentarias y un vídeo de máximo un minuto: montado desde los 3 años; a la mano o en libertad en potros.</p></div>
             <div><h3>Revisión del material</h3><p>Se comprueba, criterio por criterio, si el material permite valorar. Si no, se pide material nuevo: nunca se penaliza.</p></div>
             <div><h3>Valoración de la IA</h3><p>La IA analiza las fotos y el vídeo con la misma rúbrica para todos. Para cada bloque da una observación, una nota, la foto o el minuto que la sustenta y su nivel de confianza.</p></div>
-            <div><h3>Ficha final</h3><p>La secretaría comprueba que el material es del caballo y es válido, y acepta el resultado tal cual. La nota y el nivel son los de la IA: nadie los retoca.</p></div>
+            <div><h3>Ficha final</h3><p>Comprobamos que el material es del caballo y es válido, y expedimos la ficha con el resultado de la IA tal cual. La nota y el nivel no los retoca nadie.</p></div>
           </div>
         </div>
       </section>

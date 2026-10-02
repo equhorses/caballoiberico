@@ -82,9 +82,9 @@ export default function Home() {
               Aporta las cinco vistas reglamentarias y el vídeo según su rango de edad: la IA prepara una propuesta por bloques con su evidencia.
             </p>
             <div className="mt32">
-              <div className="feature"><span className="icon-dot">{I.scan}</span><div><h3>Nueve bloques puntuados de 0 a 10</h3><p>Cabeza y cuello, tronco y dorso, grupa, aplomos, paso, trote, galope, ejercicios y aptitud para ser montado, según su edad y etapa de doma.</p></div></div>
+              <div className="feature"><span className="icon-dot">{I.scan}</span><div><h3>Nueve bloques puntuados de 0 a 10</h3><p>1 Cabeza y cuello · 2 Tronco y dorso · 3 Grupa · 4 Aplomos · 5 Paso · 6 Trote · 7 Galope · 8 Ejercicios · 9 Aptitud para ser montado (según su edad y etapa de doma).</p></div></div>
               <div className="feature"><span className="icon-dot">{I.book}</span><div><h3>Doble lectura reglamentaria</h3><p>Cada informe traduce el resultado al lenguaje de la doma clásica y al de las pruebas de aptitud centroeuropeas.</p></div></div>
-              <div className="feature"><span className="icon-dot">{I.user}</span><div><h3>La IA valora, la secretaría certifica</h3><p>La nota es de la IA, con la misma rúbrica para todos. La secretaría solo comprueba el material y emite la ficha final: datos, no impresiones.</p></div></div>
+              <div className="feature"><span className="icon-dot">{I.user}</span><div><h3>La IA valora, C-IBERICO expide</h3><p>La nota y el nivel los pone la IA, con la misma rúbrica para todos. Nosotros no los tocamos: comprobamos que el material es del caballo y es válido, y expedimos la ficha con el resultado tal cual.</p></div></div>
             </div>
             <Link to="/valoracion" className="btn btn-line mt32">Cómo funciona la valoración</Link>
           </div>
