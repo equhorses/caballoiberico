@@ -23,8 +23,8 @@ export default function Home() {
           <div className="hero-tag">✦ ¿Qué es C-IBERICO? La unión del caballo español y lusitano</div>
           <h1>El caballo ibérico <em>valorado por su deporte,</em> no por su etiqueta.</h1>
           <p className="lead">
-            C-IBERICO certifica la calidad deportiva del caballo ibérico, con una valoración de la morfología
-            y los tres aires según el reglamento de doma clásica y los criterios de selección centroeuropeos.
+            C-IBERICO certifica la calidad deportiva del caballo ibérico, con una valoración de los tres aires
+            según el reglamento de doma clásica y los criterios de selección centroeuropeos.
             Cada caballo recibe un número único y una ficha pública: cualquiera puede comprobar en esta web
             su certificado y su nivel de calidad.
           </p>
@@ -60,7 +60,7 @@ export default function Home() {
             <div className="card truth">
               <div className="label">Cómo se comprueba</div>
               <h3 className="mt8">Verificación pública</h3>
-              <p>Cada certificado tiene un código único. Cualquier comprador o juez puede comprobar en esta web si está vigente.</p>
+              <p>Cada certificado tiene un código único. Cualquier persona puede comprobar en esta web si está vigente.</p>
               <Link to="/verificar" className="link mt16" style={{ display: 'inline-block' }}>Verificar un certificado →</Link>
             </div>
           </div>
