@@ -37,6 +37,24 @@ async function photoToDataUrl(uploadDir, url) {
   return (await resizeImage(file)) || `data:${mime};base64,${fs.readFileSync(file).toString('base64')}`;
 }
 
+// Textos de referencia de la rúbrica (FEI, caballos jóvenes, estándar centroeuropeo, tipo PRE/PSL)
+function referencesText(r) {
+  if (!r) return '';
+  const list = (x) => (Array.isArray(x) ? x : x ? [x] : []).map((t) => `- ${t}`).join('\n');
+  return `
+TEXTOS DE REFERENCIA (úsalos para leer los aires y la conformación):
+Aires y conceptos:
+${list(r.aires)}
+Caballos jóvenes:
+${list(r.caballosJovenes)}
+Estándar del caballo de deporte centroeuropeo:
+${list(r.centroeuropeo)}
+${r.escala || ''}
+Tipo ibérico (respétalo):
+${list(r.tipoIberico)}
+`;
+}
+
 function buildPrompt({ rubric, criteria, stage, ageMonths, views, spreadTimes, bursts }) {
   const c = rubric.content;
   const list = criteria.map((k) =>
@@ -63,6 +81,7 @@ Rúbrica versión ${rubric.version} (estado ${rubric.status}).
 
 CRITERIO DE LA CASA Y REGLAS OBLIGATORIAS:
 ${(c.rules || []).map((r) => `- ${r}`).join('\n')}
+${referencesText(c.references)}
 
 ${age}
 

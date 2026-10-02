@@ -136,7 +136,7 @@ export const AI_TRUST = [
   { ready: true, title: 'Doble lectura', text: 'Cuando trabajan dos IAs, cada una valora por separado: se usa la media y se marca cualquier discrepancia.' },
   { ready: true, title: 'No inventa', text: 'Si el material no permite valorar un bloque, no pone nota: se pide nuevo material.' },
   { ready: true, title: 'Trazable', text: 'Cada valoración queda ligada a la versión de la rúbrica utilizada y a un historial que no se borra.' },
-  // PENDIENTE antes del dominio propio: cargar los reglamentos en la IA y poner las cifras reales de la calibración.
+  // Reglamentos cargados en la rúbrica v2.3 (oct 2026). PENDIENTE antes del dominio propio: vídeos de referencia y calibración con caballos (poner cifras reales).
   { ready: true, title: 'Instruida con los reglamentos', text: 'Trabaja con el reglamento FEI de doma clásica y de caballos jóvenes y con los estándares del PRE y del PSL, aplicados al criterio C-IBERICO.' },
   { ready: true, title: 'Formada con vídeo y texto', text: 'Preparada con vídeos de referencia de caballos de deporte y con la documentación técnica de la doma clásica, para leer el movimiento como lo haría un juez.' },
   { ready: true, title: 'Única para el caballo ibérico', text: 'Calibrada con caballos ibéricos valorados por jinetes y jueces, para que sus niveles coincidan con el criterio de los expertos.' },

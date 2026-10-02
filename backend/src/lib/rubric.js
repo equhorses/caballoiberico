@@ -1,4 +1,4 @@
-// Rúbrica C-IBERICO v2.2
+// Rúbrica C-IBERICO v2.3 (con textos de referencia: FEI, estudbooks centroeuropeos, PRE y PSL)
 // CRITERIO DE LA CASA: el caballo ibérico (PRE, PSL y cruces) juzgado con la vara del caballo de deporte centroeuropeo.
 // - MOVIMIENTO: las notas se anclan al estándar de las pruebas de caballos jóvenes y de selección centroeuropeas.
 //   Un 8 en trote es un trote que obtendría un 8 allí, sea de la raza que sea.
@@ -51,7 +51,7 @@ const CRITERIA = [
   },
   {
     key: 'aplomos', name: 'Aplomos y extremidades', area: 'CONFORMACION', material: ['LATERAL_IZQUIERDO', 'LATERAL_DERECHO', 'FRONTAL', 'TRASERA'],
-    observe: 'Aplomos anteriores y posteriores, articulaciones, cuartillas y cascos. Correcciones que afecten a la durabilidad del caballo de deporte.',
+    observe: 'Aplomos anteriores y posteriores, articulaciones, cuartillas y cascos. Correcciones que afecten a la durabilidad del caballo de deporte. Un ángulo de corvejón ligeramente cerrado es propio del PRE y no resta si el posterior empuja bien.',
     anchors: {
       '9-10': 'Aplomos correctos en las cuatro vistas, articulaciones secas y amplias, cuartillas de longitud y ángulo correctos.',
       '7-8': 'Desviación leve sin repercusión funcional aparente.',
@@ -63,10 +63,10 @@ const CRITERIA = [
     key: 'paso', name: 'Paso', area: 'MOVIMIENTO', material: ['VIDEO'],
     observe: 'Cuatro tiempos puros, amplitud, sobrepaso, actividad y soltura. Sin montar: a la mano o en libertad.',
     anchors: {
-      '9-10': 'Cuatro tiempos puros, sobrepaso amplio (varios cascos), soltura y movimiento de todo el cuerpo.',
-      '7-8': 'Regular con buen sobrepaso.',
-      '5-6': 'Regular pero corto o con poca soltura; poco sobrepaso.',
-      '0-4': 'Tendencia a lateral (amblado) o irregular.',
+      '9-10': 'Cuatro tiempos puros y regulares, el posterior pisa claramente por delante de la huella del anterior (más de dos cascos), hombros libres, relajación y movimiento de todo el cuerpo.',
+      '7-8': 'Regular, activo, con buen sobrepaso (uno o dos cascos).',
+      '5-6': 'Regular pero corto o con poca soltura; los cuatro tiempos poco marcados limitan la nota a 5.',
+      '0-4': 'Irregular (máximo 4), posterior que solo llega a la huella (máximo 4) o no llega (máximo 3), o lateral/amblado (máximo 3).',
     },
   },
   {
@@ -76,7 +76,7 @@ const CRITERIA = [
       '9-10': 'Alcance desde el hombro, posterior que empuja y pisa muy por delante, dorso que oscila, suspensión clara, cuesta arriba. Nivel de élite del caballo de deporte.',
       '7-8': 'Regular, buen alcance y empuje, suspensión visible; elasticidad o amplitud mejorables.',
       '5-6': 'Movimiento sobre todo de rodilla, con poco alcance desde el hombro, poco empuje del posterior o poca suspensión.',
-      '0-4': 'Irregular, plano o sin impulsión.',
+      '0-4': 'Irregular o muy desigual (máximo 4; si parece cojera, abstente y avísalo), plano, sin suspensión o arrastrando el posterior.',
     },
   },
   {
@@ -86,11 +86,11 @@ const CRITERIA = [
       '9-10': 'Tres tiempos claros, gran salto cuesta arriba, amplitud y posterior muy activo.',
       '7-8': 'Tres tiempos claros y equilibrados, algo de peso en el anterior.',
       '5-6': 'Corto, plano o con poco salto; tendencia a cuatro tiempos.',
-      '0-4': 'Galope a cuatro tiempos o desunido.',
+      '0-4': 'Galope a cuatro tiempos, desunido o con rupturas de aire (menos de 5).',
     },
   },
   {
-    key: 'reunion_giros', name: 'Equilibrio y capacidad de reunión', area: 'FUNCIONALIDAD', material: ['VIDEO'],
+    key: 'reunion_giros', name: 'Ejercicios: equilibrio y reunión', area: 'FUNCIONALIDAD', material: ['VIDEO'],
     observe: 'Transiciones, capacidad de cargar el posterior y bajar la grupa, equilibrio en giros. Sin montar: equilibrio natural en giros y cambios de aire en libertad.',
     anchors: {
       '9-10': 'Transiciones fluidas, reunión con descenso real de la grupa sin perder amplitud ni ritmo.',
@@ -129,15 +129,39 @@ const WEIGHTS = {
   paso: 12, trote: 19, galope: 14, reunion_giros: 15, comportamiento_montable: 20,
 };
 
+// TEXTOS DE REFERENCIA (resumen propio, no copia literal). La IA los usa para leer los aires y la conformación.
+// Fuentes: FEI Dressage Rules 2025 y FEI Dressage Judging Manual 2025; hojas FEI de caballos jóvenes de 5, 6 y 7 años;
+// objetivos de cría y puntuación lineal de los studbooks centroeuropeos (Oldenburg, KWPN; escala FN alemana);
+// Programa de Cría del PRE (ANCCE, BOE 2020); estándar del PSL (APSL, según fuentes académicas de la Univ. de Évora).
+const REFERENCES = {
+  aires: [
+    'PASO: aire de 4 tiempos sin suspensión. Se valora regularidad, relajación, actividad, terreno cubierto y libertad de hombros. Falta grave: paso lateral o amblado (mano y pie del mismo lado avanzan a la vez).',
+    'TROTE: aire de 2 tiempos por bípedos diagonales con momento de suspensión. Se valora ritmo, soltura, elasticidad, dorso que oscila, impulsión desde el posterior, flexión de las articulaciones posteriores, suspensión y terreno cubierto.',
+    'GALOPE: aire de 3 tiempos con suspensión. Se valora ritmo, soltura, equilibrio natural, tendencia cuesta arriba, salto, terreno cubierto y flexión del posterior. Faltas: cuatro tiempos, desunido, rupturas.',
+    'REUNIÓN: los posteriores entran bajo la masa y cargan peso; trancos más cortos, más altos y activos sin perder impulsión ni ritmo. IMPULSIÓN: energía del posterior transmitida por un dorso flexible. EQUILIBRIO/AUTOPORTE: el caballo se lleva solo, sin apoyarse en la mano. CONTACTO: ligero y constante, cara ligeramente por delante de la vertical; detrás de la vertical, boca abierta o dorso hundido o tenso restan.',
+  ],
+  caballosJovenes: 'Criterios de las pruebas de caballos jóvenes (5-7 años): TROTE (ritmo, soltura, elasticidad, dorso que oscila, flexión de posteriores; a los 7: impulsión, terreno y capacidad de reunión), PASO (ritmo, relajación, actividad, terreno; libertad de hombros), GALOPE (ritmo, soltura, equilibrio natural, tendencia cuesta arriba, flexión de posteriores), SUMISIÓN (contacto, rectitud, respuesta a las ayudas) y PERSPECTIVA (potencial futuro como caballo de doma). Los fallos de ritmo, soltura, contacto o impulsión se puntúan claramente a la baja.',
+  centroeuropeo: 'Objetivo de los studbooks de deporte centroeuropeos para el caballo de doma: modelo rectangular de líneas largas y cuesta arriba; cuello largo, alto y bien unido; cruz alta y larga; espalda inclinada; dorso y riñón fuertes; grupa larga; remos secos y correctos. El movimiento nace elástico y enérgico en el posterior, pasa por un dorso suelto que oscila y llega a un anterior libre desde la espalda: impulso, terreno cubierto, elasticidad, suspensión clara, equilibrio que "carga" (cuesta arriba) y no solo "empuja", y facilidad para alargar y acortar. Se puntúan a la baja el tranco corto, la rigidez, el equilibrio sobre el anterior, el posterior que se arrastra y el movimiento solo de rodilla.',
+  escala: 'Escala de notas (FEI / FN): 10 excelente, 9 muy bueno, 8 bueno, 7 bastante bueno, 6 satisfactorio, 5 suficiente, 4 insuficiente, 3 bastante malo, 2 malo, 1 muy malo, 0 no ejecutado.',
+  tipoIberico: [
+    'PRE (prototipo racial oficial): cabeza proporcionada de perfil subconvexo; cuello de longitud media, musculado, en arco ascendente de la cruz a la nuca; cruz destacada; dorso casi recto; riñón corto, ancho y algo arqueado; grupa redondeada y ligeramente en declive; cola de nacimiento bajo; pecho amplio; espalda larga y oblicua; corvejón fuerte, con ángulo que puede ser ligeramente cerrado; proporciones cercanas al cuadrado. Aires amplios, ágiles, enérgicos, cadenciosos y elásticos, con elevación y extensión; predisposición a la reunión y a los giros sobre el posterior.',
+    'PSL (estándar oficial): mediolíneo y subconvexilíneo de formas redondeadas, silueta que cabe en un cuadrado; cabeza de perfil ligeramente subconvexo; cuello de longitud media, arqueado; cruz destacada; dorso casi horizontal; riñón corto y algo convexo; grupa redondeada y ligeramente oblicua; cola que sale de la curva de la grupa. Aires ágiles, elevados, proyectados hacia delante y suaves; tendencia natural a la reunión.',
+    'NO RESTAN por ser rasgos de tipo (si no limitan el movimiento): perfil subconvexo, cuello alto y arqueado, grupa redondeada e inclinada, cola baja, riñón corto y arqueado, silueta compacta, crines abundantes, corvejón ligeramente cerrado.',
+    'SÍ RESTAN porque limitan el caballo de deporte: espalda recta y corta, riñón débil o largo, defectos de aplomos, paso irregular o corto, amblado, trote sin suspensión, movimiento de rodilla sin alcance desde el hombro ni empuje del posterior.',
+  ],
+};
+
 const RULES = [
   STANDARD,
+  'Usa los textos de referencia (FEI, caballos jóvenes, estándar centroeuropeo y tipo PRE/PSL) para describir y puntuar, pero la nota sigue el criterio C-IBERICO: movimiento con la vara centroeuropea y conformación por su función, respetando el tipo ibérico.',
+  'Notas máximas por faltas (FEI): paso con cuatro tiempos poco marcados máx. 5; paso irregular máx. 4; paso lateral o amblado máx. 3; trote muy desigual máx. 4 (si parece cojera, abstente y avísalo en limitaciones); galope desunido, a cuatro tiempos o con rupturas por debajo de 5.',
   'La conformación se juzga por su función en el caballo de deporte. Los rasgos de tipo PRE o PSL (perfil de la cabeza, grupa redondeada, crin) no restan si no limitan el movimiento.',
-  'La IA propone; el evaluador humano resuelve. Ninguna nota es oficial sin decisión humana.',
+  'Tu nota es la nota oficial: la secretaría solo comprueba el material y la acepta tal cual. Por eso sé rigurosa, cita evidencia y abstente si el material no permite valorar.',
   'Un material deficiente nunca se convierte automáticamente en una puntuación baja: se marca como "requiere material" o "no evaluable".',
   'Cada propuesta cita su evidencia (vista fotográfica o minuto del vídeo) y declara confianza: alta, media, baja o abstención.',
   'La IA no determina identidad, genealogía, pureza, temperamento, seguridad, estado de salud, valor reproductivo ni rendimiento futuro.',
-  'La IA no sugiere cruces. La orientación de cría la emite, en su caso, el evaluador humano.',
-  'Las estrellas y los niveles nunca se deciden desde la IA: el nivel sale de las notas confirmadas por el evaluador y los méritos deportivos los reconoce la presidencia.',
+  'La IA no sugiere cruces ni da orientación de cría.',
+  'El nivel sale de tus notas con el tope de cada etapa; tú no decides el nivel ni las estrellas (las estrellas salen de resultados deportivos verificados).',
   'En potros y caballos sin montar la nota es orientativa: calibra con la etapa y no penalices lo que la edad no permite ver.',
   'Sé exigente y usa toda la escala: no concentres las notas entre 6 y 7 por prudencia.',
 ];
@@ -145,15 +169,15 @@ const RULES = [
 const { DEFAULT_STAGES, DEFAULT_LEVELS } = require('./levels');
 
 const DEFAULT_RUBRIC = {
-  version: '2.2.0',
+  version: '2.3.0',
   status: 'EXPERIMENTAL',
   content: {
     standard: STANDARD,
-    areas: AREAS, criteria: CRITERIA, ageWheel: AGE_WHEEL, weights: WEIGHTS, rules: RULES,
+    areas: AREAS, criteria: CRITERIA, ageWheel: AGE_WHEEL, weights: WEIGHTS, rules: RULES, references: REFERENCES,
     stages: DEFAULT_STAGES, levels: DEFAULT_LEVELS,
     scale: '0-10, anclada al estándar de movimiento del caballo de deporte centroeuropeo',
   },
-  notes: 'Criterio de la casa: caballo ibérico con la vara de movimiento centroeuropea, conformación funcional respetando el tipo. El movimiento pesa el 80 %. Pesos y umbrales pendientes de validación.',
+  notes: 'v2.3: añade textos de referencia (FEI doma y caballos jóvenes, estándar centroeuropeo, prototipos PRE y PSL) y notas máximas por faltas. La nota de la IA es la oficial. Pesos y umbrales pendientes de calibración.',
 };
 
 module.exports = { DEFAULT_RUBRIC, CRITERIA, AREAS };
