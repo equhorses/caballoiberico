@@ -24,7 +24,7 @@ export default function Reglamento() {
             <details>
               <summary>Razas admitidas y cruces</summary>
               <div className="acc-body">
-                <p>Se admiten <strong>PRE</strong> (Pura Raza Española), <strong>PSL</strong> (Puro Sangre Lusitano) y <strong>sus cruces</strong>: cruces PRE × PSL y los hijos de caballos ya registrados en C-IBERICO.</p>
+                <p>Se admiten <strong>PRE</strong> (Pura Raza Española), <strong>PSL</strong> (Pura Sangre Lusitano) y <strong>sus cruces</strong>: cruces PRE × PSL y los hijos de caballos ya registrados en C-IBERICO.</p>
                 <p>Una de las razones de ser de C-IBERICO son los cruces entre español y lusitano, que no inscribe ninguna de las dos asociaciones. Se admiten siempre que su procedencia esté controlada.</p>
                 <ul>
                   <li><strong>Identificación:</strong> el microchip es obligatorio para todos los ejemplares.</li>

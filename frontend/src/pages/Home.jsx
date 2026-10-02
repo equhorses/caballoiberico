@@ -104,7 +104,7 @@ export default function Home() {
           <span className="eyebrow">Razas admitidas</span>
           <h2>Dos fronteras, un solo caballo de deporte</h2>
           <p className="lead">
-            El certificado trabaja con Pura Raza Española y Puro Sangre Lusitano, y con los cruces entre ambas.
+            El certificado trabaja con Pura Raza Española y Pura Sangre Lusitano, y con los cruces entre ambas.
             La inscripción en sus libros oficiales sigue correspondiendo a sus asociaciones; C-IBERICO certifica su calidad deportiva.
           </p>
           <div className="grid g2 mt48">
@@ -113,8 +113,8 @@ export default function Home() {
               <div className="body"><div className="code">PRE</div><h3 className="mt16">Pura Raza Española</h3><p className="muted mt8">Formas redondeadas, cuello arqueado muy insertado y extraordinaria predisposición a la reunión y a los giros sobre el tercio posterior.</p></div>
             </article>
             <article className="card breed">
-              <div className="media"><Img src="/images/psl.jpg" alt="Caballo Puro Sangre Lusitano" dark label="Imagen: PSL" /></div>
-              <div className="body"><div className="code">PSL</div><h3 className="mt16">Puro Sangre Lusitano</h3><p className="muted mt8">Perfil subconvexo, grupa potente y dorso elástico. Empuje posterior y galope que sostienen el trabajo de nivel Gran Premio.</p></div>
+              <div className="media"><Img src="/images/psl.jpg" alt="Caballo Pura Sangre Lusitano" dark label="Imagen: PSL" /></div>
+              <div className="body"><div className="code">PSL</div><h3 className="mt16">Pura Sangre Lusitano</h3><p className="muted mt8">Perfil subconvexo, grupa potente y dorso elástico. Empuje posterior y galope que sostienen el trabajo de nivel Gran Premio.</p></div>
             </article>
           </div>
           <div className="card cruzados mt32">
@@ -128,8 +128,8 @@ export default function Home() {
             </div>
             <ul className="origin-list">
               <li><strong>Padres documentados.</strong> El cruce puede no tener papeles, pero su padre y su madre deben estar inscritos en ANCCE, APSL o en C-IBERICO.</li>
-              <li><strong>Sus hijos, bajo nuestro control.</strong> Una vez registrado, su descendencia se inscribe en C-IBERICO con la genealogía ya comprobada.</li>
-              <li><strong>Mismo nivel de calidad.</strong> Un cruce se valora con la misma vara que un PRE o un PSL y puede llegar al nivel V.</li>
+              <li><strong>Sus hijos, bajo tu control.</strong> Una vez registrado, su descendencia se inscribe en C-IBERICO con la genealogía ya comprobada.</li>
+              <li><strong>Mismo nivel de calidad.</strong> Un cruce se valora con la misma equidad que cualquier otro caballo y puede llegar al nivel V.</li>
             </ul>
           </div>
         </div>
