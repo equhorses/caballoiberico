@@ -9,7 +9,7 @@ export default function Gestiones() {
   return (
     <>
       <PageHero eyebrow="Gestiones online" title={<>Todo el expediente,<br />sin salir de casa</>}>
-        Solicita, documenta, abona la tarifa y sigue el estado del expediente desde el mismo panel. No se inicia ningún trámite sin el abono previo.
+        Solicita, documenta, abona la tarifa y sigue el estado del expediente desde el mismo panel. Mismo precio en cualquier país, sin cuotas de socio ni recargos.
       </PageHero>
       <section className="section">
         <div className="wrap grid g2">

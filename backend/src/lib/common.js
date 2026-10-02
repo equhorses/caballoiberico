@@ -5,16 +5,16 @@ const fs = require('fs');
 const multer = require('multer');
 const db = require('./db');
 
-// Tarifas (céntimos). Deben coincidir con la web.
+// Tarifas (céntimos). Deben coincidir con la web. Mismo precio en cualquier país, sin cuotas de socio ni recargos.
 const PREVAL_PRICE = Math.max(0, Math.round(Number(process.env.PREVALORACION_PRICE_EUR || 0) * 100));
 const SERVICES = {
-  PREVALORACION: { name: 'Pre-valoración', price: PREVAL_PRICE, days: 5 },
-  ORIGEN: { name: 'Certificado de Origen', price: 12000, days: 10 },
-  CALIDAD: { name: 'Certificado de Calidad', price: 18000, days: 15 },
-  CAMBIO_NOMBRE: { name: 'Cambio de nombre', price: 6000, days: 5 },
-  CAMBIO_TITULARIDAD: { name: 'Cambio de titularidad', price: 7500, days: 5 },
-  LAUREADA: { name: 'Lista Laureada Ámbar', price: 25000, days: 20 },
-  YEGUADA: { name: 'Alta de yeguada asociada', price: 30000, days: 15 },
+  PREVALORACION: { name: 'Pre-valoración', price: PREVAL_PRICE, days: 3 },
+  ORIGEN: { name: 'Certificado de Origen', price: 5900, days: 5 },
+  CALIDAD: { name: 'Certificado de Calidad', price: 8900, days: 3 },
+  CAMBIO_NOMBRE: { name: 'Cambio de nombre', price: 2500, days: 2 },
+  CAMBIO_TITULARIDAD: { name: 'Cambio de titularidad', price: 1900, days: 2 },
+  LAUREADA: { name: 'Lista Laureada Ámbar', price: 9900, days: 10 },
+  YEGUADA: { name: 'Alta de yeguada asociada', price: 14900, days: 7 },
 };
 
 const MERIT_STARS = { JOVENES_NACIONAL: 3, NACIONAL_ABSOLUTO: 6, INTERNACIONAL: 12, MUNDIAL_OLIMPICO: 24 };

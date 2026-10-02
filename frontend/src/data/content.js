@@ -13,7 +13,7 @@ export const BREEDS = { PRE: 'PRE', PSL: 'PSL', PRE_PSL: 'Cruce PRE × PSL', CRU
 
 export const SERVICES = [
   {
-    code: 'PREVALORACION', slug: 'prevaloracion', num: '00', tag: 'Pre-valoración', name: 'Pre-valoración', price: 0, days: 5, launch: true,
+    code: 'PREVALORACION', slug: 'prevaloracion', num: '00', tag: 'Pre-valoración', name: 'Pre-valoración', price: 0, days: 3, launch: true,
     desc: 'Antes de pedir el certificado: con un vídeo y una foto de perfil te damos una orientación del nivel probable de tu ejemplar con nuestro criterio. Sin compromiso.',
     docs: [
       'Un vídeo de 30 a 60 segundos de lado, con la cámara quieta a 10–15 m: trote y, si puede ser, paso y galope',
@@ -22,7 +22,7 @@ export const SERVICES = [
     ],
   },
   {
-    code: 'ORIGEN', slug: 'origen', num: '01', tag: 'Origen', name: 'Certificado de Origen', price: 120, days: 10,
+    code: 'ORIGEN', slug: 'origen', num: '01', tag: 'Origen', name: 'Certificado de Origen', price: 59, days: 5,
     desc: 'El primer paso, para cualquier edad. Acredita quién es el caballo y de dónde viene: microchip, procedencia comprobada y número de registro CIB con verificación pública. Es único y no caduca.',
     docs: [
       'Microchip del ejemplar',
@@ -33,7 +33,7 @@ export const SERVICES = [
     ],
   },
   {
-    code: 'CALIDAD', slug: 'calidad', num: '02', tag: 'Calidad', name: 'Certificado de Calidad', price: 180, days: 15,
+    code: 'CALIDAD', slug: 'calidad', num: '02', tag: 'Calidad', name: 'Certificado de Calidad', price: 89, days: 3,
     desc: 'El segundo paso, desde los 6 meses. Valoración morfo-deportiva según su etapa de edad y nivel de calidad del I al V. Es un certificado vivo: se actualiza cuando el caballo sube de nivel en una nueva etapa o por sus resultados deportivos.',
     docs: [
       'Certificado de Origen C-IBERICO ya expedido',
@@ -43,22 +43,22 @@ export const SERVICES = [
     ],
   },
   {
-    code: 'CAMBIO_NOMBRE', slug: 'nombre', num: '03', tag: 'Nombre', name: 'Cambio de nombre', price: 60, days: 5,
+    code: 'CAMBIO_NOMBRE', slug: 'nombre', num: '03', tag: 'Nombre', name: 'Cambio de nombre', price: 25, days: 2,
     desc: 'Cambio del nombre del ejemplar en el Registro C-IBERICO con reexpedición del certificado y de la documentación anexa.',
     docs: ['Certificado de Origen actual', 'Reseña del ejemplar', 'Comprobante de identidad del titular'],
   },
   {
-    code: 'CAMBIO_TITULARIDAD', slug: 'titularidad', num: '04', tag: 'Titularidad', name: 'Cambio de titularidad', price: 75, days: 5,
+    code: 'CAMBIO_TITULARIDAD', slug: 'titularidad', num: '04', tag: 'Titularidad', name: 'Cambio de titularidad', price: 19, days: 2,
     desc: 'Transmisión de la titularidad del ejemplar entre partes, con reexpedición inmediata de la documentación.',
     docs: ['Certificado de Origen actual', 'Documento de compraventa o cesión firmado por ambas partes', 'Identificación del titular anterior y del nuevo titular'],
   },
   {
-    code: 'LAUREADA', slug: 'laureada', num: '05', tag: 'Laureada', name: 'Lista Laureada Ámbar', price: 250, days: 20,
+    code: 'LAUREADA', slug: 'laureada', num: '05', tag: 'Laureada', name: 'Lista Laureada Ámbar', price: 99, days: 10,
     desc: 'Máxima distinción C-IBERICO. Acceso al salón de la fama y trabajo de promoción por parte de la presidencia.',
     docs: ['Certificado de Origen C-IBERICO', 'Acreditación de las tres estrellas ámbar obtenidas por la descendencia', 'Historial deportivo documentado'],
   },
   {
-    code: 'YEGUADA', slug: 'yeguada', num: '06', tag: 'Yeguada', name: 'Alta de yeguada asociada', price: 300, days: 15,
+    code: 'YEGUADA', slug: 'yeguada', num: '06', tag: 'Yeguada', name: 'Alta de yeguada asociada', price: 149, days: 7,
     desc: 'Integración de la yeguada en la red C-IBERICO con código de criador, atención urgente y descuentos en servicios.',
     docs: ['Datos de la yeguada y ubicación', 'Identificación del titular', 'Relación de ejemplares'],
   },
