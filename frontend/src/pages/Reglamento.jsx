@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { PageHero } from './Registry.jsx'
 import { Img } from '../components/ui.jsx'
-import { CONTACT, SERVICES, STAR_LEVELS, eur, plazo } from '../data/content.js'
+import { CONTACT, SERVICES, STAR_LEVELS, eur, plazo, MERIT_FLOOR, ROMAN } from '../data/content.js'
 
 export default function Reglamento() {
   return (
@@ -69,9 +69,10 @@ export default function Reglamento() {
               <div className="acc-body">
                 <p>El resultado de la valoración se expresa en un nivel de calidad del I al V, independiente de la edad. Cada etapa tiene un nivel máximo: II para potros y añojos, III a los 2 y 3 años, IV a los 4 y 5 años y V a partir de los 6.</p>
                 <ul>
-                  <li>En cada cambio de etapa el ejemplar puede volver a presentarse. Si mejora, sube de nivel; si no, conserva el que tenía.</li>
+                  <li>Se puede presentar por primera vez en cualquier etapa, sin haber pasado por las anteriores. Después, en cada cambio de etapa puede volver a presentarse. Si mejora, sube de nivel; si no, conserva el que tenía.</li>
                   <li>El nivel nunca baja por una nueva valoración.</li>
-                  <li>La presidencia puede subir el nivel por méritos deportivos acreditados con documentación oficial. Todo cambio queda registrado con su motivo.</li>
+                  <li><strong>Suelo por méritos:</strong> un resultado deportivo verificado garantiza un nivel mínimo, aunque la valoración haya dado menos y sin el tope de la etapa: {MERIT_FLOOR.map((m) => `${m.result} → nivel ${ROMAN[m.level]}`).join('; ')}. El nivel del caballo es el más alto entre su valoración y sus méritos.</li>
+                  <li>La presidencia puede además subir el nivel por otros méritos acreditados con documentación oficial. Todo cambio queda registrado con su motivo.</li>
                   <li>La presidencia puede revisar el nivel si se acredita falsedad en la documentación aportada.</li>
                 </ul>
               </div>

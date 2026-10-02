@@ -1,6 +1,7 @@
 // Presidencia: gestiones, expedición/revocación de certificados, méritos deportivos y usuarios
 const router = require('express').Router();
 const DOCS = require('../lib/documents');
+const L = require('../lib/levels');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { validateHorse } = require('../lib/horses');
@@ -135,10 +136,24 @@ router.delete('/merits/:id', requireRole('ADMIN'), wrap(async (req, res) => {
 }));
 
 router.post('/merits/:id/verify', requireRole('ADMIN'), wrap(async (req, res) => {
-  const m = await db.one('UPDATE sport_merits SET verified=TRUE WHERE id::text=$1 RETURNING *', [req.params.id]);
-  if (!m) return res.status(404).json({ error: 'Resultado no encontrado' });
-  audit(req.user.id, 'SportMerit', m.id, 'VERIFICAR', {});
-  res.json(m);
+  const out = await db.tx(async (client) => {
+    const m = await db.one('UPDATE sport_merits SET verified=TRUE WHERE id::text=$1 RETURNING *', [req.params.id], client);
+    if (!m) throw Object.assign(new Error('Resultado no encontrado'), { status: 404 });
+    await audit(req.user.id, 'SportMerit', m.id, 'VERIFICAR', {}, client);
+    // Suelo por méritos: si el resultado garantiza un nivel mayor que el actual, el caballo sube
+    const floor = L.meritFloor(m);
+    const h = await db.one('SELECT id, name, level FROM horses WHERE id=$1 FOR UPDATE', [m.horseId], client);
+    let raised = null;
+    if (floor > h.level) {
+      await db.query('UPDATE horses SET level=$2, updated_at=now() WHERE id=$1', [h.id, floor], client);
+      await db.query("INSERT INTO level_history(horse_id, from_level, to_level, reason, notes, decided_by) VALUES ($1,$2,$3,'MERITO',$4,$5)",
+        [h.id, h.level, floor, `${m.position} · ${m.competition} · ${m.category}`, req.user.id], client);
+      await audit(req.user.id, 'Horse', h.id, 'NIVEL', { ejemplar: h.name, de: h.level, a: floor, reason: 'MERITO', automatico: true }, client);
+      raised = { from: h.level, to: floor };
+    }
+    return { ...m, raised };
+  });
+  res.json(out);
 }));
 
 // Origen: DECLARADO (lo dice el titular) o ACREDITADO (documentos oficiales o ADN revisados). Auditado.

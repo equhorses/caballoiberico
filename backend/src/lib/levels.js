@@ -61,4 +61,13 @@ function levelFromScore(score, rubricContent) {
   return levelsOf(rubricContent).reduce((lvl, l) => (score >= l.minScore ? Math.max(lvl, l.level) : lvl), 0);
 }
 
-module.exports = { DEFAULT_STAGES, DEFAULT_LEVELS, ROMAN, ageMonths, stageFor, criteriaFor, scoreOf, levelFromScore, stagesOf };
+// Suelo por méritos: un resultado verificado garantiza un nivel mínimo (no se aplica el tope de la etapa)
+const MERIT_FLOOR = { JOVENES_NACIONAL: { level: 3, top: 3 }, NACIONAL_ABSOLUTO: { level: 4, top: 3 }, INTERNACIONAL: { level: 5, top: 3 }, MUNDIAL_OLIMPICO: { level: 5, top: 15 } };
+function meritFloor(merit) {
+  const rule = MERIT_FLOOR[merit.level];
+  const pos = parseInt(String(merit.position || '').replace(/[^0-9]/g, ''), 10);
+  if (!rule || !pos || pos > rule.top) return 0;
+  return rule.level;
+}
+
+module.exports = { MERIT_FLOOR, meritFloor, DEFAULT_STAGES, DEFAULT_LEVELS, ROMAN, ageMonths, stageFor, criteriaFor, scoreOf, levelFromScore, stagesOf };

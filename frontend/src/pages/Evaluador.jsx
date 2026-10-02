@@ -433,7 +433,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
               <strong>{m.competition}</strong> · {m.category} · {m.position} · {MERIT_LEVELS[m.level]} ({m.starsGiven}★) · {fmtDate(m.date)}
               <div className="row mt8" style={{ gap: 8 }}>
                 {m.documentUrl && <a className="link small" href={fileUrl(m.documentUrl)} target="_blank" rel="noreferrer">Documento</a>}
-                {m.verified ? <span className="badge ok">verificado</span> : isAdmin ? <button className="btn btn-line btn-sm" onClick={() => call(() => api(`/admin/merits/${m.id}/verify`, { method: 'POST' }), 'Resultado verificado')}>Verificar</button> : <span className="badge example">pendiente</span>}
+                {m.verified ? <span className="badge ok">verificado</span> : isAdmin ? <button className="btn btn-line btn-sm" onClick={() => call(() => api(`/admin/merits/${m.id}/verify`, { method: 'POST' }), 'Resultado verificado (si da derecho a un nivel mayor, el caballo sube solo)')}>Verificar</button> : <span className="badge example">pendiente</span>}
               </div>
             </div>
           ))}

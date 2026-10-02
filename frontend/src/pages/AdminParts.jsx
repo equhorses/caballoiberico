@@ -361,7 +361,7 @@ export function CertificatesAdmin({ notify, openHorse }) {
 // ─── MÉRITOS ───
 export function MeritsAdmin({ notify, isAdmin, openHorse }) {
   const { data, loading, reload } = useFetch('/admin/merits')
-  const verify = async (m) => { try { await api(`/admin/merits/${m.id}/verify`, { method: 'POST' }); notify('Resultado verificado'); reload() } catch (x) { notify(x.message) } }
+  const verify = async (m) => { try { const r = await api(`/admin/merits/${m.id}/verify`, { method: 'POST' }); notify(r.raised ? `Resultado verificado: ${m.horseName} sube a nivel ${ROMAN[r.raised.to]} por méritos` : 'Resultado verificado'); reload() } catch (x) { notify(x.message) } }
   const reject = async (m) => { if (!window.confirm('¿Rechazar y borrar este resultado?')) return; try { await api(`/admin/merits/${m.id}`, { method: 'DELETE' }); notify('Resultado rechazado'); reload() } catch (x) { notify(x.message) } }
   return (
     <div className="stack">

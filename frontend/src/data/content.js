@@ -67,6 +67,14 @@ export const SERVICES = [
   },
 ]
 
+// Suelo por méritos (debe coincidir con backend/src/lib/levels.js)
+export const MERIT_FLOOR = [
+  { result: 'Podio (1º–3º) en caballos jóvenes, nacional', level: 3 },
+  { result: 'Podio en una prueba nacional absoluta', level: 4 },
+  { result: 'Podio en una prueba internacional (CDI)', level: 5 },
+  { result: 'Entre los 15 primeros en Juegos Olímpicos, Mundial o Juegos Ecuestres', level: 5 },
+]
+
 // Las estrellas reconocen méritos deportivos verificados. No forman parte del Certificado de Calidad (que es el nivel I–V).
 export const STAR_LEVELS = [
   { n: 3, name: 'Tres estrellas', level: 'Mérito nacional — categoría jóvenes', desc: 'Vencedor de la prueba más alta de la categoría de caballos jóvenes en doma clásica o disciplina avalada.' },
