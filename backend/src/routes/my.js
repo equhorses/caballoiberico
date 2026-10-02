@@ -4,6 +4,9 @@ const { db, SERVICES, upload, authenticate, audit, wrap } = require('../lib/comm
 
 const DOCS = require('../lib/documents');
 const { validateHorse } = require('../lib/horses');
+const ai = require('../lib/ai');
+const L = require('../lib/levels');
+const { UPLOAD_DIR } = require('../lib/common');
 
 const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null;
 
@@ -116,6 +119,69 @@ router.post('/horses/:id/video', upload.single('file'), wrap(async (req, res) =>
 }));
 
 // ─── Solicitudes (gestiones) ───
+// ── Pre-valoración automática (gratis): vídeo + foto de perfil → la IA responde al momento ──
+// Es orientativa: usa una sola IA y el material es mínimo. Límite para controlar el coste de la IA.
+const PREVAL_LIMIT = Math.max(1, parseInt(process.env.PREVALORACION_LIMIT_30D || '3', 10));
+const MOVEMENT = ['paso', 'trote', 'galope'];
+
+router.get('/prevaloraciones', wrap(async (req, res) => {
+  const rows = await db.query('SELECT id, horse_name, breed, birth_date, stage, score, level, result, error, created_at FROM prevaluations WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20', [req.user.id]);
+  const used = rows.filter((r) => new Date(r.createdAt) > new Date(Date.now() - 30 * 864e5)).length;
+  res.json({ items: rows, limit: PREVAL_LIMIT, remaining: Math.max(0, PREVAL_LIMIT - used) });
+}));
+
+router.post('/prevaloraciones', upload.fields([{ name: 'video', maxCount: 1 }, { name: 'photo', maxCount: 1 }]), wrap(async (req, res) => {
+  const b = req.body || {};
+  const video = req.files?.video?.[0];
+  const photo = req.files?.photo?.[0];
+  if (!String(b.name || '').trim() || !/^\d{4}-\d{2}-\d{2}$/.test(String(b.birthDate || ''))) return res.status(400).json({ error: 'Indica el nombre y la fecha de nacimiento del caballo' });
+  if (!video || !/^video\//.test(video.mimetype)) return res.status(400).json({ error: 'Sube un vídeo (MP4, MOV o WEBM)' });
+  if (photo && !/^image\/(jpeg|png|webp)$/.test(photo.mimetype)) return res.status(400).json({ error: 'La foto debe ser JPG, PNG o WEBP' });
+  if (!ai.isConfigured()) return res.status(503).json({ error: 'La pre-valoración automática no está disponible en este momento. Inténtalo más tarde.' });
+  const used = await db.one("SELECT COUNT(*)::int AS n FROM prevaluations WHERE user_id=$1 AND created_at > now() - interval '30 days' AND error IS NULL", [req.user.id]);
+  if (used.n >= PREVAL_LIMIT) return res.status(429).json({ error: `Has usado tus ${PREVAL_LIMIT} pre-valoraciones gratuitas de este mes. Para una valoración completa, pide el Certificado de Calidad.` });
+
+  const months = L.ageMonths(b.birthDate);
+  if (months < 6) return res.status(400).json({ error: 'El caballo debe tener al menos 6 meses' });
+  const rubric = await db.one("SELECT * FROM rubrics WHERE status <> 'ARCHIVADA' ORDER BY created_at DESC LIMIT 1");
+  const stage = L.stageFor(months, rubric.content);
+  const criteria = L.criteriaFor(rubric.content, stage?.key);
+  const photoUrl = photo ? `/uploads/${photo.filename}` : null;
+  const videoUrl = `/uploads/${video.filename}`;
+
+  let out; let error = null;
+  try {
+    out = await ai.runEvaluation({
+      rubric, criteria, stage, ageMonths: months, uploadDir: UPLOAD_DIR, maxProviders: 1,
+      photos: photoUrl ? [{ view: 'LATERAL_IZQUIERDO', url: photoUrl }] : [], video: { url: videoUrl },
+    });
+  } catch (e) { error = e.message; }
+
+  let result = null; let score = null; let level = null;
+  if (out) {
+    const run = out.runs[0];
+    const items = criteria.map((k) => {
+      const it = (run.result.criterios || []).find((x) => x.criterionKey === k.key) || {};
+      const mat = it.material || {}; const p = it.propuesta || {};
+      const ok = ['APTO', 'APTO_PARCIAL'].includes(mat.status) && typeof p.score === 'number' && p.score >= 0 && p.score <= 10;
+      return { key: k.key, name: k.name, score: ok ? Math.round(p.score * 2) / 2 : null, observation: p.observation || mat.notes || '' };
+    });
+    const movementOk = MOVEMENT.every((k) => items.find((i) => i.key === k)?.score != null);
+    score = movementOk ? L.scoreOf(items.map((i) => ({ criterionKey: i.key, finalScore: i.score })), rubric.content.weights) : null;
+    level = score == null ? null : Math.min(L.levelFromScore(score, rubric.content), stage ? stage.cap : 5);
+    result = { items, stageName: stage?.name || null, cap: stage?.cap || null, movementOk, model: run.model, rubricVersion: rubric.version };
+  }
+  const row = await db.one(
+    `INSERT INTO prevaluations(user_id, horse_name, breed, birth_date, stage, photo_url, video_url, result, score, level, models, error)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id, horse_name, breed, birth_date, stage, score, level, result, error, created_at`,
+    [req.user.id, String(b.name).trim().toUpperCase(), b.breed || null, b.birthDate, stage?.key || null, photoUrl, videoUrl,
+      result ? JSON.stringify(result) : null, score, level, out ? out.runs.map((r) => r.model).join(',') : null, error],
+  );
+  audit(req.user.id, 'Prevaluation', row.id, 'PREVALORACION', { nivel: level, nota: score, error, uso: out ? out.runs.map((r) => r.usage) : null });
+  if (error) return res.status(502).json({ error: 'No se ha podido analizar el vídeo. Inténtalo de nuevo en unos minutos (no cuenta en tu límite).' });
+  res.status(201).json(row);
+}));
+
 // ── Documentación: se sube, la IA la lee y propone los datos (el titular revisa; la presidencia acredita) ──
 const DOC_ROLES = ['EJEMPLAR', 'PADRE', 'MADRE'];
 const DOC_MIME = /^(image\/(jpeg|png|webp)|application\/pdf)$/;

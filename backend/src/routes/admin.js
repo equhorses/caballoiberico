@@ -24,6 +24,7 @@ router.get('/stats', wrap(async (req, res) => {
     (SELECT COUNT(*)::int FROM users WHERE created_at > now() - interval '30 days') AS users_month,
     (SELECT COUNT(DISTINCT raw->>'runId')::int FROM ai_proposals WHERE created_at > date_trunc('month', now())) AS ai_runs_month,
     (SELECT COUNT(*)::int FROM horse_documents WHERE created_at > date_trunc('month', now())) AS docs_month,
+    (SELECT COUNT(*)::int FROM prevaluations WHERE created_at > date_trunc('month', now())) AS preval_month,
     (SELECT COALESCE(SUM(amount),0)::int FROM payments WHERE status='COMPLETADO') / 100.0 AS revenue,
     (SELECT COALESCE(SUM(amount),0)::int FROM payments WHERE status='COMPLETADO' AND paid_at > date_trunc('month', now())) / 100.0 AS revenue_month`));
 }));

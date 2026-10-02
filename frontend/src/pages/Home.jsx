@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Img, HorseCard } from '../components/ui.jsx'
-import { SERVICES, STAR_LEVELS, eur } from '../data/content.js'
+import { SERVICES, STAR_LEVELS, eur, plazo } from '../data/content.js'
 import { useRegistry } from '../data/useRegistry.js'
 
 const I = {
@@ -151,7 +151,7 @@ export default function Home() {
               <Link to={`/gestiones#${s.slug}`} key={s.code} className="service" style={{ textDecoration: 'none' }}>
                 <div className="num">{s.num}</div>
                 <div><h3>{s.name}</h3><p>{s.desc}</p></div>
-                <div className="price"><strong>{eur(s.price)}</strong><span>◷ {s.days} días hábiles</span></div>
+                <div className="price"><strong>{eur(s.price)}</strong><span>◷ {plazo(s.days)}</span></div>
               </Link>
             ))}
           </div>

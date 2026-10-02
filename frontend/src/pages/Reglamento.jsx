@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { PageHero } from './Registry.jsx'
 import { Img } from '../components/ui.jsx'
-import { CONTACT, SERVICES, STAR_LEVELS, eur } from '../data/content.js'
+import { CONTACT, SERVICES, STAR_LEVELS, eur, plazo } from '../data/content.js'
 
 export default function Reglamento() {
   return (
@@ -105,7 +105,7 @@ export default function Reglamento() {
               <div className="acc-body">
                 {SERVICES.map((s) => (
                   <div key={s.code} className="row between" style={{ padding: '12px 0', borderBottom: '1px solid var(--line)' }}>
-                    <div><strong>{s.name}</strong><div className="small">Plazo: {s.days} días hábiles</div></div>
+                    <div><strong>{s.name}</strong><div className="small">Plazo: {plazo(s.days)}</div></div>
                     <strong style={{ fontFamily: 'var(--serif)', fontSize: '1.3rem', color: 'var(--gold-deep)' }}>{eur(s.price)}</strong>
                   </div>
                 ))}

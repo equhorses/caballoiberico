@@ -11,10 +11,13 @@ export const DOC_ROLES = { EJEMPLAR: 'Documento del ejemplar', PADRE: 'Documento
 export const ORIGIN = { DECLARADO: 'Pendiente de acreditar', ACREDITADO: 'Acreditado por C-IBERICO' }
 export const BREEDS = { PRE: 'PRE', PSL: 'PSL', PRE_PSL: 'Cruce PRE × PSL', CRUZADO: 'Cruce ibérico' }
 
+// Plazo en texto: 0 = al momento
+export const plazo = (d) => (d === 0 ? 'Al momento' : `${d} días hábiles`)
+
 export const SERVICES = [
   {
-    code: 'PREVALORACION', slug: 'prevaloracion', num: '00', tag: 'Pre-valoración', name: 'Pre-valoración', price: 0, days: 3, launch: true,
-    desc: 'Antes de pedir el certificado: con un vídeo y una foto de perfil te damos una orientación del nivel probable de tu ejemplar con nuestro criterio. Sin compromiso.',
+    code: 'PREVALORACION', slug: 'prevaloracion', num: '00', tag: 'Pre-valoración', name: 'Pre-valoración', price: 0, days: 0, launch: true,
+    desc: 'Antes de pedir el certificado: sube un vídeo y una foto de perfil y nuestra IA te da al momento una orientación del nivel probable de tu caballo. Gratis, sin compromiso y sin dar de alta el ejemplar.',
     docs: [
       'Un vídeo de 30 a 60 segundos de lado, con la cámara quieta a 10–15 m: trote y, si puede ser, paso y galope',
       'Una fotografía de perfil con el caballo cuadrado',

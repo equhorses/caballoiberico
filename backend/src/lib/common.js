@@ -8,7 +8,7 @@ const db = require('./db');
 // Tarifas (céntimos). Deben coincidir con la web. Mismo precio en cualquier país, sin cuotas de socio ni recargos.
 const PREVAL_PRICE = Math.max(0, Math.round(Number(process.env.PREVALORACION_PRICE_EUR || 0) * 100));
 const SERVICES = {
-  PREVALORACION: { name: 'Pre-valoración', price: PREVAL_PRICE, days: 3 },
+  PREVALORACION: { name: 'Pre-valoración', price: PREVAL_PRICE, days: 0 },
   ORIGEN: { name: 'Certificado de Origen', price: 5900, days: 5 },
   CALIDAD: { name: 'Certificado de Calidad', price: 8900, days: 3 },
   CAMBIO_NOMBRE: { name: 'Cambio de nombre', price: 2500, days: 2 },

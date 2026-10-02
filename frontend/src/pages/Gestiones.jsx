@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../api.jsx'
 import { PageHero } from './Registry.jsx'
-import { SERVICES, eur } from '../data/content.js'
+import { SERVICES, eur, plazo } from '../data/content.js'
 
 export default function Gestiones() {
   const { user } = useAuth()
@@ -22,7 +22,7 @@ export default function Gestiones() {
                       <span className="eyebrow">{s.num} · {s.tag}</span>
                       <h3 style={{ fontSize: '1.7rem' }}>{s.name} {s.launch && <span className="badge example" style={{ verticalAlign: 'middle' }}>Lanzamiento</span>}</h3>
                     </div>
-                    <div className="price"><strong>{eur(s.price)}</strong><span>◷ {s.days} días hábiles</span></div>
+                    <div className="price"><strong>{eur(s.price)}</strong><span>◷ {plazo(s.days)}</span></div>
                   </div>
                   <p className="muted mt16">{s.desc}</p>
                 </div>

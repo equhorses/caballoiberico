@@ -160,8 +160,8 @@ function parseJson(text) {
 }
 
 // Prepara el material una sola vez y lo envía a todas las IAs configuradas en paralelo
-async function runEvaluation({ rubric, criteria, stage, ageMonths, photos, video, uploadDir }) {
-  const list = providers();
+async function runEvaluation({ rubric, criteria, stage, ageMonths, photos, video, uploadDir, maxProviders }) {
+  const list = providers().slice(0, maxProviders || undefined);
   if (!list.length) throw Object.assign(new Error('IA pendiente de integración: falta AI_API_KEY o AI_MODEL'), { status: 503 });
 
   const images = (await Promise.all(photos.map(async (p) => ({ view: p.view, dataUrl: await photoToDataUrl(uploadDir, p.url) })))).filter((p) => p.dataUrl);

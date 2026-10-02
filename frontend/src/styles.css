@@ -396,3 +396,4 @@ p { margin: 0; }
 .trust p { margin: 8px 0 0; color: var(--muted); font-size: .95rem; }
 .trust.soon { background: var(--cream); border-left-color: var(--line-strong); }
 .trust.soon p { color: var(--muted); }
+.preval.hl { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }

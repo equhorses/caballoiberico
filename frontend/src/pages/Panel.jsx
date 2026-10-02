@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { api, openPrivateFile, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
-import { DOC_ROLES, PHOTO_VIEWS, SERVICES, eur, fmtDate } from '../data/content.js'
+import { BREEDS, DOC_ROLES, PHOTO_VIEWS, ROMAN, SERVICES, eur, fmtDate } from '../data/content.js'
 
 const REQ_STATUS = {
   PENDIENTE_PAGO: ['Pendiente de pago', 'example'], PAGADA: ['Pagada', 'ok'], EN_REVISION: ['En revisión', 'light'],
@@ -259,6 +259,74 @@ function HorseDocs({ h, notify, onChange }) {
   )
 }
 
+// Pre-valoración automática: vídeo + foto → la IA responde al momento (orientativa)
+function Prevaloracion({ picker, notify, onCalidad }) {
+  const list = useFetch('/my/prevaloraciones')
+  const [f, setF] = useState({ name: '', birthDate: '', breed: 'PRE' })
+  const [video, setVideo] = useState(null)
+  const [photo, setPhoto] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const [last, setLast] = useState(null)
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const submit = async (e) => {
+    e.preventDefault(); setErr('')
+    if (!video) return setErr('Sube el vídeo')
+    setBusy(true)
+    const form = new FormData(); Object.entries(f).forEach(([k, v]) => form.append(k, v)); form.append('video', video); if (photo) form.append('photo', photo)
+    try { const r = await api('/my/prevaloraciones', { method: 'POST', form }); setLast(r); list.reload(); notify('Pre-valoración lista') } catch (x) { setErr(x.message) }
+    setBusy(false)
+  }
+  const remaining = list.data?.remaining
+  return (
+    <div className="grid g2" style={{ alignItems: 'start', gap: 32 }}>
+      <form className="card form" onSubmit={submit}>
+        <h3>Pre-valoración gratis</h3>
+        {picker}
+        <p className="small muted">Sube un vídeo y una foto de perfil: la IA te da al momento una orientación del nivel probable. No hace falta dar de alta el caballo.{remaining != null ? ` Te quedan ${remaining} este mes.` : ''}</p>
+        <div className="grid g3" style={{ gap: 12 }}>
+          <div className="field"><label>Nombre *</label><input className="input" required value={f.name} onChange={set('name')} /></div>
+          <div className="field"><label>Nacimiento *</label><input className="input" type="date" required value={f.birthDate} onChange={set('birthDate')} /></div>
+          <div className="field"><label>Raza</label><select className="select" value={f.breed} onChange={set('breed')}>{Object.entries(BREEDS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+        </div>
+        <div className="field"><label>Vídeo * (30–60 s, de lado, cámara quieta a 10–15 m: trote y, si puede ser, paso y galope)</label><input className="input" type="file" accept="video/mp4,video/quicktime,video/webm" onChange={(e) => setVideo(e.target.files[0])} /></div>
+        <div className="field"><label>Foto de perfil (caballo cuadrado)</label><input className="input" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setPhoto(e.target.files[0])} /></div>
+        {err && <p className="notice bad">{err}</p>}
+        <button className="btn btn-gold btn-block" disabled={busy || remaining === 0}>{busy ? 'La IA está analizando el vídeo… (puede tardar 1–2 minutos)' : 'Pre-valorar gratis'}</button>
+        <p className="small muted">Es una orientación, no un certificado. El nivel oficial se obtiene con el Certificado de Calidad (5 fotos y vídeo completo).</p>
+      </form>
+      <div>
+        {last && <PrevalResult r={last} onCalidad={onCalidad} highlight />}
+        <h3 className={last ? 'mt24' : ''}>Mis pre-valoraciones</h3>
+        <div className="mt16">
+          {(list.data?.items || []).filter((r) => r.id !== last?.id).map((r) => <PrevalResult key={r.id} r={r} onCalidad={onCalidad} />)}
+          {!list.data?.items?.length && !last && <div className="empty">Aún no has hecho ninguna.</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PrevalResult({ r, onCalidad, highlight }) {
+  const res = r.result || {}
+  return (
+    <div className={`card preval ${highlight ? 'hl' : ''}`} style={{ marginBottom: 12 }}>
+      <div className="row between"><strong>{r.horseName}</strong><span className="small muted">{fmtDate(r.createdAt)}</span></div>
+      {r.error ? <p className="small muted mt8">No se pudo analizar: inténtalo de nuevo.</p> : r.level != null ? (
+        <>
+          <p className="mt8">Nivel probable: <LevelBadge level={r.level} /> <span className="small muted">· {Number(r.score).toFixed(1)}/100{res.stageName ? ` · etapa ${res.stageName} (máx. ${ROMAN[res.cap]})` : ''}</span></p>
+          {highlight && (
+            <ul className="small mt8" style={{ paddingLeft: 18, margin: '8px 0 0' }}>
+              {(res.items || []).filter((i) => i.score != null).map((i) => <li key={i.key}><strong>{i.name}: {i.score}</strong>{i.observation ? ` — ${i.observation}` : ''}</li>)}
+            </ul>
+          )}
+          {highlight && <button type="button" className="btn btn-ink btn-sm mt16" onClick={onCalidad}>Pedir el Certificado de Calidad</button>}
+        </>
+      ) : <p className="small mt8">El vídeo no permite valorar los tres aires. Repite la grabación de lado, con la cámara quieta, mostrando paso, trote y galope.</p>}
+    </div>
+  )
+}
+
 function Requests({ horses, requests, preset, presetHorse, notify }) {
   const [f, setF] = useState({ service: preset || 'PREVALORACION', horseId: presetHorse || '', notes: '' })
   const [files, setFiles] = useState([])
@@ -280,15 +348,19 @@ function Requests({ horses, requests, preset, presetHorse, notify }) {
     } catch (x) { setErr(x.message) }
     setBusy(false)
   }
+  const picker = (
+    <div className="field"><label>Gestión</label>
+      <select className="select" value={f.service} onChange={(e) => setF({ ...f, service: e.target.value })}>
+        {SERVICES.map((s) => <option key={s.code} value={s.code}>{s.name} · {eur(s.price)}</option>)}
+      </select>
+    </div>
+  )
+  if (f.service === 'PREVALORACION') return <Prevaloracion picker={picker} notify={notify} onCalidad={() => setF({ ...f, service: 'CALIDAD' })} />
   return (
     <div className="grid g2" style={{ alignItems: 'start', gap: 32 }}>
       <form className="card form" onSubmit={submit}>
         <h3>Nueva gestión</h3>
-        <div className="field"><label>Gestión</label>
-          <select className="select" value={f.service} onChange={(e) => setF({ ...f, service: e.target.value })}>
-            {SERVICES.map((s) => <option key={s.code} value={s.code}>{s.name} · {eur(s.price)}</option>)}
-          </select>
-        </div>
+        {picker}
         {f.service !== 'YEGUADA' && (
           <div className="field"><label>Ejemplar</label>
             {horses.length ? (

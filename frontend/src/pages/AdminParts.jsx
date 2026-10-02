@@ -62,6 +62,7 @@ export function Dashboard({ go }) {
           {tile(eurs(s.revenueMonth), 'Cobrado este mes', null, 'pagos')}
           {tile(s.aiRunsMonth, 'Valoraciones con IA este mes', 'cada una ≈ 0,10–0,15 $')}
           {tile(s.docsMonth, 'Documentos leídos este mes', 'cada uno ≈ 0,01–0,02 $')}
+          {tile(s.prevalMonth, 'Pre-valoraciones gratis este mes', 'cada una ≈ 0,05–0,10 $')}
         </div>
       </div>
     </div>
