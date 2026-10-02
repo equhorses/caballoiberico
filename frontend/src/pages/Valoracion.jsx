@@ -45,6 +45,7 @@ export default function Valoracion() {
         <div className="wrap">
           <span className="eyebrow">Confianza</span>
           <h2>Cómo trabaja nuestra IA</h2>
+          <p className="lead">Una IA instruida con reglamentos, vídeo y texto especializado para valorar al caballo ibérico con claridad y con la misma seguridad para todos.</p>
           <div className="trust-grid mt32">
             {AI_TRUST.map((t) => (
               <div key={t.title} className={`trust ${t.ready ? '' : 'soon'}`}>
