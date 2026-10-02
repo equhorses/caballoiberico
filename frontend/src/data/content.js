@@ -129,11 +129,11 @@ export const STANDARD_TEXT = {
 }
 
 export const AI_RULES = [
-  'La IA propone; un evaluador humano resuelve. Ninguna nota es válida sin decisión humana.',
+  'La nota es de la IA, siempre con la misma rúbrica para todos. La secretaría solo comprueba que el material es del caballo y es válido, y acepta el resultado: no modifica notas.',
   'Un material deficiente nunca se convierte en una nota baja: se pide nuevo material o se marca como no evaluable.',
   'Cada propuesta cita su evidencia (vista fotográfica o minuto del vídeo) y declara su confianza.',
   'La IA no determina identidad, genealogía, pureza, temperamento, salud, valor reproductivo ni rendimiento futuro.',
-  'Ni el nivel ni las estrellas los decide la IA: el nivel sale de las notas confirmadas por el evaluador y los méritos los reconoce la presidencia.',
+  'El nivel sale de la nota de la IA, con el tope de cada etapa. Las estrellas no las da la IA: salen de resultados deportivos verificados.',
   'Cada valoración queda ligada a la versión de la rúbrica utilizada y a un historial que no se borra.',
 ]
 

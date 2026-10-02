@@ -117,7 +117,7 @@ export function HorseDetail() {
                   </tbody>
                 </table>
                 {h.evaluation.summary && <p className="mt16">{h.evaluation.summary}</p>}
-                <p className="small muted mt16">Resuelto por evaluador el {fmtDate(h.evaluation.resolvedAt)} · rúbrica v{h.evaluation.rubricVersion} (pesos en fase experimental). Criterios no evaluables por la edad no cuentan en la nota.</p>
+                <p className="small muted mt16">Valoración de la IA aceptada por la secretaría el {fmtDate(h.evaluation.resolvedAt)} · rúbrica v{h.evaluation.rubricVersion} (pesos en fase experimental). Criterios no evaluables por la edad no cuentan en la nota.</p>
               </>
             ) : <p className="muted">Este ejemplar aún no tiene una valoración resuelta.</p>}
           </div>

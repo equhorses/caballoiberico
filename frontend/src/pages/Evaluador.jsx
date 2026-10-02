@@ -80,9 +80,13 @@ function Cases({ open }) {
 }
 
 function CaseView({ id, onBack, notify }) {
+  const { isAdmin } = useAuth()
   const { data: c, loading, reload, error } = useFetch(`/eval/cases/${id}`)
   const [aiBusy, setAiBusy] = useState(false)
   const [resolve, setResolve] = useState({ summary: '', guidance: '' })
+  const [manual, setManual] = useState(false)
+  const [checks, setChecks] = useState({ same: false, valid: false })
+  const [accepting, setAccepting] = useState(false)
   if (loading && !c) return <p className="muted">Cargando…</p>
   if (error) return <p className="notice bad">{error.message}</p>
   const locked = c.status === 'RESUELTO'
@@ -100,6 +104,17 @@ function CaseView({ id, onBack, notify }) {
       reload()
     } catch (x) { notify(x.message) }
   }
+
+  const acceptAI = async () => {
+    setAccepting(true)
+    try {
+      const r = await api(`/eval/cases/${id}/accept-ai`, { method: 'POST', body: {} })
+      notify(r.newLevel > r.previousLevel ? `Resultado aceptado: sube a nivel ${ROMAN[r.newLevel]}` : `Resultado aceptado: conserva nivel ${ROMAN[r.newLevel]}`)
+      reload()
+    } catch (x) { notify(x.message) }
+    setAccepting(false)
+  }
+  const ar = c.aiResult
 
   return (
     <div className="stack">
@@ -132,13 +147,47 @@ function CaseView({ id, onBack, notify }) {
         )}
       </div>
 
+      {!locked && !manual && (
+        <div className="card ai-result">
+          <h3>Resultado de la IA</h3>
+          {!ar ? <p className="muted mt8">Lanza la IA para obtener la valoración.</p> : (
+            <>
+              <p className="small muted mt8">Modelo{ar.models.length > 1 ? 's' : ''}: {ar.models.join(' + ')}{ar.models.length > 1 ? ' (se toma la media)' : ''}</p>
+              <table className="table mt8">
+                <thead><tr><th>Bloque</th><th>Nota</th><th /></tr></thead>
+                <tbody>{ar.items.map((i) => (
+                  <tr key={i.key}>
+                    <td>{i.name}</td>
+                    <td><strong>{i.score ?? '—'}</strong>{i.scores.length > 1 && <span className="small muted"> ({i.scores.map((x) => x.score).join(' y ')})</span>}</td>
+                    <td className="small">{i.score == null ? <span className="chk DISTINTO">No ha podido valorarlo</span> : i.disagree ? <span className="chk DISTINTO">⚠ las IAs discrepan</span> : ''}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+              <p className="ai-total mt16">Nota <strong>{ar.score ?? '—'}/100</strong> → nivel <strong>{ROMAN[ar.level || 0]}</strong>{c.stageInfo ? ` (tope de la etapa: ${ROMAN[c.stageInfo.cap]})` : ''} · {ar.level > c.horse.level ? `subirá de ${ROMAN[c.horse.level]} a ${ROMAN[ar.level]}` : `conserva su nivel ${ROMAN[c.horse.level]}`}</p>
+            </>
+          )}
+          <div className="secretaria mt16">
+            <h4>Comprobación de la secretaría</h4>
+            <p className="small muted">La nota es de la IA. La secretaría solo comprueba el material y acepta el resultado; no modifica notas.</p>
+            <label className="row small mt8" style={{ gap: 8 }}><input type="checkbox" checked={checks.same} onChange={(e) => setChecks({ ...checks, same: e.target.checked })} /> Las fotos y el vídeo son de este caballo (capa, reseña, microchip si se ve)</label>
+            <label className="row small mt8" style={{ gap: 8 }}><input type="checkbox" checked={checks.valid} onChange={(e) => setChecks({ ...checks, valid: e.target.checked })} /> El material es válido: vistas correctas y vídeo en los aires que pide su etapa</label>
+            <div className="row mt16" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn btn-gold" disabled={!ar || ar.missing.length > 0 || !checks.same || !checks.valid || accepting} onClick={acceptAI}>{accepting ? 'Cerrando…' : 'Aceptar resultado de la IA'}</button>
+              <button className="btn btn-line" onClick={() => { const summary = window.prompt('¿Qué material falta o hay que repetir? (lo verá el titular)'); if (summary) { setResolve({ ...resolve, summary }); api(`/eval/cases/${id}/resolve`, { method: 'POST', body: { summary, requiresMaterial: true } }).then(() => { notify('Se ha pedido nuevo material al titular'); reload() }).catch((x) => notify(x.message)) } }}>Pedir nuevo material</button>
+            </div>
+            {ar?.missing.length > 0 && <p className="small chk DISTINTO mt8">La IA no ha podido valorar algún bloque: pide nuevo material o vuelve a lanzarla.</p>}
+          </div>
+          {isAdmin && <button type="button" className="link small mt16" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => setManual(true)}>Ajuste manual excepcional (solo presidencia, queda en la auditoría)</button>}
+        </div>
+      )}
+
       {criteria.map((k) => (
-        <Criterion key={k.key} k={k} c={c} locked={locked} reload={reload} notify={notify} />
+        <Criterion key={k.key} k={k} c={c} locked={locked} reload={reload} notify={notify} manual={manual} />
       ))}
 
-      {!locked ? (
+      {!locked && !manual ? null : !locked ? (
         <div className="card form">
-          <h3>Resolución del evaluador</h3>
+          <div className="row between"><h3>Ajuste manual excepcional</h3><button type="button" className="link small" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => setManual(false)}>Volver al modelo IA</button></div>
           <p className="notice info">
             Nota provisional con lo decidido: <strong>{c.preview?.score != null ? `${c.preview.score}/100` : '—'}</strong> → nivel <strong>{ROMAN[c.preview?.level || 0]}</strong>.{' '}
             {c.preview && c.preview.level > c.preview.current ? `Al resolver, el ejemplar subirá de ${ROMAN[c.preview.current]} a ${ROMAN[c.preview.level]}.` : `No supera su nivel actual (${ROMAN[c.preview?.current || 0]}): lo conservará.`}
@@ -159,7 +208,7 @@ function CaseView({ id, onBack, notify }) {
   )
 }
 
-function Criterion({ k, c, locked, reload, notify }) {
+function Criterion({ k, c, locked, reload, notify, manual }) {
   const mat = c.material.find((m) => m.criterionKey === k.key)
   // Última ejecución de la IA (una o dos IAs en doble lectura)
   const lastRun = c.proposals[0]?.raw?.runId
@@ -218,8 +267,8 @@ function Criterion({ k, c, locked, reload, notify }) {
             ))
           ) : <p className="muted small">Sin propuesta.</p>}
         </div>
-        <div>
-          <h4>3 · Decisión del evaluador</h4>
+        {(manual || locked) && <div>
+          <h4>3 · {locked ? 'Resultado' : 'Ajuste manual'}</h4>
           {locked ? <p>{dec ? `${dec.action.toLowerCase()} · ${dec.finalScore ?? '—'}${dec.notes ? ` · ${dec.notes}` : ''}` : '—'}</p> : (
             <>
               <div className="row" style={{ gap: 8 }}>
@@ -236,7 +285,7 @@ function Criterion({ k, c, locked, reload, notify }) {
               {dec && <p className="small muted mt8">Decidido por {dec.decidedByName} · {fmtDate(dec.decidedAt)}</p>}
             </>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   )
