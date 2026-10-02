@@ -113,13 +113,15 @@ const CRITERIA = [
 
 // Rueda de edad por etapa (interpretación C-IBERICO inspirada en las pruebas de caballos jóvenes; no atribuida a la FEI)
 const AGE_WHEEL = {
-  POTRO: 'Potro de 6 a 11 meses, a la mano o en libertad. Proporciones, aplomos y calidad natural de los aires frente al estándar de potros de deporte centroeuropeos. La conformación cambia mucho: nota orientativa, nivel máximo II.',
-  ANOJO: 'Añojo en libertad o a la mano. Aires naturales, alcance y equilibrio. Nivel máximo II.',
-  DOS_ANOS: 'Dos años en libertad o a la cuerda. Elasticidad, empuje del posterior y equilibrio en giros. Nivel máximo III.',
-  TRES_ANOS: 'Tres aires regulares, ritmo y tacto bajo el jinete; se valora sobre todo la calidad natural de los aires. Nivel máximo III.',
-  CUATRO_ANOS: 'Impulsión naciente y transiciones básicas. Nivel máximo IV.',
-  CINCO_ANOS: 'Alargamientos, contragalope corto, reunión incipiente. Nivel máximo IV.',
-  SEIS_MAS: 'Reunión real y exigencia completa de doma clásica según el nivel presentado.',
+  POTRO: 'Potro de 6 a 11 meses, a la mano o en libertad. Proporciones, aplomos y calidad natural de los aires frente a potros de deporte de su edad. La conformación cambia mucho: valoración orientativa.',
+  ANOJO: 'Añojo en libertad o a la mano. Aires naturales, alcance y equilibrio para su edad.',
+  DOS_ANOS: 'Dos años en libertad o a la cuerda. Elasticidad, empuje del posterior y equilibrio en giros.',
+  TRES_ANOS: 'Tres años bajo el jinete: tres aires regulares, ritmo y tacto; sobre todo la calidad natural de los aires.',
+  CUATRO_ANOS: 'Cuatro años: impulsión naciente, contacto estable y transiciones básicas.',
+  CINCO_ANOS: 'Cinco años (criterios FEI de 5 años): ritmo, soltura, elasticidad, equilibrio natural y alargamientos.',
+  SEIS_ANOS: 'Seis años (criterios FEI de 6 años): más impulsión y terreno cubierto, tendencia cuesta arriba y primeras señales de reunión.',
+  SIETE_ANOS: 'Siete años (criterios FEI de 7 años): capacidad real de reunir y cargar peso, elasticidad e impulsión.',
+  OCHO_MAS: 'Ocho años o más: exigencia completa de doma clásica; reunión, autoporte y calidad de los aires al máximo nivel.',
 };
 
 // Pesos EXPERIMENTALES: el movimiento pesa claramente más que la conformación (conformación 20 %, aires 45 %, equilibrio 15 %, aptitud 20 %).
@@ -162,15 +164,15 @@ const RULES = [
   'Cada propuesta cita su evidencia (vista fotográfica o minuto del vídeo) y declara confianza: alta, media, baja o abstención.',
   'La IA no determina identidad, genealogía, pureza, temperamento, seguridad, estado de salud, valor reproductivo ni rendimiento futuro.',
   'La IA no sugiere cruces ni da orientación de cría.',
-  'El nivel sale de tus notas con el tope de cada etapa; tú no decides el nivel ni las estrellas (las estrellas salen de resultados deportivos verificados).',
-  'En potros y caballos sin montar la nota es orientativa: calibra con la etapa y no penalices lo que la edad no permite ver.',
+  'La calidad final (de 1 a 5 estrellas) sale de tus notas; tú no la decides. Exige a cada caballo lo que corresponde a su edad (ver la etapa).',
+  'Calibra con la etapa: a un caballo de 6 años pídele lo de 6 años, a uno de 7 lo de 7 y desde los 8 la exigencia completa. En potros y caballos sin montar la nota es orientativa: no penalices lo que la edad no permite ver.',
   'Sé exigente y usa toda la escala: no concentres las notas entre 6 y 7 por prudencia.',
 ];
 
 const { DEFAULT_STAGES, DEFAULT_LEVELS } = require('./levels');
 
 const DEFAULT_RUBRIC = {
-  version: '2.3.2',
+  version: '2.4.0',
   status: 'EXPERIMENTAL',
   content: {
     standard: STANDARD,
@@ -178,7 +180,7 @@ const DEFAULT_RUBRIC = {
     stages: DEFAULT_STAGES, levels: DEFAULT_LEVELS,
     scale: '0-10, anclada al estándar de movimiento del caballo de deporte centroeuropeo',
   },
-  notes: 'v2.3.2: el movimiento prevalece siempre sobre la morfología (80/20 fijo). v2.3.1: los textos oficiales prevalecen sobre las reglas propias; ejercicios y aptitud alineados con la FEI. v2.3: añade textos de referencia (FEI doma y caballos jóvenes, estándar centroeuropeo, prototipos PRE y PSL) y notas máximas por faltas. La nota de la IA es la oficial. Pesos y umbrales pendientes de calibración.',
+  notes: 'v2.4.0: calidad de 1 a 5 estrellas sin topes por etapa; etapas de 6, 7 y 8+ años. v2.3.2: el movimiento prevalece siempre sobre la morfología (80/20 fijo). v2.3.1: los textos oficiales prevalecen sobre las reglas propias; ejercicios y aptitud alineados con la FEI. v2.3: añade textos de referencia (FEI doma y caballos jóvenes, estándar centroeuropeo, prototipos PRE y PSL) y notas máximas por faltas. La nota de la IA es la oficial. Pesos y umbrales pendientes de calibración.',
 };
 
 module.exports = { DEFAULT_RUBRIC, CRITERIA, AREAS };

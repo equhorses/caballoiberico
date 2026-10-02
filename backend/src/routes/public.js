@@ -42,7 +42,7 @@ const card = (h) => ({
   level: h.level || 0,
   stars: starsOf(h.merits),
   amberStars: h.amberStars || 0,
-  laureado: Boolean(h.laureado || (h.amberStars || 0) >= 3),
+  laureado: Boolean(h.laureado),
   hasQuality: h.certificates.some((c) => c.type === 'CALIDAD'),
   score: finalScore(h.lastCase),
 });

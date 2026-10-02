@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { PageHero } from './Registry.jsx'
 import { Img } from '../components/ui.jsx'
-import { CONTACT, SERVICES, STAR_LEVELS, eur, plazo, MERIT_FLOOR, ROMAN } from '../data/content.js'
+import { CONTACT, SERVICES, eur, plazo, MERIT_FLOOR, STARS_TXT } from '../data/content.js'
 
 export default function Reglamento() {
   return (
@@ -41,9 +41,9 @@ export default function Reglamento() {
               <summary>Los dos certificados: Origen y Calidad</summary>
               <div className="acc-body">
                 <p><strong>1. Certificado de Origen.</strong> Es el primero y se expide a ejemplares de cualquier edad. Acredita la identidad del caballo (microchip) y su procedencia, una vez comprobada por la presidencia, y le asigna su número de registro CIB. Es único y no caduca.</p>
-                <p><strong>2. Certificado de Calidad.</strong> Requiere el Certificado de Origen y una valoración morfo-deportiva resuelta, desde los 6 meses de edad. Expresa el <strong>nivel de calidad del I al V</strong> alcanzado según la etapa de edad, e incluye los resultados deportivos verificados.</p>
-                <p>El Certificado de Calidad es único y vivo: no se expide uno nuevo cada vez, sino que se actualiza cuando el ejemplar sube de nivel, ya sea por una nueva valoración en otra etapa o por méritos deportivos. La verificación pública y el código QR muestran siempre el nivel vigente.</p>
-                <p>Las estrellas no forman parte del Certificado de Calidad: reconocen los méritos deportivos.</p>
+                <p><strong>2. Certificado de Calidad.</strong> Requiere el Certificado de Origen y una valoración morfo-deportiva resuelta, desde los 6 meses de edad. Expresa la <strong>calidad de 1 a 5 estrellas</strong> según su edad, e incluye los resultados deportivos verificados.</p>
+                <p>El Certificado de Calidad es único y vivo: no se expide uno nuevo cada vez, sino que se actualiza cuando el ejemplar sube de estrellas, ya sea por una nueva valoración o por resultados deportivos. La verificación pública y el código QR muestran siempre las estrellas vigentes.</p>
+                <p>El Certificado de Calidad expresa la calidad en estrellas, de 1 a 5, e incluye los resultados deportivos verificados.</p>
               </div>
             </details>
             <details>
@@ -65,29 +65,21 @@ export default function Reglamento() {
               </div>
             </details>
             <details>
-              <summary>Niveles de calidad</summary>
+              <summary>Calidad: de 1 a 5 estrellas</summary>
               <div className="acc-body">
-                <p>El resultado de la valoración se expresa en un nivel de calidad del I al V, independiente de la edad. Cada etapa tiene un nivel máximo: II para potros y añojos, III a los 2 y 3 años, IV a los 4 y 5 años y V a partir de los 6.</p>
+                <p>El resultado de la valoración se expresa en estrellas de calidad, de 1 a 5, según la nota obtenida (1 desde 50/100, 2 desde 60, 3 desde 70, 4 desde 80 y 5 desde 90). La exigencia se ajusta a la edad: a cada caballo se le pide lo que corresponde a sus años, y desde los 8 la exigencia es completa.</p>
                 <ul>
-                  <li>Se puede presentar por primera vez en cualquier etapa, sin haber pasado por las anteriores. Después, en cada cambio de etapa puede volver a presentarse. Si mejora, sube de nivel; si no, conserva el que tenía.</li>
-                  <li>El nivel nunca baja por una nueva valoración.</li>
-                  <li><strong>Suelo por méritos:</strong> un resultado deportivo verificado garantiza un nivel mínimo, aunque la valoración haya dado menos y sin el tope de la etapa: {MERIT_FLOOR.map((m) => `${m.result} → nivel ${ROMAN[m.level]}`).join('; ')}. El nivel del caballo es el más alto entre su valoración y sus méritos.</li>
-                  <li>La presidencia puede además subir el nivel por otros méritos acreditados con documentación oficial. Todo cambio queda registrado con su motivo.</li>
-                  <li>La presidencia puede revisar el nivel si se acredita falsedad en la documentación aportada.</li>
+                  <li>Se puede presentar por primera vez a cualquier edad, sin haber pasado por las anteriores, y volver a presentarse cada año. Si mejora, sube; si no, conserva lo que tenía. Nunca baja por una nueva valoración.</li>
+                  <li>Cada valoración queda en el historial con la edad del caballo (por ejemplo, «4 años · 3 estrellas»).</li>
+                  <li><strong>Resultados deportivos:</strong> un resultado verificado con documento oficial asegura unas estrellas mínimas: {MERIT_FLOOR.map((m) => `${m.result} → ${STARS_TXT[m.level]}`).join('; ')}. El caballo se queda con lo más alto entre su valoración y sus resultados.</li>
+                  <li>La presidencia puede revisar las estrellas por otros méritos acreditados o si se acredita falsedad en la documentación. Todo cambio queda registrado con su motivo.</li>
                 </ul>
               </div>
             </details>
             <details>
-              <summary>Méritos deportivos y estrellas</summary>
+              <summary>Lista Laureada</summary>
               <div className="acc-body">
-                <p>Las estrellas reconocen mérito deportivo contrastado con documentación oficial del organismo competente. No son un certificado ni sustituyen al nivel de calidad: figuran en la ficha y en el Certificado de Calidad, y la presidencia puede tenerlas en cuenta para subir el nivel del ejemplar. Un ejemplar puede obtener cualquiera de estas distinciones sin haber obtenido la anterior; prevalece la más alta conseguida.</p>
-                {STAR_LEVELS.map((s) => (
-                  <div key={s.n} style={{ borderLeft: '3px solid var(--gold)', paddingLeft: 16 }}>
-                    <strong>{s.name} — {s.level}</strong>
-                    <div>{s.desc}</div>
-                  </div>
-                ))}
-                <p>Cada ejemplar que alcanza veinticuatro estrellas concede una estrella ámbar a todos sus ascendientes. Con tres estrellas ámbar se accede a la Lista Laureada.</p>
+                <p>Es el máximo reconocimiento de C-IBERICO y es independiente de las estrellas. La concede la presidencia, a solicitud del titular o por iniciativa propia, a los ejemplares que han marcado la diferencia en competición o como reproductores.</p>
               </div>
             </details>
             <details>

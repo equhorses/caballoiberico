@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Img, HorseCard } from '../components/ui.jsx'
-import { SERVICES, STAR_LEVELS, eur, plazo } from '../data/content.js'
+import { Img, HorseCard, LevelBadge } from '../components/ui.jsx'
+import { MERIT_FLOOR, SERVICES, eur, plazo } from '../data/content.js'
 import { useRegistry } from '../data/useRegistry.js'
 
 const I = {
@@ -26,7 +26,7 @@ export default function Home() {
             C-IBERICO certifica la calidad deportiva del caballo ibérico, con una valoración de los tres aires
             según el reglamento de doma clásica y los criterios de selección centroeuropeos.
             Cada caballo recibe un número único y una ficha pública: cualquiera puede comprobar en esta web
-            su certificado y su nivel de calidad.
+            su certificado y sus estrellas de calidad.
           </p>
           <div className="row mt32">
             <Link className="btn btn-gold" to="/gestiones#prevaloracion">Pre-valoración gratis →</Link>
@@ -84,7 +84,7 @@ export default function Home() {
             <div className="mt32">
               <div className="feature"><span className="icon-dot">{I.scan}</span><div><h3>Nueve bloques puntuados de 0 a 10</h3><p>1 Cabeza y cuello · 2 Tronco y dorso · 3 Grupa · 4 Aplomos · 5 Paso · 6 Trote · 7 Galope · 8 Ejercicios · 9 Aptitud para ser montado (según su edad y etapa de doma).</p></div></div>
               <div className="feature"><span className="icon-dot">{I.book}</span><div><h3>Doble lectura reglamentaria</h3><p>Cada informe traduce el resultado al lenguaje de la doma clásica y al de las pruebas de aptitud centroeuropeas.</p></div></div>
-              <div className="feature"><span className="icon-dot">{I.user}</span><div><h3>La IA valora, C-IBERICO expide</h3><p>La nota y el nivel los pone la IA, con la misma rúbrica para todos. Nosotros no los tocamos: comprobamos que el material es del caballo y es válido, y expedimos la ficha con el resultado tal cual.</p></div></div>
+              <div className="feature"><span className="icon-dot">{I.user}</span><div><h3>La IA valora, C-IBERICO expide</h3><p>La nota y las estrellas las pone la IA, con la misma rúbrica para todos. Nosotros no los tocamos: comprobamos que el material es del caballo y es válido, y expedimos la ficha con el resultado tal cual.</p></div></div>
             </div>
             <Link to="/valoracion" className="btn btn-line mt32">Cómo funciona la valoración</Link>
           </div>
@@ -129,7 +129,7 @@ export default function Home() {
             <ul className="origin-list">
               <li><strong>Padres documentados.</strong> El cruce puede no tener papeles, pero su padre y su madre deben estar inscritos en ANCCE, APSL o en C-IBERICO.</li>
               <li><strong>Sus hijos, bajo tu control.</strong> Una vez registrado, su descendencia se inscribe en C-IBERICO con la genealogía ya comprobada.</li>
-              <li><strong>Mismo nivel de calidad.</strong> Un cruce se valora con la misma equidad que cualquier otro caballo y puede llegar al nivel V.</li>
+              <li><strong>Misma calidad.</strong> Un cruce se valora con la misma equidad que cualquier otro caballo y puede llegar a las 5 estrellas.</li>
             </ul>
           </div>
         </div>
@@ -174,39 +174,47 @@ export default function Home() {
             <li>
               <span className="path-tag">Su nota</span>
               <h3>Certificado de Calidad</h3>
-              <p>Nivel del I al V según cómo es y cómo se mueve, valorado para su edad. El mismo certificado se actualiza si sube de nivel.</p>
-              <em>Desde los 6 meses · puede subir en cada etapa</em>
+              <p>De 1 a 5 estrellas según cómo se mueve, exigiéndole lo que corresponde a su edad. El mismo certificado se actualiza si sube de estrellas.</p>
+              <em>Desde los 6 meses · se puede repetir cada año</em>
             </li>
             <li>
               <span className="path-tag">Sus medallas</span>
-              <h3>Estrellas</h3>
-              <p>Los resultados que gana en competición, verificados con documento oficial. Aparecen en su ficha y en su certificado.</p>
-              <em>Cada vez que gana algo</em>
+              <h3>Resultados en pista</h3>
+              <p>Lo que gana en competición, verificado con documento oficial. Aparece en su ficha y un podio le asegura unas estrellas mínimas.</p>
+              <em>Cada vez que gana algo · gratis</em>
             </li>
             <li>
               <span className="path-tag">Su salón de la fama</span>
               <h3>Lista Laureada</h3>
-              <p>El máximo reconocimiento C-IBERICO, para los caballos que han marcado la diferencia en pista o como reproductores.</p>
+              <p>El máximo reconocimiento, que concede C-IBERICO a los caballos que han marcado la diferencia en pista o como reproductores.</p>
               <Link to="/laureados" className="link">Ver la Lista Laureada →</Link>
             </li>
           </ol>
         </div>
       </section>
 
-      {/* MÉRITOS */}
+      {/* CALIDAD Y RESULTADOS */}
       <section className="section">
-        <div className="wrap">
-          <span className="eyebrow">Méritos deportivos</span>
-          <h2>Los resultados en pista, en estrellas</h2>
-          <p className="lead">Las estrellas reconocen resultados deportivos verificados con documento oficial. Aparecen en la ficha del caballo y en su Certificado de Calidad, y pueden servir para subir su nivel. Las veinticuatro estrellas conceden una estrella ámbar a todos sus ascendientes.</p>
-          <div className="stars-grid mt48">
-            {STAR_LEVELS.map((s) => (
-              <div key={s.n}><div className="n">{s.n}</div><h3>{s.name}</h3><div className="lvl">{s.level}</div><p>{s.desc}</p></div>
-            ))}
+        <div className="wrap grid g2" style={{ gap: 48, alignItems: 'start' }}>
+          <div>
+            <span className="eyebrow">Calidad C-IBERICO</span>
+            <h2>De 1 a 5 estrellas</h2>
+            <p className="lead">Una sola escala, fácil de entender. La IA valora cómo se mueve el caballo exigiéndole lo que corresponde a su edad: a uno de 4 años, lo de 4; a uno de 7, lo de 7; desde los 8, la exigencia completa.</p>
+            <div className="stars-scale mt24">
+              {[5, 4, 3, 2, 1].map((n) => <div key={n} className="row between"><LevelBadge level={n} /><span className="small muted">{['', 'Correcto', 'Bueno', 'Muy bueno', 'Excelente', 'Excepcional'][n]}</span></div>)}
+            </div>
+            <p className="small muted mt16">En su historial queda cada valoración con su edad, por ejemplo: «4 años · 3 estrellas», «6 años · 4 estrellas». Nunca baja.</p>
           </div>
-          <div className="callout mt24">
-            <div className="seal"><Img src="/images/sello.png" alt="Sello Lista Laureada" label="★" /></div>
-            <p>Tres estrellas ámbar dan acceso automático a la <Link to="/laureados" className="link">Lista Laureada</Link>, el máximo reconocimiento C-IBERICO y la puerta al salón de la fama.</p>
+          <div>
+            <span className="eyebrow">Resultados en pista</span>
+            <h2>Si gana, se le reconoce</h2>
+            <p className="lead">Un resultado deportivo verificado le asegura unas estrellas mínimas, aunque la valoración haya dado menos. Se queda con lo más alto.</p>
+            <table className="table mt24"><thead><tr><th>Resultado verificado</th><th>Mínimo</th></tr></thead>
+              <tbody>{MERIT_FLOOR.map((m) => <tr key={m.result}><td>{m.result}</td><td><LevelBadge level={m.level} /></td></tr>)}</tbody></table>
+            <div className="callout mt24">
+              <div className="seal"><Img src="/images/sello.png" alt="Sello Lista Laureada" label="★" /></div>
+              <p>Aparte está la <Link to="/laureados" className="link">Lista Laureada</Link>: el máximo reconocimiento, que concede C-IBERICO a los caballos que han marcado la diferencia.</p>
+            </div>
           </div>
         </div>
       </section>

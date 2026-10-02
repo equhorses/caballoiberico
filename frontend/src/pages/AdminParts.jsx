@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { api, downloadPrivate, fileUrl, useFetch } from '../api.jsx'
 import { LevelBadge, breedLabel } from '../components/ui.jsx'
-import { MERIT_LEVELS, ORIGIN, ROMAN, SERVICES, fmtDate } from '../data/content.js'
+import { MERIT_LEVELS, ORIGIN, STARS_TXT, SERVICES, fmtDate } from '../data/content.js'
 
 const pretty = (s) => (s || '').replace(/_/g, ' ').toLowerCase()
 const eurs = (n) => `${Number(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`
@@ -193,9 +193,6 @@ export function HorseEditCard({ h, notify, reload }) {
       </div>
       <div className="row mt16" style={{ gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <label className="row small" style={{ gap: 8 }}><input type="checkbox" checked={h.laureado} disabled={busy} onChange={(e) => patch({ laureado: e.target.checked }, e.target.checked ? 'Incluido en la Lista Laureada' : 'Retirado de la Lista Laureada')} /> En la Lista Laureada Ámbar</label>
-        <label className="row small" style={{ gap: 8 }}>Estrellas ámbar
-          <input className="input" type="number" min="0" max="99" style={{ width: 80 }} defaultValue={h.amberStars} key={h.amberStars} onBlur={(e) => Number(e.target.value) !== h.amberStars && patch({ amberStars: e.target.value }, 'Estrellas ámbar actualizadas')} />
-        </label>
         {h.adminNotes && <span className="small muted">Nota interna: {h.adminNotes}</span>}
       </div>
       {open && (
@@ -311,7 +308,7 @@ function UserDetail({ id, me, notify, onBack }) {
       <div className="grid g2" style={{ alignItems: 'start' }}>
         <div className="card">
           <h3>Ejemplares ({u.horses.length})</h3>
-          {u.horses.length ? u.horses.map((h) => <p key={h.id} className="mt8">{h.name} <span className="small muted">· {h.registrationNumber || 'sin nº'} · {breedLabel(h.breed)} · {pretty(h.status)} · nivel {ROMAN[h.level] || '—'}</span></p>) : <p className="muted mt8">Ninguno.</p>}
+          {u.horses.length ? u.horses.map((h) => <p key={h.id} className="mt8">{h.name} <span className="small muted">· {h.registrationNumber || 'sin nº'} · {breedLabel(h.breed)} · {pretty(h.status)} · {STARS_TXT[h.level] || '—'}</span></p>) : <p className="muted mt8">Ninguno.</p>}
         </div>
         <div className="card">
           <h3>Gestiones ({u.requests.length})</h3>
@@ -344,7 +341,7 @@ export function CertificatesAdmin({ notify, openHorse }) {
             <thead><tr><th>Certificado</th><th>Ejemplar</th><th>Expedido</th><th>Estado</th><th /></tr></thead>
             <tbody>{data.map((c) => (
               <tr key={c.id}>
-                <td><span className="t-name">{c.type === 'ORIGEN' ? 'Origen' : `Calidad · nivel ${ROMAN[c.level] || '—'}`}</span><div className="k">{c.code}</div></td>
+                <td><span className="t-name">{c.type === 'ORIGEN' ? 'Origen' : `Calidad · ${STARS_TXT[c.level] || '—'}`}</span><div className="k">{c.code}</div></td>
                 <td className="small"><button type="button" className="link" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => openHorse(c.horseId)}>{c.horseName}</button><div className="muted">{c.registrationNumber || 'sin nº'}</div></td>
                 <td className="small">{fmtDate(c.issuedAt)}</td>
                 <td><span className={`badge ${c.status === 'VIGENTE' ? 'ok' : 'bad'}`}>{c.status.toLowerCase()}</span>{c.notes && <div className="small muted mt8">{c.notes}</div>}</td>
@@ -361,7 +358,7 @@ export function CertificatesAdmin({ notify, openHorse }) {
 // ─── MÉRITOS ───
 export function MeritsAdmin({ notify, isAdmin, openHorse }) {
   const { data, loading, reload } = useFetch('/admin/merits')
-  const verify = async (m) => { try { const r = await api(`/admin/merits/${m.id}/verify`, { method: 'POST' }); notify(r.raised ? `Resultado verificado: ${m.horseName} sube a nivel ${ROMAN[r.raised.to]} por méritos` : 'Resultado verificado'); reload() } catch (x) { notify(x.message) } }
+  const verify = async (m) => { try { const r = await api(`/admin/merits/${m.id}/verify`, { method: 'POST' }); notify(r.raised ? `Resultado verificado: ${m.horseName} sube a ${STARS_TXT[r.raised.to]} por méritos` : 'Resultado verificado'); reload() } catch (x) { notify(x.message) } }
   const reject = async (m) => { if (!window.confirm('¿Rechazar y borrar este resultado?')) return; try { await api(`/admin/merits/${m.id}`, { method: 'DELETE' }); notify('Resultado rechazado'); reload() } catch (x) { notify(x.message) } }
   return (
     <div className="stack">

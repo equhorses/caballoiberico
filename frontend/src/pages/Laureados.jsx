@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api.jsx'
 import { PageHero } from './Registry.jsx'
-import { ExampleBadge, Img, Stars, breedLabel } from '../components/ui.jsx'
+import { ExampleBadge, Img, LevelBadge, breedLabel } from '../components/ui.jsx'
 import { MERIT_LEVELS, fmtDate } from '../data/content.js'
 import { EXAMPLE_HORSES, EXAMPLE_RESULTS } from '../data/examples.js'
 
@@ -17,8 +17,8 @@ export default function Laureados() {
       .catch(() => setData(null))
       .finally(() => setData((d) => d || {
         isExample: true,
-        laureados: EXAMPLE_HORSES.filter((h) => h.amberStars >= 3),
-        ranking: [...EXAMPLE_HORSES].sort((a, b) => b.stars - a.stars || b.score - a.score),
+        laureados: EXAMPLE_HORSES.filter((h) => h.laureado || h.amberStars >= 3),
+        ranking: [...EXAMPLE_HORSES].sort((a, b) => (b.level || 0) - (a.level || 0) || (b.score || 0) - (a.score || 0)),
         results: EXAMPLE_RESULTS,
       }))
   }, [])
@@ -26,7 +26,7 @@ export default function Laureados() {
   return (
     <>
       <PageHero eyebrow="Salón de la fama" title="Lista Laureada Ámbar">
-        La máxima distinción C-IBERICO. Reservada a los ejemplares que acumulan tres estrellas ámbar por la trayectoria deportiva de su descendencia.
+        El máximo reconocimiento C-IBERICO. Lo concedemos a los caballos que han marcado la diferencia en competición o como reproductores.
       </PageHero>
       {!data ? <div className="wrap section"><p className="muted">Cargando…</p></div> : (
         <>
@@ -43,7 +43,7 @@ export default function Laureados() {
                         <div className="row" style={{ gap: 8 }}><span style={{ color: 'var(--gold-deep)', fontSize: 22 }}>🏆</span>{h.example && <ExampleBadge />}</div>
                         <h3 className="mt8" style={{ textTransform: 'uppercase' }}>{h.name}</h3>
                         <div className="k mt8">{breedLabel(h.breed)} · Nº {h.registrationNumber}</div>
-                        <div className="mt8"><Stars n={h.stars} amber={h.amberStars} /></div>
+                        <div className="mt8"><LevelBadge level={h.level} /></div>
                       </div>
                     </Link>
                   ))}
@@ -54,7 +54,7 @@ export default function Laureados() {
 
           <section className="section white tight">
             <div className="wrap">
-              <span className="eyebrow">Clasificación por estrellas</span>
+              <span className="eyebrow">Mejor valorados</span>
               <div className="table-scroll mt16">
                 <table className="table">
                   <thead><tr><th>#</th><th>Ejemplar</th><th>Estrellas</th><th style={{ textAlign: 'right' }}>Nota</th></tr></thead>
@@ -63,7 +63,7 @@ export default function Laureados() {
                       <tr key={h.registrationNumber}>
                         <td style={{ fontFamily: 'var(--serif)', color: 'var(--gold-deep)', fontSize: '1.3rem' }}>{i + 1}</td>
                         <td><span className="t-name" style={{ textTransform: 'uppercase' }}>{h.name}</span> {h.example && <ExampleBadge />}<div className="k">{breedLabel(h.breed)} · {h.country}</div></td>
-                        <td><Stars n={h.stars} amber={h.amberStars} max={16} /></td>
+                        <td><LevelBadge level={h.level} /></td>
                         <td style={{ textAlign: 'right', fontFamily: 'var(--serif)', fontSize: '1.3rem', color: 'var(--gold-deep)' }}>{h.score != null ? h.score.toFixed(1) : '—'}</td>
                       </tr>
                     ))}

@@ -244,7 +244,7 @@ router.put('/cases/:id/decisions/:key', wrap(async (req, res) => {
   res.json(d);
 }));
 
-// Cierre de la valoración: nota ponderada, nivel (con el tope de la etapa) y subida si mejora. Nunca baja.
+// Cierre de la valoración: nota ponderada, estrellas de calidad y subida si mejora. Nunca baja.
 async function resolveCase(c, user, summary, guidance) {
   const rubric = await db.one('SELECT content FROM rubrics WHERE id=$1', [c.rubricId]);
   const decisions = await db.query('SELECT * FROM human_decisions WHERE case_id=$1', [c.id]);
@@ -264,7 +264,7 @@ async function resolveCase(c, user, summary, guidance) {
     if (earned > horse.level) {
       await db.query('UPDATE horses SET level=$2, updated_at=now() WHERE id=$1', [horse.id, earned], client);
       await db.query(`INSERT INTO level_history(horse_id, from_level, to_level, reason, case_id, notes, decided_by)
-                      VALUES ($1,$2,$3,'VALORACION',$4,$5,$6)`, [horse.id, horse.level, earned, c.id, `Valoración ${stage ? stage.name : ''}: ${score}/100`, user.id], client);
+                      VALUES ($1,$2,$3,'VALORACION',$4,$5,$6)`, [horse.id, horse.level, earned, c.id, `${stage ? stage.name : ''} · ${earned} ${earned === 1 ? 'estrella' : 'estrellas'} (${score}/100)`, user.id], client);
     }
     await audit(user.id, 'EvaluationCase', c.id, 'RESOLVER', { summary: finalSummary, guidance, nota: score, nivelObtenido: earned, nivelAnterior: horse.level, sube: earned > horse.level }, client);
     return { ...out, previousLevel: horse.level, newLevel: Math.max(earned, horse.level) };

@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { api, fileUrl, openPrivateFile, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
 import { AdminHorses, CertificatesAdmin, Dashboard, ExportButton, HorseEditCard, MeritsAdmin, PaymentsAdmin, UsersAdmin } from './AdminParts.jsx'
-import { DOC_ROLES, LEVEL_REASON, MERIT_LEVELS, ORIGIN, PHOTO_VIEWS, ROMAN, SERVICES, fmtDate } from '../data/content.js'
+import { DOC_ROLES, LEVEL_REASON, MERIT_LEVELS, ORIGIN, PHOTO_VIEWS, STARS_TXT, SERVICES, fmtDate } from '../data/content.js'
 
 const CASE_STATUS = { REVISION_MATERIAL: 'Revisión de material', EN_REVISION_HUMANA: 'En revisión humana', REQUIERE_MATERIAL: 'Requiere material', RESUELTO: 'Resuelto' }
 const MATERIAL = [['APTO', 'Apto'], ['APTO_PARCIAL', 'Apto parcialmente'], ['REQUIERE_MATERIAL', 'Requiere nuevo material'], ['NO_EVALUABLE', 'No evaluable']]
@@ -67,7 +67,7 @@ function Cases({ open }) {
               <td><span className="t-name">{c.horseName}</span><div className="k">{c.registrationNumber || 'sin nº'} · {breedLabel(c.breed)} · {c.stageName || `${c.ageYears} años`}</div></td>
               <td><span className={`badge ${c.status === 'RESUELTO' ? 'ok' : c.status === 'REQUIERE_MATERIAL' ? 'bad' : 'light'}`}>{CASE_STATUS[c.status]}</span></td>
               <td>{c.decided} / {c.criteriaCount}</td>
-              <td>{c.status === 'RESUELTO' ? <span className="small">obtenido {ROMAN[c.levelAwarded || 0]}</span> : <LevelBadge level={c.horseLevel} />}</td>
+              <td>{c.status === 'RESUELTO' ? <span className="small">obtenido {STARS_TXT[c.levelAwarded || 0]}</span> : <LevelBadge level={c.horseLevel} />}</td>
               <td>v{c.rubricVersion}</td>
               <td className="small">{fmtDate(c.updatedAt)}</td>
               <td><button className="btn btn-line btn-sm" onClick={() => open(c.id)}>Abrir</button></td>
@@ -100,7 +100,7 @@ function CaseView({ id, onBack, notify }) {
   const doResolve = async (requiresMaterial) => {
     try {
       const r = await api(`/eval/cases/${id}/resolve`, { method: 'POST', body: { ...resolve, requiresMaterial } })
-      notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : r.newLevel > r.previousLevel ? `Valoración resuelta: sube a nivel ${ROMAN[r.newLevel]}` : `Valoración resuelta: conserva nivel ${ROMAN[r.newLevel]}`)
+      notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : r.newLevel > r.previousLevel ? `Valoración resuelta: sube a ${STARS_TXT[r.newLevel]}` : `Valoración resuelta: conserva ${STARS_TXT[r.newLevel]}`)
       reload()
     } catch (x) { notify(x.message) }
   }
@@ -109,7 +109,7 @@ function CaseView({ id, onBack, notify }) {
     setAccepting(true)
     try {
       const r = await api(`/eval/cases/${id}/accept-ai`, { method: 'POST', body: {} })
-      notify(r.newLevel > r.previousLevel ? `Resultado aceptado: sube a nivel ${ROMAN[r.newLevel]}` : `Resultado aceptado: conserva nivel ${ROMAN[r.newLevel]}`)
+      notify(r.newLevel > r.previousLevel ? `Resultado aceptado: sube a ${STARS_TXT[r.newLevel]}` : `Resultado aceptado: conserva ${STARS_TXT[r.newLevel]}`)
       reload()
     } catch (x) { notify(x.message) }
     setAccepting(false)
@@ -125,8 +125,8 @@ function CaseView({ id, onBack, notify }) {
             <h2 style={{ fontSize: '1.9rem', textTransform: 'uppercase' }}>{c.horse.name}</h2>
             <p className="k mt8">{c.horse.registrationNumber || 'sin nº'} · {breedLabel(c.horse.breed)} · {c.stageInfo ? c.stageInfo.name : `${c.ageYears} años`} · rúbrica v{c.rubric.version} ({c.rubric.status.toLowerCase()})</p>
             <div className="row mt8" style={{ gap: 10 }}>
-              <span className="small">Nivel actual</span><LevelBadge level={c.horse.level} />
-              {c.stageInfo && <span className="small muted">· tope de esta etapa: {ROMAN[c.stageInfo.cap]}{c.stageInfo.ridden ? '' : ' · sin montar: no se evalúa la aptitud para ser montado'}</span>}
+              <span className="small">Calidad actual</span><LevelBadge level={c.horse.level} />
+              {c.stageInfo && !c.stageInfo.ridden && <span className="small muted">· sin montar: no se evalúa la aptitud para ser montado</span>}
             </div>
           </div>
           <span className={`badge ${locked ? 'ok' : 'light'}`}>{CASE_STATUS[c.status]}</span>
@@ -163,7 +163,7 @@ function CaseView({ id, onBack, notify }) {
                   </tr>
                 ))}</tbody>
               </table>
-              <p className="ai-total mt16">Nota <strong>{ar.score ?? '—'}/100</strong> → nivel <strong>{ROMAN[ar.level || 0]}</strong>{c.stageInfo ? ` (tope de la etapa: ${ROMAN[c.stageInfo.cap]})` : ''} · {ar.level > c.horse.level ? `subirá de ${ROMAN[c.horse.level]} a ${ROMAN[ar.level]}` : `conserva su nivel ${ROMAN[c.horse.level]}`}</p>
+              <p className="ai-total mt16">Nota <strong>{ar.score ?? '—'}/100</strong> → nivel <strong>{STARS_TXT[ar.level || 0]}</strong> · {ar.level > c.horse.level ? `subirá de ${STARS_TXT[c.horse.level]} a ${STARS_TXT[ar.level]}` : `conserva su ${STARS_TXT[c.horse.level]}`}</p>
             </>
           )}
           <div className="secretaria mt16">
@@ -189,15 +189,15 @@ function CaseView({ id, onBack, notify }) {
         <div className="card form">
           <div className="row between"><h3>Ajuste manual excepcional</h3><button type="button" className="link small" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => setManual(false)}>Volver al modelo IA</button></div>
           <p className="notice info">
-            Nota provisional con lo decidido: <strong>{c.preview?.score != null ? `${c.preview.score}/100` : '—'}</strong> → nivel <strong>{ROMAN[c.preview?.level || 0]}</strong>.{' '}
-            {c.preview && c.preview.level > c.preview.current ? `Al resolver, el ejemplar subirá de ${ROMAN[c.preview.current]} a ${ROMAN[c.preview.level]}.` : `No supera su nivel actual (${ROMAN[c.preview?.current || 0]}): lo conservará.`}
+            Nota provisional con lo decidido: <strong>{c.preview?.score != null ? `${c.preview.score}/100` : '—'}</strong> → nivel <strong>{STARS_TXT[c.preview?.level || 0]}</strong>.{' '}
+            {c.preview && c.preview.level > c.preview.current ? `Al resolver, el ejemplar subirá de ${STARS_TXT[c.preview.current]} a ${STARS_TXT[c.preview.level]}.` : `No supera su nivel actual (${STARS_TXT[c.preview?.current || 0]}): lo conservará.`}
           </p>
           <div className="field"><label>Conclusión (se publica en la ficha)</label><textarea className="textarea" value={resolve.summary} onChange={(e) => setResolve({ ...resolve, summary: e.target.value })} /></div>
           <div className="field"><label>Orientación (la emite el evaluador, nunca la IA)</label><textarea className="textarea" value={resolve.guidance} onChange={(e) => setResolve({ ...resolve, guidance: e.target.value })} /></div>
           <div className="row"><button className="btn btn-gold" onClick={() => doResolve(false)}>Resolver valoración</button><button className="btn btn-line" onClick={() => doResolve(true)}>Pedir nuevo material</button></div>
         </div>
       ) : (
-        <div className="card"><h3>Resolución</h3><p className="mt8">Nota {c.finalScore ?? '—'}/100 · nivel obtenido {ROMAN[c.levelAwarded || 0]}</p><p className="mt8">{c.summary}</p>{c.guidance && <p className="muted mt8"><strong>Orientación:</strong> {c.guidance}</p>}<p className="small muted mt8">Resuelto el {fmtDate(c.resolvedAt)}</p></div>
+        <div className="card"><h3>Resolución</h3><p className="mt8">Nota {c.finalScore ?? '—'}/100 · nivel obtenido {STARS_TXT[c.levelAwarded || 0]}</p><p className="mt8">{c.summary}</p>{c.guidance && <p className="muted mt8"><strong>Orientación:</strong> {c.guidance}</p>}<p className="small muted mt8">Resuelto el {fmtDate(c.resolvedAt)}</p></div>
       )}
 
       <div className="card history">
@@ -370,29 +370,29 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
       </div>
       <div className="card">
         <div className="row between">
-          <h3>Nivel de calidad</h3>
+          <h3>Calidad (estrellas)</h3>
           <LevelBadge level={h.level} big />
         </div>
-        <p className="small muted mt8">Sube solo con una valoración que lo mejore o por decisión de la presidencia (méritos deportivos). Nunca baja por una nueva valoración.</p>
+        <p className="small muted mt8">Sube con una valoración que lo mejore o con un resultado verificado (podio). Nunca baja por una nueva valoración. El cambio manual es excepcional y queda registrado.</p>
         {isAdmin && (
-          <form className="row mt16" style={{ gap: 8, alignItems: 'stretch' }} onSubmit={(e) => { e.preventDefault(); call(() => api(`/admin/horses/${id}/level`, { method: 'POST', body: { ...lvl, level: Number(lvl.level) } }), 'Nivel actualizado').then((ok) => ok && setLvl({ level: '', reason: 'MERITO', notes: '' })) }}>
+          <form className="row mt16" style={{ gap: 8, alignItems: 'stretch' }} onSubmit={(e) => { e.preventDefault(); call(() => api(`/admin/horses/${id}/level`, { method: 'POST', body: { ...lvl, level: Number(lvl.level) } }), 'Estrellas actualizadas').then((ok) => ok && setLvl({ level: '', reason: 'MERITO', notes: '' })) }}>
             <select className="select" style={{ width: 150 }} required value={lvl.level} onChange={(e) => setLvl({ ...lvl, level: e.target.value })}>
-              <option value="">Nuevo nivel…</option>
-              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n} disabled={n === h.level}>Nivel {ROMAN[n]}</option>)}
-              <option value="0">Sin nivel</option>
+              <option value="">Nuevas estrellas…</option>
+              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n} disabled={n === h.level}>{STARS_TXT[n]}</option>)}
+              <option value="0">Sin valorar</option>
             </select>
             <select className="select" style={{ width: 200 }} value={lvl.reason} onChange={(e) => setLvl({ ...lvl, reason: e.target.value })}>
               <option value="MERITO">Mérito deportivo</option>
               <option value="MANUAL">Otra decisión de presidencia</option>
             </select>
             <input className="input" style={{ flex: 1, minWidth: 220 }} required placeholder="Motivo: competición, resultado, documento…" value={lvl.notes} onChange={(e) => setLvl({ ...lvl, notes: e.target.value })} />
-            <button className="btn btn-gold">Cambiar nivel</button>
+            <button className="btn btn-gold">Cambiar estrellas</button>
           </form>
         )}
         {h.levelHistory?.length > 0 && (
           <ul className="history mt16" style={{ padding: 0 }}>
             {h.levelHistory.map((l) => (
-              <li key={l.id}><strong>{ROMAN[l.fromLevel]} → {ROMAN[l.toLevel]}</strong> · {LEVEL_REASON[l.reason]} · {l.decidedByName || '—'} · {new Date(l.at).toLocaleString('es-ES')}<div className="muted">{l.notes}</div></li>
+              <li key={l.id}><strong>{STARS_TXT[l.fromLevel]} → {STARS_TXT[l.toLevel]}</strong> · {LEVEL_REASON[l.reason]} · {l.decidedByName || '—'} · {new Date(l.at).toLocaleString('es-ES')}<div className="muted">{l.notes}</div></li>
             ))}
           </ul>
         )}
@@ -402,7 +402,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
           <h3>Certificados</h3>
           {h.certificates.map((c) => (
             <div key={c.id} className="row between mt8" style={{ borderBottom: '1px solid var(--line)', paddingBottom: 8 }}>
-              <span>{c.type === 'ORIGEN' ? 'Origen' : `Calidad · nivel ${ROMAN[h.level] || '—'} (vivo)`} · {c.code}</span>
+              <span>{c.type === 'ORIGEN' ? 'Origen' : `Calidad · ${STARS_TXT[h.level] || '—'} (vivo)`} · {c.code}</span>
               {c.status === 'VIGENTE' && isAdmin
                 ? <button className="btn btn-line btn-sm" onClick={() => { const reason = window.prompt('Motivo de la revocación'); if (reason) call(() => api(`/admin/certificates/${c.id}/revoke`, { method: 'POST', body: { reason } }), 'Certificado revocado') }}>Revocar</button>
                 : <span className={`badge ${c.status === 'VIGENTE' ? 'ok' : 'bad'}`}>{c.status.toLowerCase()}</span>}
@@ -433,7 +433,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
               <strong>{m.competition}</strong> · {m.category} · {m.position} · {MERIT_LEVELS[m.level]} ({m.starsGiven}★) · {fmtDate(m.date)}
               <div className="row mt8" style={{ gap: 8 }}>
                 {m.documentUrl && <a className="link small" href={fileUrl(m.documentUrl)} target="_blank" rel="noreferrer">Documento</a>}
-                {m.verified ? <span className="badge ok">verificado</span> : isAdmin ? <button className="btn btn-line btn-sm" onClick={() => call(() => api(`/admin/merits/${m.id}/verify`, { method: 'POST' }), 'Resultado verificado (si da derecho a un nivel mayor, el caballo sube solo)')}>Verificar</button> : <span className="badge example">pendiente</span>}
+                {m.verified ? <span className="badge ok">verificado</span> : isAdmin ? <button className="btn btn-line btn-sm" onClick={() => call(() => api(`/admin/merits/${m.id}/verify`, { method: 'POST' }), 'Resultado verificado (si da derecho a más estrellas, el caballo sube solo)')}>Verificar</button> : <span className="badge example">pendiente</span>}
               </div>
             </div>
           ))}

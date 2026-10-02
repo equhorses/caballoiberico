@@ -17,7 +17,7 @@ export const plazo = (d) => (d === 0 ? 'Al momento' : `${d} días hábiles`)
 export const SERVICES = [
   {
     code: 'PREVALORACION', slug: 'prevaloracion', num: '00', tag: 'Pre-valoración', name: 'Pre-valoración', price: 0, days: 0, launch: true,
-    desc: 'Antes de pedir el certificado: sube un vídeo y una foto de perfil y nuestra IA te da al momento una orientación del nivel probable de tu caballo. Gratis, sin compromiso y sin dar de alta el ejemplar.',
+    desc: 'Antes de pedir el certificado: sube un vídeo y una foto de perfil y nuestra IA te da al momento una orientación de las estrellas probables de tu caballo. Gratis, sin compromiso y sin dar de alta el ejemplar.',
     docs: [
       'Un vídeo de 30 a 60 segundos de lado, con la cámara quieta a 10–15 m: trote y, si puede ser, paso y galope',
       'Una fotografía de perfil con el caballo cuadrado',
@@ -37,10 +37,10 @@ export const SERVICES = [
   },
   {
     code: 'CALIDAD', slug: 'calidad', num: '02', tag: 'Calidad', name: 'Certificado de Calidad', price: 89, days: 3,
-    desc: 'El segundo paso, desde los 6 meses. Valoración morfo-deportiva según su etapa de edad y nivel de calidad del I al V. Es un certificado vivo: se actualiza cuando el caballo sube de nivel en una nueva etapa o por sus resultados deportivos.',
+    desc: 'El segundo paso, desde los 6 meses. Valoración deportiva según su edad y calidad de 1 a 5 estrellas. Es un certificado vivo: se actualiza si sube de estrellas en una nueva edad o por sus resultados deportivos.',
     docs: [
       'Certificado de Origen C-IBERICO ya expedido',
-      'Ejemplar con al menos 6 meses (la exigencia y el nivel máximo dependen de la etapa)',
+      'Ejemplar con al menos 6 meses (la exigencia se ajusta a su edad)',
       'Cinco fotografías reglamentarias y vídeo de máx. 1 minuto (montado desde los 3 años; a la mano o en libertad antes)',
       'Opcional: resultados deportivos con documento oficial del organismo, para incluirlos',
     ],
@@ -58,7 +58,7 @@ export const SERVICES = [
   {
     code: 'LAUREADA', slug: 'laureada', num: '05', tag: 'Laureada', name: 'Lista Laureada Ámbar', price: 99, days: 10,
     desc: 'Máxima distinción C-IBERICO. Acceso al salón de la fama y trabajo de promoción por parte de la presidencia.',
-    docs: ['Certificado de Origen C-IBERICO', 'Acreditación de las tres estrellas ámbar obtenidas por la descendencia', 'Historial deportivo documentado'],
+    docs: ['Certificado de Origen C-IBERICO', 'Historial deportivo documentado del ejemplar o de su descendencia', 'La concede C-IBERICO tras estudiar la candidatura'],
   },
   {
     code: 'YEGUADA', slug: 'yeguada', num: '06', tag: 'Yeguada', name: 'Alta de yeguada asociada', price: 149, days: 7,
@@ -75,13 +75,6 @@ export const MERIT_FLOOR = [
   { result: 'Entre los 15 primeros en Juegos Olímpicos, Mundial o Juegos Ecuestres', level: 5 },
 ]
 
-// Las estrellas reconocen méritos deportivos verificados. No forman parte del Certificado de Calidad (que es el nivel I–V).
-export const STAR_LEVELS = [
-  { n: 3, name: 'Tres estrellas', level: 'Mérito nacional — categoría jóvenes', desc: 'Vencedor de la prueba más alta de la categoría de caballos jóvenes en doma clásica o disciplina avalada.' },
-  { n: 6, name: 'Seis estrellas', level: 'Mérito nacional absoluto', desc: 'Vencedor de la prueba más alta de la disciplina presentada a nivel nacional.' },
-  { n: 12, name: 'Doce estrellas', level: 'Mérito internacional', desc: 'Vencedor de la prueba más alta de la disciplina presentada en competición internacional.' },
-  { n: 24, name: 'Veinticuatro estrellas', level: 'Juegos Olímpicos, Mundial o Juegos Ecuestres', desc: 'Participación entre los quince primeros. Concede además una estrella ámbar a todos sus ascendientes.' },
-]
 
 export const MERIT_LEVELS = {
   JOVENES_NACIONAL: 'Jóvenes (nacional)', NACIONAL_ABSOLUTO: 'Nacional absoluto', INTERNACIONAL: 'Internacional', MUNDIAL_OLIMPICO: 'Mundial / Olímpico',
@@ -108,23 +101,26 @@ export const CRITERIA = [
 ]
 
 export const AGE_WHEEL = [
-  ['Potro (6–11 meses)', 'A la mano o en libertad. Proporciones, aplomos y calidad natural de los aires. Nota orientativa.', 'II'],
-  ['Añojo (1 año)', 'En libertad o a la mano. Aires naturales regulares y equilibrio.', 'II'],
-  ['2 años', 'En libertad o a la cuerda. Elasticidad, empuje del posterior y equilibrio en giros.', 'III'],
-  ['3 años', 'Montado. Tres aires regulares, ritmo y tacto. No se exige más.', 'III'],
-  ['4 años', 'Impulsión naciente y transiciones básicas al galope.', 'IV'],
-  ['5 años', 'Alargamientos, contragalope corto, reunión incipiente.', 'IV'],
-  ['6 años o más', 'Reunión real y exigencia completa de doma clásica según el nivel presentado.', 'V'],
+  ['Potro (6–11 meses)', 'A la mano o en libertad. Proporciones, aplomos y calidad natural de los aires. Valoración orientativa.'],
+  ['Añojo (1 año)', 'En libertad o a la mano. Aires naturales regulares y equilibrio.'],
+  ['2 años', 'En libertad o a la cuerda. Elasticidad, empuje del posterior y equilibrio en giros.'],
+  ['3 años', 'Montado. Tres aires regulares, ritmo y tacto. No se exige más.'],
+  ['4 años', 'Impulsión naciente, contacto estable y transiciones básicas.'],
+  ['5 años', 'Criterios FEI de 5 años: ritmo, soltura, elasticidad y equilibrio natural.'],
+  ['6 años', 'Criterios FEI de 6 años: más impulsión, terreno cubierto y tendencia cuesta arriba.'],
+  ['7 años', 'Criterios FEI de 7 años: capacidad real de reunir y cargar peso.'],
+  ['8 años o más', 'Exigencia completa de doma clásica.'],
 ]
 
 export const LEVELS = [
-  { n: 1, name: 'Nivel I', min: 50 },
-  { n: 2, name: 'Nivel II', min: 60 },
-  { n: 3, name: 'Nivel III', min: 70 },
-  { n: 4, name: 'Nivel IV', min: 80 },
-  { n: 5, name: 'Nivel V', min: 90 },
+  { n: 1, name: '1 estrella', min: 50 },
+  { n: 2, name: '2 estrellas', min: 60 },
+  { n: 3, name: '3 estrellas', min: 70 },
+  { n: 4, name: '4 estrellas', min: 80 },
+  { n: 5, name: '5 estrellas', min: 90 },
 ]
-export const ROMAN = ['—', 'I', 'II', 'III', 'IV', 'V']
+// Calidad C-IBERICO: de 1 a 5 estrellas
+export const STARS_TXT = ['sin valorar', '1 estrella', '2 estrellas', '3 estrellas', '4 estrellas', '5 estrellas']
 export const LEVEL_REASON = { VALORACION: 'Valoración', MERITO: 'Mérito deportivo', MANUAL: 'Decisión de presidencia' }
 
 export const STANDARD_TEXT = {
@@ -158,7 +154,7 @@ export const AI_RULES = [
   'Un material deficiente nunca se convierte en una nota baja: se pide nuevo material o se marca como no evaluable.',
   'Cada propuesta cita su evidencia (vista fotográfica o minuto del vídeo) y declara su confianza.',
   'La IA no determina identidad, genealogía, pureza, temperamento, salud, valor reproductivo ni rendimiento futuro.',
-  'El nivel sale de la nota de la IA, con el tope de cada etapa. Las estrellas no las da la IA: salen de resultados deportivos verificados.',
+  'Las estrellas de calidad salen de la nota de la IA, que exige a cada caballo lo que corresponde a su edad. Los resultados deportivos verificados pueden asegurar unas estrellas mínimas.',
   'Cada valoración queda ligada a la versión de la rúbrica utilizada y a un historial que no se borra.',
 ]
 

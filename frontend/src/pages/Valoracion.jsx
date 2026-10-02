@@ -10,7 +10,7 @@ export default function Valoracion() {
     <>
       <PageHero eyebrow="Inteligencia artificial C-IBERICO" title={<>Valoración morfo-deportiva<br />del ejemplar</>} image="/images/valoracion.jpg">
         Desde los 6 meses. Nueve bloques puntuados de 0 a 10 según el reglamento de doma clásica y los criterios de selección
-        centroeuropeos, calibrados por la edad. El resultado es un nivel de calidad, del I al V, que el ejemplar conserva y puede mejorar.
+        centroeuropeos, calibrados por la edad. El resultado es su calidad de 1 a 5 estrellas, que el caballo conserva y puede mejorar.
       </PageHero>
 
       <section className="section white">
@@ -36,7 +36,7 @@ export default function Valoracion() {
             <div><h3>Material</h3><p>El titular sube las cinco fotografías reglamentarias y un vídeo de máximo un minuto: montado desde los 3 años; a la mano o en libertad en potros.</p></div>
             <div><h3>Revisión del material</h3><p>Se comprueba, criterio por criterio, si el material permite valorar. Si no, se pide material nuevo: nunca se penaliza.</p></div>
             <div><h3>Valoración de la IA</h3><p>La IA analiza las fotos y el vídeo con la misma rúbrica para todos. Para cada bloque da una observación, una nota, la foto o el minuto que la sustenta y su nivel de confianza.</p></div>
-            <div><h3>Ficha final</h3><p>Comprobamos que el material es del caballo y es válido, y expedimos la ficha con el resultado de la IA tal cual. La nota y el nivel no los retoca nadie.</p></div>
+            <div><h3>Ficha final</h3><p>Comprobamos que el material es del caballo y es válido, y expedimos la ficha con el resultado de la IA tal cual. La nota y las estrellas no las retoca nadie.</p></div>
           </div>
         </div>
       </section>
@@ -70,11 +70,11 @@ export default function Valoracion() {
           </div>
           <div>
             <span className="eyebrow">Rueda de edad</span>
-            <h2>Se exige según la etapa</h2>
-            <p className="muted mt16">La misma ejecución no vale lo mismo a los 4 que a los 6 años. Antes de puntuar se calibra con lo que es razonable pedir a esa edad, y cada etapa tiene un nivel máximo.</p>
+            <h2>Se exige según la edad</h2>
+            <p className="muted mt16">A cada caballo se le pide lo que corresponde a su edad: a uno de 6 años, lo de 6; a uno de 7, lo de 7; desde los 8, la exigencia completa. Por eso 4 estrellas a los 4 años y 4 estrellas a los 8 significan lo mismo: un caballo muy bueno para su edad.</p>
             <table className="table mt24">
-              <thead><tr><th>Etapa</th><th>Qué se valora</th><th>Nivel máx.</th></tr></thead>
-              <tbody>{AGE_WHEEL.map(([a, t, cap]) => <tr key={a}><td className="t-name" style={{ whiteSpace: 'nowrap' }}>{a}</td><td className="muted">{t}</td><td style={{ textAlign: 'center', fontWeight: 700 }}>{cap}</td></tr>)}</tbody>
+              <thead><tr><th>Edad</th><th>Qué se le pide</th></tr></thead>
+              <tbody>{AGE_WHEEL.map(([a, t]) => <tr key={a}><td className="t-name" style={{ whiteSpace: 'nowrap' }}>{a}</td><td className="muted">{t}</td></tr>)}</tbody>
             </table>
             <p className="small muted mt16">Interpretación propia de C-IBERICO inspirada en las pruebas de caballos jóvenes; no es un baremo de la FEI.</p>
           </div>
@@ -83,13 +83,13 @@ export default function Valoracion() {
 
       <section className="section white">
         <div className="wrap">
-          <span className="eyebrow">Niveles de calidad</span>
-          <h2>Un nivel que se conserva y se mejora</h2>
-          <p className="lead">El nivel no depende de la edad. En cada cambio de etapa el ejemplar puede volver a presentarse (una nueva valoración, {eur(SERVICES.find((s) => s.code === 'CALIDAD').price)}): si mejora, sube; si no, conserva el que tenía. Nunca baja por una nueva valoración. Se puede presentar por primera vez en cualquier etapa, sin haber pasado por las anteriores.</p>
+          <span className="eyebrow">Calidad C-IBERICO</span>
+          <h2>De 1 a 5 estrellas, que se conservan y se mejoran</h2>
+          <p className="lead">Se puede presentar por primera vez a cualquier edad, sin haber pasado por las anteriores. Cada año puede volver a presentarse (una nueva valoración, {eur(SERVICES.find((s) => s.code === 'CALIDAD').price)}): si mejora, sube; si no, conserva lo que tenía. Nunca baja. Cada valoración queda en su historial con su edad, por ejemplo «4 años · 3 estrellas».</p>
           <div className="card mt24">
             <h3>Los resultados en pista también cuentan</h3>
-            <p className="muted mt8">Un resultado deportivo verificado garantiza un nivel mínimo, aunque la valoración haya dado menos. El caballo se queda con el más alto de los dos.</p>
-            <table className="table mt16"><thead><tr><th>Resultado verificado</th><th>Nivel mínimo</th></tr></thead>
+            <p className="muted mt8">Un resultado deportivo verificado le asegura unas estrellas mínimas, aunque la valoración haya dado menos. Se queda con lo más alto.</p>
+            <table className="table mt16"><thead><tr><th>Resultado verificado</th><th>Mínimo</th></tr></thead>
               <tbody>{MERIT_FLOOR.map((m) => <tr key={m.result}><td>{m.result}</td><td><LevelBadge level={m.level} /></td></tr>)}</tbody></table>
           </div>
           <div className="levels-scale mt32">

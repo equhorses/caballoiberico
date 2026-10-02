@@ -42,7 +42,7 @@ export default function Verificar() {
                   <dt>Nº de registro</dt><dd>{result.horse.registrationNumber || '—'}</dd>
                   <dt>Raza</dt><dd>{breedLabel(result.horse.breed)}</dd>
                   <dt>Procedencia</dt><dd>{ORIGIN[result.horse.originStatus || 'DECLARADO']}</dd>
-                  <dt>Nivel C-IBERICO</dt><dd><LevelBadge level={result.horse.level} /></dd>
+                  <dt>Calidad C-IBERICO</dt><dd><LevelBadge level={result.horse.level} /></dd>
                   {result.type && <><dt>Tipo</dt><dd>{TYPE[result.type]}</dd></>}
                   {result.code && <><dt>Código</dt><dd>{result.code}</dd></>}
                   {result.issuedAt && <><dt>Expedido</dt><dd>{fmtDate(result.issuedAt)}</dd></>}
@@ -53,18 +53,18 @@ export default function Verificar() {
                     <span className="eyebrow">Certificado de Calidad · estado actual</span>
                     <div className="row mt8" style={{ gap: 12, alignItems: 'center' }}>
                       <LevelBadge level={result.horse.level} big />
-                      {result.quality.levelUpdatedAt && <span className="small muted">Nivel vigente desde el {fmtDate(result.quality.levelUpdatedAt)}{result.quality.levelReason === 'MERITO' ? ' (por méritos deportivos)' : ''}</span>}
+                      {result.quality.levelUpdatedAt && <span className="small muted">Vigente desde el {fmtDate(result.quality.levelUpdatedAt)}{result.quality.levelReason === 'MERITO' ? ' (por resultados deportivos)' : ''}</span>}
                     </div>
-                    {result.quality.lastValuation && <p className="small mt8">Última valoración: etapa {result.quality.lastValuation.stageName}, resuelta el {fmtDate(result.quality.lastValuation.resolvedAt)}.</p>}
+                    {result.quality.lastValuation && <p className="small mt8">Última valoración: con {result.quality.lastValuation.stageName}, resuelta el {fmtDate(result.quality.lastValuation.resolvedAt)}.</p>}
                     {result.quality.merits.length > 0 && (
                       <div className="mt8">
-                        <strong className="small">Resultados deportivos verificados{result.quality.stars ? ` · ${result.quality.stars} estrellas` : ''}</strong>
+                        <strong className="small">Resultados deportivos verificados</strong>
                         <ul className="small" style={{ margin: '6px 0 0', paddingLeft: 18 }}>
                           {result.quality.merits.slice(0, 6).map((m, i) => <li key={i}>{m.competition} · {m.category} · {m.position}{m.score ? ` · ${m.score}${m.score > 10 ? ' %' : ''}` : ''} · {fmtDate(m.date)}</li>)}
                         </ul>
                       </div>
                     )}
-                    <p className="small muted mt8">Este certificado es vivo: muestra siempre el nivel vigente del ejemplar.</p>
+                    <p className="small muted mt8">Este certificado es vivo: muestra siempre las estrellas vigentes del ejemplar.</p>
                   </div>
                 )}
                 {result.certificates && (

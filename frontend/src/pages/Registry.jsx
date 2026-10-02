@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useFetch } from '../api.jsx'
-import { HorseRow, Img, LevelBadge, Stars, breedLabel, Spinner } from '../components/ui.jsx'
-import { CRITERIA, LEVEL_REASON, ORIGIN, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, fmtDate } from '../data/content.js'
+import { HorseRow, Img, LevelBadge, breedLabel, Spinner } from '../components/ui.jsx'
+import { CRITERIA, LEVEL_REASON, ORIGIN, MERIT_LEVELS, PHOTO_VIEWS, STARS_TXT, fmtDate } from '../data/content.js'
 import { useRegistry, filterHorses } from '../data/useRegistry.js'
 
 export function PageHero({ eyebrow, title, children, image = '/images/pista.jpg' }) {
@@ -36,8 +36,7 @@ export default function Registry() {
             <input className="input" placeholder="Buscar por nombre, número de registro, padre, madre o criador" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar en el registro" />
             <select className="select" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Ordenar">
               <option value="score">Mejor valoración</option>
-              <option value="level">Nivel más alto</option>
-              <option value="stars">Más estrellas</option>
+              <option value="level">Más estrellas</option>
               <option value="name">Nombre</option>
               <option value="age">Más jóvenes</option>
             </select>
@@ -75,7 +74,7 @@ export function HorseDetail() {
               <span className="badge">{breedLabel(h.breed)}</span>
               <h1 className="mt16" style={{ textTransform: 'uppercase', fontSize: 'clamp(2rem,4.5vw,3.4rem)' }}>{h.name}</h1>
               <p className="k mt8">Nº {h.registrationNumber}</p>
-              <div className="row mt16" style={{ gap: 12 }}><LevelBadge level={h.level} big /><Stars n={h.stars} amber={h.amberStars} max={24} /></div>
+              <div className="row mt16" style={{ gap: 12 }}><LevelBadge level={h.level} big /></div>
               <dl className="kv">
                 <dt>Nacimiento</dt><dd>{fmtDate(h.birthDate)} · {h.age} años</dd>
                 <dt>Sexo</dt><dd>{h.sex?.toLowerCase()}</dd>
@@ -126,7 +125,7 @@ export function HorseDetail() {
               <span className="eyebrow">Certificados vigentes</span>
               {h.certificates.length ? h.certificates.map((c) => (
                 <div key={c.code} className="row between" style={{ padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
-                  <div><strong>{c.type === 'ORIGEN' ? 'Certificado de Origen' : `Certificado de Calidad · Nivel ${ROMAN[h.level] || '—'}`}</strong><div className="small muted">Expedido el {fmtDate(c.issuedAt)}</div></div>
+                  <div><strong>{c.type === 'ORIGEN' ? 'Certificado de Origen' : `Certificado de Calidad · ${STARS_TXT[h.level]}`}</strong><div className="small muted">Expedido el {fmtDate(c.issuedAt)}</div></div>
                   <Link to={`/verificar?c=${c.code}`} className="badge ok" style={{ textDecoration: 'none' }}>{c.code}</Link>
                 </div>
               )) : <p className="muted">Sin certificados vigentes.</p>}
@@ -136,7 +135,7 @@ export function HorseDetail() {
                 <span className="eyebrow">Evolución de nivel</span>
                 {h.levelHistory.map((l, i) => (
                   <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid var(--line)' }}>
-                    <strong>Nivel {ROMAN[l.fromLevel]} → {ROMAN[l.toLevel]}</strong> · {LEVEL_REASON[l.reason]}
+                    <strong>{STARS_TXT[l.fromLevel]} → {STARS_TXT[l.toLevel]}</strong> · {LEVEL_REASON[l.reason]}
                     <div className="small muted">{fmtDate(l.at)}{l.notes ? ` · ${l.notes}` : ''}</div>
                   </div>
                 ))}

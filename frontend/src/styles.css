@@ -400,3 +400,12 @@ p { margin: 0; }
 .price-note { border-left: 3px solid var(--gold); }
 .price-note p { margin-bottom: 0; }
 .merits-box { border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 14px; background: var(--cream); }
+
+/* Calidad en estrellas */
+.level-badge { letter-spacing: .08em; font-size: .9rem; padding: 2px 8px; text-transform: none; }
+.level-badge .lv-on { color: var(--gold-deep); }
+.level-badge .lv-off { color: #d9d2c3; }
+.level-badge.big { font-size: 1.3rem; padding: 4px 12px; }
+.level-badge.none { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+.stars-scale { display: grid; gap: 8px; max-width: 360px; }
+.stars-scale > div { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fileUrl } from '../api.jsx'
-import { BREEDS, ROMAN } from '../data/content.js'
+import { BREEDS, STARS_TXT } from '../data/content.js'
 
 // Imagen con respaldo: si el archivo no existe todavía, muestra un marcador elegante
 export function Img({ src, alt, dark, label, style, className }) {
@@ -28,22 +28,14 @@ export function Logo({ size = 46 }) {
   )
 }
 
-// Estrellas: azules/oscuras por mérito, ámbar las heredadas de la descendencia
-export function Stars({ n = 0, amber = 0, max = 12 }) {
-  if (!n && !amber) return <span className="muted small">—</span>
-  const shown = Math.min(n, max)
+// Calidad C-IBERICO: de 1 a 5 estrellas
+export function LevelBadge({ level = 0, big }) {
+  if (!level) return <span className={`level-badge none ${big ? 'big' : ''}`} title="Aún sin valorar">Sin valorar</span>
   return (
-    <span className="stars" aria-label={`${n} estrellas${amber ? ` y ${amber} ámbar` : ''}`}>
-      {Array.from({ length: shown }, (_, i) => <span key={i}>★</span>)}
-      {Array.from({ length: amber }, (_, i) => <span key={`a${i}`} className="amber">★</span>)}
-      {n > max && <span className="x">×{n}</span>}
+    <span className={`level-badge l${level} ${big ? 'big' : ''}`} title={`${STARS_TXT[level]} de 5`} aria-label={`${STARS_TXT[level]} de 5`}>
+      <span className="lv-on">{'★'.repeat(level)}</span><span className="lv-off">{'★'.repeat(5 - level)}</span>
     </span>
   )
-}
-
-export function LevelBadge({ level = 0, big }) {
-  if (!level) return <span className={`level-badge none ${big ? 'big' : ''}`} title="Sin nivel todavía">Sin nivel</span>
-  return <span className={`level-badge l${level} ${big ? 'big' : ''}`} title={`Nivel ${ROMAN[level]} de V`}>Nivel {ROMAN[level]}</span>
 }
 
 export const breedLabel = (b) => BREEDS[b] || b
@@ -63,7 +55,7 @@ export function HorseCard({ h }) {
       <div className="body">
         <h3>{h.name}</h3>
         <div className="reg">Nº {h.registrationNumber} · {new Date(h.birthDate).getFullYear()}</div>
-        <div className="row mt8" style={{ gap: 10 }}><LevelBadge level={h.level} /><Stars n={h.stars} amber={h.amberStars} /></div>
+        <div className="row mt8" style={{ gap: 10 }}><LevelBadge level={h.level} /></div>
         <div className="score">Valoración {h.score != null ? <><strong>{h.score.toFixed(1)}</strong> / 100</> : 'pendiente'}</div>
       </div>
     </Link>
@@ -82,9 +74,8 @@ export function HorseRow({ h }) {
         <div className="k mt8">Nº {h.registrationNumber} · {breedLabel(h.breed)}</div>
       </div>
       <div className="hide-m"><span className="k">Nacimiento</span><span className="v">{new Date(h.birthDate).getFullYear()} · {h.age} años</span></div>
-      <div className="hide-m"><span className="k">Nivel</span><LevelBadge level={h.level} /></div>
+      <div className="hide-m"><span className="k">Calidad</span><LevelBadge level={h.level} /></div>
       <div className="hide-m"><span className="k">País</span><span className="v">{h.country}</span></div>
-      <div className="hide-m"><span className="k">Estrellas</span><Stars n={h.stars} amber={h.amberStars} /></div>
       <div className="bignum"><span className="k" style={{ textAlign: 'right' }}>Nota</span>{h.score != null ? h.score.toFixed(1) : '—'}</div>
     </Link>
   )

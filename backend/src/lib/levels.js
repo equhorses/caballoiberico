@@ -1,26 +1,30 @@
 // Etapas por edad y niveles de calidad C-IBERICO.
 // - Etapa: qué se puede evaluar según la edad (desde 6 meses).
 // - Nivel (I–V): independiente de la edad. Se conserva el más alto; nunca baja por una valoración.
-//   Cada etapa tiene un tope de nivel (un potro no puede pasar del nivel II).
+//   La exigencia se ajusta a la edad de cada etapa.
 // Los valores por defecto se pueden sobrescribir en la rúbrica (content.stages / content.levels).
 
+// Etapas por edad. La IA exige a cada caballo lo que corresponde a su edad; desde los 8 años, exigencia completa.
+// Sin topes: la calidad (1 a 5 estrellas) sale solo de la nota, porque la exigencia ya se ajusta a la edad.
 const DEFAULT_STAGES = [
-  { key: 'POTRO', name: 'Potro (6–11 meses)', minMonths: 6, maxMonths: 11, ridden: false, cap: 2 },
-  { key: 'ANOJO', name: 'Añojo (1 año)', minMonths: 12, maxMonths: 23, ridden: false, cap: 2 },
-  { key: 'DOS_ANOS', name: '2 años', minMonths: 24, maxMonths: 35, ridden: false, cap: 3 },
-  { key: 'TRES_ANOS', name: '3 años', minMonths: 36, maxMonths: 47, ridden: true, cap: 3 },
-  { key: 'CUATRO_ANOS', name: '4 años', minMonths: 48, maxMonths: 59, ridden: true, cap: 4 },
-  { key: 'CINCO_ANOS', name: '5 años', minMonths: 60, maxMonths: 71, ridden: true, cap: 4 },
-  { key: 'SEIS_MAS', name: '6 años o más', minMonths: 72, maxMonths: 9999, ridden: true, cap: 5 },
+  { key: 'POTRO', name: 'Potro (6–11 meses)', minMonths: 6, maxMonths: 11, ridden: false, cap: 5 },
+  { key: 'ANOJO', name: 'Añojo (1 año)', minMonths: 12, maxMonths: 23, ridden: false, cap: 5 },
+  { key: 'DOS_ANOS', name: '2 años', minMonths: 24, maxMonths: 35, ridden: false, cap: 5 },
+  { key: 'TRES_ANOS', name: '3 años', minMonths: 36, maxMonths: 47, ridden: true, cap: 5 },
+  { key: 'CUATRO_ANOS', name: '4 años', minMonths: 48, maxMonths: 59, ridden: true, cap: 5 },
+  { key: 'CINCO_ANOS', name: '5 años', minMonths: 60, maxMonths: 71, ridden: true, cap: 5 },
+  { key: 'SEIS_ANOS', name: '6 años', minMonths: 72, maxMonths: 83, ridden: true, cap: 5 },
+  { key: 'SIETE_ANOS', name: '7 años', minMonths: 84, maxMonths: 95, ridden: true, cap: 5 },
+  { key: 'OCHO_MAS', name: '8 años o más', minMonths: 96, maxMonths: 9999, ridden: true, cap: 5 },
 ];
 
 // Nota mínima (sobre 100) para cada nivel. Experimental hasta validar con evaluadores.
 const DEFAULT_LEVELS = [
-  { level: 1, name: 'Nivel I', minScore: 50 },
-  { level: 2, name: 'Nivel II', minScore: 60 },
-  { level: 3, name: 'Nivel III', minScore: 70 },
-  { level: 4, name: 'Nivel IV', minScore: 80 },
-  { level: 5, name: 'Nivel V', minScore: 90 },
+  { level: 1, name: '1 estrella', minScore: 50 },
+  { level: 2, name: '2 estrellas', minScore: 60 },
+  { level: 3, name: '3 estrellas', minScore: 70 },
+  { level: 4, name: '4 estrellas', minScore: 80 },
+  { level: 5, name: '5 estrellas', minScore: 90 },
 ];
 
 const ROMAN = ['—', 'I', 'II', 'III', 'IV', 'V'];
@@ -61,7 +65,7 @@ function levelFromScore(score, rubricContent) {
   return levelsOf(rubricContent).reduce((lvl, l) => (score >= l.minScore ? Math.max(lvl, l.level) : lvl), 0);
 }
 
-// Suelo por méritos: un resultado verificado garantiza un nivel mínimo (no se aplica el tope de la etapa)
+// Suelo por méritos: un resultado verificado garantiza unas estrellas mínimas
 const MERIT_FLOOR = { JOVENES_NACIONAL: { level: 3, top: 3 }, NACIONAL_ABSOLUTO: { level: 4, top: 3 }, INTERNACIONAL: { level: 5, top: 3 }, MUNDIAL_OLIMPICO: { level: 5, top: 15 } };
 function meritFloor(merit) {
   const rule = MERIT_FLOOR[merit.level];

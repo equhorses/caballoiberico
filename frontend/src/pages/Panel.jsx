@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { api, openPrivateFile, useAuth, useFetch } from '../api.jsx'
 import { Img, LevelBadge, Toast, breedLabel } from '../components/ui.jsx'
-import { BREEDS, DOC_ROLES, MERIT_LEVELS, PHOTO_VIEWS, ROMAN, SERVICES, eur, fmtDate } from '../data/content.js'
+import { BREEDS, DOC_ROLES, MERIT_LEVELS, PHOTO_VIEWS, STARS_TXT, SERVICES, eur, fmtDate } from '../data/content.js'
 
 const REQ_STATUS = {
   PENDIENTE_PAGO: ['Pendiente de pago', 'example'], PAGADA: ['Pagada', 'ok'], EN_REVISION: ['En revisión', 'light'],
@@ -177,7 +177,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
           <div>
             <h2 style={{ fontSize: '2rem', textTransform: 'uppercase' }}>{h.name}</h2>
             <p className="k mt8">{h.registrationNumber ? `Nº ${h.registrationNumber}` : 'Pendiente de Certificado de Origen'} · {breedLabel(h.breed)} · {fmtDate(h.birthDate)}</p>
-            <div className="mt8"><LevelBadge level={h.level} /> <span className="small muted">Puedes volver a presentarlo en cada cambio de etapa para subir de nivel.</span></div>
+            <div className="mt8"><LevelBadge level={h.level} /> <span className="small muted">Puedes volver a presentarlo cada año para subir de estrellas.</span></div>
           </div>
           {h.registrationNumber && <label className="small row" style={{ gap: 8 }}><input type="checkbox" checked={h.isPublic} onChange={togglePublic} /> Ficha pública en el registro</label>}
         </div>
@@ -212,7 +212,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
       <div className="card">
         <h3>Certificados y valoraciones</h3>
         {h.certificates.length ? h.certificates.map((c) => (
-          <p key={c.id} className="mt8">{c.type === 'ORIGEN' ? 'Certificado de Origen' : `Certificado de Calidad · ${c.stars} estrellas`} · <Link className="link" to={`/verificar?c=${c.code}`}>{c.code}</Link> · {c.status.toLowerCase()}</p>
+          <p key={c.id} className="mt8">{c.type === 'ORIGEN' ? 'Certificado de Origen' : `Certificado de Calidad · ${STARS_TXT[h.level]}`} · <Link className="link" to={`/verificar?c=${c.code}`}>{c.code}</Link> · {c.status.toLowerCase()}</p>
         )) : <p className="muted mt8">Sin certificados todavía.</p>}
         {h.cases.map((c) => <p key={c.id} className="small muted mt8">Valoración del {fmtDate(c.createdAt)} · {c.status.replace(/_/g, ' ').toLowerCase()}{c.summary ? ` · ${c.summary}` : ''}</p>)}
         <div className="row mt16">
@@ -224,7 +224,7 @@ function HorseManager({ h, onBack, onChange, notify, onRequest }) {
   )
 }
 
-// Resultados deportivos: el titular los aporta con su documento; la presidencia los verifica y entonces suman estrellas
+// Resultados deportivos: el titular sube el documento; la IA lo lee; la presidencia lo verifica (un podio asegura estrellas mínimas)
 const EMPTY_MERIT = { competition: '', category: '', level: 'JOVENES_NACIONAL', position: '', score: '', date: '' }
 function OwnerMerits({ h, notify, onChange, compact }) {
   const [m, setM] = useState(EMPTY_MERIT)
@@ -338,7 +338,7 @@ function Prevaloracion({ picker, notify, onCalidad }) {
       <form className="card form" onSubmit={submit}>
         <h3>Pre-valoración gratis</h3>
         {picker}
-        <p className="small muted">Sube un vídeo y una foto de perfil: la IA te da al momento una orientación del nivel probable. No hace falta dar de alta el caballo.{remaining != null ? ` Te quedan ${remaining} este mes.` : ''}</p>
+        <p className="small muted">Sube un vídeo y una foto de perfil: la IA te da al momento una orientación de sus estrellas probables. No hace falta dar de alta el caballo.{remaining != null ? ` Te quedan ${remaining} este mes.` : ''}</p>
         <div className="grid g3" style={{ gap: 12 }}>
           <div className="field"><label>Nombre *</label><input className="input" required value={f.name} onChange={set('name')} /></div>
           <div className="field"><label>Nacimiento *</label><input className="input" type="date" required value={f.birthDate} onChange={set('birthDate')} /></div>
@@ -369,7 +369,7 @@ function PrevalResult({ r, onCalidad, highlight }) {
       <div className="row between"><strong>{r.horseName}</strong><span className="small muted">{fmtDate(r.createdAt)}</span></div>
       {r.error ? <p className="small muted mt8">No se pudo analizar: inténtalo de nuevo.</p> : r.level != null ? (
         <>
-          <p className="mt8">Nivel probable: <LevelBadge level={r.level} /> <span className="small muted">· {Number(r.score).toFixed(1)}/100{res.stageName ? ` · etapa ${res.stageName} (máx. ${ROMAN[res.cap]})` : ''}</span></p>
+          <p className="mt8">Calidad probable: <LevelBadge level={r.level} /> <span className="small muted">· {Number(r.score).toFixed(1)}/100{res.stageName ? ` · ${res.stageName}` : ''}</span></p>
           {highlight && (
             <ul className="small mt8" style={{ paddingLeft: 18, margin: '8px 0 0' }}>
               {(res.items || []).filter((i) => i.score != null).map((i) => <li key={i.key}><strong>{i.name}: {i.score}</strong>{i.observation ? ` — ${i.observation}` : ''}</li>)}
