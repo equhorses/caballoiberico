@@ -1,6 +1,6 @@
 // Panel de la presidencia: inicio, ejemplares, usuarios, certificados, méritos, pagos y exportaciones
 import { useEffect, useState } from 'react'
-import { api, downloadPrivate, useFetch } from '../api.jsx'
+import { api, downloadPrivate, fileUrl, useFetch } from '../api.jsx'
 import { LevelBadge, breedLabel } from '../components/ui.jsx'
 import { MERIT_LEVELS, ORIGIN, ROMAN, SERVICES, fmtDate } from '../data/content.js'
 
@@ -362,6 +362,7 @@ export function CertificatesAdmin({ notify, openHorse }) {
 export function MeritsAdmin({ notify, isAdmin, openHorse }) {
   const { data, loading, reload } = useFetch('/admin/merits')
   const verify = async (m) => { try { await api(`/admin/merits/${m.id}/verify`, { method: 'POST' }); notify('Resultado verificado'); reload() } catch (x) { notify(x.message) } }
+  const reject = async (m) => { if (!window.confirm('¿Rechazar y borrar este resultado?')) return; try { await api(`/admin/merits/${m.id}`, { method: 'DELETE' }); notify('Resultado rechazado'); reload() } catch (x) { notify(x.message) } }
   return (
     <div className="stack">
       <div className="row between"><p className="small muted">Los resultados se añaden desde la ficha de cada ejemplar. Aquí ves todos, primero los pendientes de verificar.</p>{isAdmin && <ExportButton kind="meritos" notify={notify} />}</div>
@@ -372,12 +373,12 @@ export function MeritsAdmin({ notify, isAdmin, openHorse }) {
             <tbody>{data.map((m) => (
               <tr key={m.id}>
                 <td className="small"><button type="button" className="link" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => openHorse(m.horseId)}>{m.horseName}</button></td>
-                <td className="small">{m.competition}<div className="muted">{m.category}</div></td>
+                <td className="small">{m.competition}<div className="muted">{m.category}</div>{m.documentUrl && <a className="link" href={fileUrl(m.documentUrl)} target="_blank" rel="noreferrer">Ver documento</a>}{m.aiWarning && <div className="chk DISTINTO">⚠ {m.aiWarning}</div>}</td>
                 <td className="small">{MERIT_LEVELS[m.level]}</td>
                 <td className="small">{m.position}{m.score ? ` · ${m.score}%` : ''}</td>
                 <td className="small">{fmtDate(m.date)}</td>
                 <td>{m.starsGiven}★</td>
-                <td>{m.verified ? <span className="badge ok">verificado</span> : isAdmin ? <button className="btn btn-line btn-sm" onClick={() => verify(m)}>Verificar</button> : <span className="badge example">pendiente</span>}</td>
+                <td>{m.verified ? <span className="badge ok">verificado</span> : isAdmin ? <div className="row" style={{ gap: 6 }}><button className="btn btn-line btn-sm" onClick={() => verify(m)}>Verificar</button><button className="btn btn-line btn-sm" onClick={() => reject(m)}>Rechazar</button></div> : <span className="badge example">pendiente</span>}</td>
               </tr>
             ))}</tbody>
           </table>

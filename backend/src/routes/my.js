@@ -125,15 +125,29 @@ router.post('/horses/:id/video', upload.single('file'), wrap(async (req, res) =>
 router.post('/horses/:id/merits', upload.single('document'), wrap(async (req, res) => {
   const h = await ownHorse(req, res);
   if (!h) return;
-  const { competition, category, level, position, score, date } = req.body || {};
-  if (!competition || !category || !MERIT_STARS[level] || !position || !date) return res.status(400).json({ error: 'Faltan datos del resultado' });
   if (!req.file) return res.status(400).json({ error: 'Adjunta el documento oficial del resultado (clasificación, acta o certificado)' });
+  const b = req.body || {};
+  // Si el titular no escribe los datos, la IA los lee del documento
+  let ex = null;
+  const manual = b.competition && b.category && MERIT_STARS[b.level] && b.position && b.date;
+  if (!manual) ex = await DOCS.extractResult({ file: req.file.path, mime: req.file.mimetype, horseName: h.name });
+  const pick = (k) => (b[k] ? b[k] : ex && ex[k] != null ? String(ex[k]) : null);
+  const data = { competition: pick('competition'), category: pick('category'), level: pick('level'), position: pick('position'), score: pick('score'), date: pick('date') };
+  if (data.date && !/^\d{4}-\d{2}-\d{2}$/.test(data.date)) data.date = null;
+  const missing = ['competition', 'category', 'position', 'date'].filter((k) => !data[k]);
+  if (!MERIT_STARS[data.level]) missing.push('level');
+  if (missing.length) {
+    return res.status(422).json({ error: ex?.error ? 'No se ha podido leer el documento: escribe los datos a mano.' : 'La IA no ha podido leer todos los datos: complétalos a mano.', partial: data });
+  }
+  const warning = ex && ex.horseFound === false ? `La IA no encuentra a ${h.name} en el documento` : (ex?.notes || null);
+  const scoreNum = data.score != null && !Number.isNaN(Number(String(data.score).replace(',', '.'))) ? Number(String(data.score).replace(',', '.')) : null;
   const m = await db.one(
-    `INSERT INTO sport_merits(horse_id, competition, category, level, position, score, date, stars_given, document_url, verified)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,FALSE) RETURNING id, competition, category, level, position, score, date, stars_given, verified`,
-    [h.id, competition, category, level, position, score ? Number(score) : null, date, MERIT_STARS[level], `/uploads/${req.file.filename}`],
+    `INSERT INTO sport_merits(horse_id, competition, category, level, position, score, date, stars_given, document_url, verified, ai_extracted, ai_warning)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,FALSE,$10,$11) RETURNING id, competition, category, level, position, score, date, stars_given, verified, ai_warning`,
+    [h.id, data.competition, data.category, data.level, data.position, scoreNum, data.date, MERIT_STARS[data.level], `/uploads/${req.file.filename}`,
+      ex ? JSON.stringify(ex) : null, warning],
   );
-  audit(req.user.id, 'SportMerit', m.id, 'APORTAR_TITULAR', { ejemplar: h.name, competition, level });
+  audit(req.user.id, 'SportMerit', m.id, 'APORTAR_TITULAR', { ejemplar: h.name, competition: data.competition, leidoPorIA: Boolean(ex) });
   res.status(201).json(m);
 }));
 

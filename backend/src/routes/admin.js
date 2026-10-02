@@ -127,6 +127,13 @@ router.post('/horses/:id/merits', upload.single('document'), wrap(async (req, re
   res.status(201).json(m);
 }));
 
+router.delete('/merits/:id', requireRole('ADMIN'), wrap(async (req, res) => {
+  const m = await db.one('DELETE FROM sport_merits WHERE id::text=$1 AND NOT verified RETURNING id, competition', [req.params.id]);
+  if (!m) return res.status(404).json({ error: 'Resultado no encontrado o ya verificado' });
+  audit(req.user.id, 'SportMerit', m.id, 'RECHAZAR', { competition: m.competition, motivo: req.body?.reason || null });
+  res.json({ ok: true });
+}));
+
 router.post('/merits/:id/verify', requireRole('ADMIN'), wrap(async (req, res) => {
   const m = await db.one('UPDATE sport_merits SET verified=TRUE WHERE id::text=$1 RETURNING *', [req.params.id]);
   if (!m) return res.status(404).json({ error: 'Resultado no encontrado' });

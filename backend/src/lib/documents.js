@@ -93,4 +93,28 @@ function compare(horse, doc) {
   ];
 }
 
-module.exports = { DOCS_DIR, storePrivate, privatePath, extract, compare, FIELDS };
+// Lectura de un resultado deportivo (clasificación, acta, certificado de la federación)
+async function extractResult({ file, mime, horseName }) {
+  const list = providers();
+  if (!list.length) return { error: 'IA no configurada' };
+  const p = list[0];
+  const text = `Eres el asistente administrativo de C-IBERICO. Recibes un documento oficial con un resultado deportivo ecuestre (clasificación, acta o certificado).
+Busca el resultado del caballo "${horseName}" (puede aparecer con prefijos o sufijos). Lee SOLO lo que está escrito; si un dato no aparece, pon null. No inventes.
+- competition: nombre de la competición o concurso
+- category: prueba o categoría (p. ej. "Caballos jóvenes 5 años", "San Jorge", "Gran Premio")
+- level: uno de JOVENES_NACIONAL (campeonato/prueba de caballos jóvenes nacional), NACIONAL_ABSOLUTO (prueba de adultos nacional), INTERNACIONAL (CDI u otra internacional), MUNDIAL_OLIMPICO (Juegos Olímpicos, Mundial o Juegos Ecuestres)
+- position: puesto obtenido (p. ej. "1º")
+- score: nota numérica (0-10 o porcentaje), solo el número
+- date: fecha AAAA-MM-DD
+- horseFound: true si aparece ese caballo en el documento
+Responde SOLO con JSON: {"horseFound":true,"competition":null,"category":null,"level":null,"position":null,"score":null,"date":null,"notes":"lo que no se lee bien o parece raro"}`;
+  try {
+    const images = await toImages(file, mime);
+    const body = await callModel(p, { model: p.model, messages: [{ role: 'user', content: [{ type: 'text', text }, ...images.map((url) => ({ type: 'image_url', image_url: { url } }))] }] });
+    return { model: p.model, ...parseJson(body.choices?.[0]?.message?.content) };
+  } catch (e) {
+    return { model: p.model, error: e.message };
+  }
+}
+
+module.exports = { DOCS_DIR, storePrivate, privatePath, extract, extractResult, compare, FIELDS };

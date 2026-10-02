@@ -229,30 +229,39 @@ const EMPTY_MERIT = { competition: '', category: '', level: 'JOVENES_NACIONAL', 
 function OwnerMerits({ h, notify, onChange, compact }) {
   const [m, setM] = useState(EMPTY_MERIT)
   const [doc, setDoc] = useState(null)
-  const [open, setOpen] = useState(false)
+  const [manual, setManual] = useState(false)
   const [busy, setBusy] = useState(false)
   const set = (k) => (e) => setM({ ...m, [k]: e.target.value })
-  const add = async () => {
-    if (!m.competition || !m.category || !m.position || !m.date) return notify('Rellena competición, prueba, puesto y fecha')
+  const send = async (withFields) => {
     if (!doc) return notify('Adjunta el documento oficial del resultado')
     setBusy(true)
     try {
-      const form = new FormData(); Object.entries(m).forEach(([k, v]) => form.append(k, v)); form.append('document', doc)
-      await api(`/my/horses/${h.id}/merits`, { method: 'POST', form }); notify('Resultado añadido: queda pendiente de verificar'); setM(EMPTY_MERIT); setDoc(null); setOpen(false); onChange?.()
-    } catch (x) { notify(x.message) }
+      const form = new FormData(); form.append('document', doc)
+      if (withFields) Object.entries(m).forEach(([k, v]) => form.append(k, v))
+      const r = await api(`/my/horses/${h.id}/merits`, { method: 'POST', form })
+      notify(`Resultado añadido${r.aiWarning ? ' (con aviso para revisar)' : ''}: queda pendiente de verificar`)
+      setM(EMPTY_MERIT); setDoc(null); setManual(false); onChange?.()
+    } catch (x) {
+      notify(x.message)
+      if (x.status === 422) setManual(true)
+    }
     setBusy(false)
   }
-  const Wrap = compact ? 'div' : 'div'
   return (
-    <Wrap className={compact ? 'merits-box' : 'card'}>
+    <div className={compact ? 'merits-box' : 'card'}>
       <h3 style={compact ? { fontSize: '1rem' } : undefined}>Resultados deportivos {compact && <span className="small muted">(opcional)</span>}</h3>
-      <p className="small muted mt8">Añade los resultados en competición con su documento oficial. Una vez verificados aparecen en su ficha y en el Certificado de Calidad, y pueden subir su nivel.</p>
+      <p className="small muted mt8">Sube el documento oficial del resultado (clasificación, acta o certificado de la federación): la IA lee la competición, la prueba, el puesto, la nota y la fecha. Una vez verificado aparece en su ficha y en el Certificado de Calidad. Puedes añadir resultados cuando quieras, sin coste.</p>
       {(h.merits || []).map((x) => (
         <p key={x.id} className="small mt8">{x.competition} · {x.category} · {x.position}{x.score ? ` · ${x.score}${x.score > 10 ? ' %' : ''}` : ''} · {fmtDate(x.date)} <span className={`badge ${x.verified ? 'ok' : 'example'}`}>{x.verified ? 'verificado' : 'pendiente'}</span></p>
       ))}
-      {!open ? <button type="button" className="btn btn-line btn-sm mt16" onClick={() => setOpen(true)}>+ Añadir resultado</button> : (
+      <div className="row mt16" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input className="input" style={{ flex: 1, minWidth: 220 }} type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => setDoc(e.target.files[0])} />
+        {!manual && <button type="button" className="btn btn-ink btn-sm" disabled={busy || !doc} onClick={() => send(false)}>{busy ? 'Leyendo el documento…' : 'Añadir resultado'}</button>}
+        {!manual && <button type="button" className="link small" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => setManual(true)}>o escribirlo a mano</button>}
+      </div>
+      {manual && (
         <div className="stack mt16" style={{ gap: 8 }}>
-          <input className="input" placeholder="Competición (p. ej. Campeonato de España de Caballos Jóvenes)" value={m.competition} onChange={set('competition')} />
+          <input className="input" placeholder="Competición" value={m.competition} onChange={set('competition')} />
           <div className="row" style={{ gap: 8 }}>
             <input className="input" style={{ flex: 1 }} placeholder="Prueba / categoría" value={m.category} onChange={set('category')} />
             <select className="select" style={{ flex: 1 }} value={m.level} onChange={set('level')}>{Object.entries(MERIT_LEVELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
@@ -262,11 +271,10 @@ function OwnerMerits({ h, notify, onChange, compact }) {
             <input className="input" style={{ width: 160 }} placeholder="Nota (8,4 o 72,5 %)" value={m.score} onChange={set('score')} />
             <input className="input" style={{ flex: 1 }} type="date" value={m.date} onChange={set('date')} />
           </div>
-          <label className="small">Documento oficial (clasificación, acta o certificado) <input className="input mt8" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(e) => setDoc(e.target.files[0])} /></label>
-          <div className="row" style={{ gap: 8 }}><button type="button" className="btn btn-ink btn-sm" disabled={busy} onClick={add}>{busy ? 'Guardando…' : 'Guardar resultado'}</button><button type="button" className="btn btn-line btn-sm" onClick={() => setOpen(false)}>Cancelar</button></div>
+          <div className="row" style={{ gap: 8 }}><button type="button" className="btn btn-ink btn-sm" disabled={busy} onClick={() => send(true)}>{busy ? 'Guardando…' : 'Guardar resultado'}</button><button type="button" className="btn btn-line btn-sm" onClick={() => setManual(false)}>Cancelar</button></div>
         </div>
       )}
-    </Wrap>
+    </div>
   )
 }
 
