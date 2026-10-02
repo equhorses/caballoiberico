@@ -203,7 +203,7 @@ export default function Home() {
             <div className="stars-scale mt24">
               {[5, 4, 3, 2, 1].map((n) => <div key={n} className="row between"><LevelBadge level={n} /><span className="small muted">{['', 'Correcto', 'Bueno', 'Muy bueno', 'Excelente', 'Excepcional'][n]}</span></div>)}
             </div>
-            <p className="small muted mt16">En su historial queda cada valoración con su edad, por ejemplo: «4 años · 3 estrellas», «6 años · 4 estrellas». Nunca baja.</p>
+            <p className="small muted mt16">En su historial queda cada valoración con su edad, por ejemplo: «4 años · 3 estrellas», «5 años · 2 estrellas». Cuenta la última: la calidad es la que muestra el caballo en cada momento. Por debajo de 50/100 no hay estrellas ni certificado.</p>
           </div>
           <div>
             <span className="eyebrow">Resultados en pista</span>

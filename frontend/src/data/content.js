@@ -41,6 +41,7 @@ export const SERVICES = [
     docs: [
       'Certificado de Origen C-IBERICO ya expedido',
       'Ejemplar con al menos 6 meses (la exigencia se ajusta a su edad)',
+      'Si la nota es inferior a 50/100 no se obtienen estrellas ni el certificado; la tarifa corresponde a la valoración y no se devuelve',
       'Cinco fotografías reglamentarias y vídeo de máx. 1 minuto (montado desde los 3 años; a la mano o en libertad antes)',
       'Opcional: resultados deportivos con documento oficial del organismo, para incluirlos',
     ],

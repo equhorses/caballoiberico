@@ -367,7 +367,7 @@ function PrevalResult({ r, onCalidad, highlight }) {
   return (
     <div className={`card preval ${highlight ? 'hl' : ''}`} style={{ marginBottom: 12 }}>
       <div className="row between"><strong>{r.horseName}</strong><span className="small muted">{fmtDate(r.createdAt)}</span></div>
-      {r.error ? <p className="small muted mt8">No se pudo analizar: inténtalo de nuevo.</p> : r.level != null ? (
+      {r.error ? <p className="small muted mt8">No se pudo analizar: inténtalo de nuevo.</p> : r.level === 0 ? <p className="small mt8">Nota orientativa {Number(r.score).toFixed(1)}/100: por debajo de 50 no obtendría estrellas ni el Certificado de Calidad.</p> : r.level != null ? (
         <>
           <p className="mt8">Calidad probable: <LevelBadge level={r.level} /> <span className="small muted">· {Number(r.score).toFixed(1)}/100{res.stageName ? ` · ${res.stageName}` : ''}</span></p>
           {highlight && (

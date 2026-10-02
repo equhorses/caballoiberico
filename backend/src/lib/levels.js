@@ -1,6 +1,7 @@
 // Etapas por edad y niveles de calidad C-IBERICO.
 // - Etapa: qué se puede evaluar según la edad (desde 6 meses).
-// - Nivel (I–V): independiente de la edad. Se conserva el más alto; nunca baja por una valoración.
+// - Calidad (1 a 5 estrellas): la de la última valoración (puede subir o bajar); por debajo de 50/100, sin estrellas.
+//   Los resultados deportivos verificados aseguran un mínimo.
 //   La exigencia se ajusta a la edad de cada etapa.
 // Los valores por defecto se pueden sobrescribir en la rúbrica (content.stages / content.levels).
 

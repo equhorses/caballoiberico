@@ -69,7 +69,8 @@ export default function Reglamento() {
               <div className="acc-body">
                 <p>El resultado de la valoración se expresa en estrellas de calidad, de 1 a 5, según la nota obtenida (1 desde 50/100, 2 desde 60, 3 desde 70, 4 desde 80 y 5 desde 90). La exigencia se ajusta a la edad: a cada caballo se le pide lo que corresponde a sus años, y desde los 8 la exigencia es completa.</p>
                 <ul>
-                  <li>Se puede presentar por primera vez a cualquier edad, sin haber pasado por las anteriores, y volver a presentarse cada año. Si mejora, sube; si no, conserva lo que tenía. Nunca baja por una nueva valoración.</li>
+                  <li>Se puede presentar por primera vez a cualquier edad, sin haber pasado por las anteriores, y volver a presentarse cada año. Cuenta siempre la última valoración: si mejora, sube; si empeora, baja. Las anteriores quedan en su historial.</li>
+                  <li><strong>Menos de 50/100: sin estrellas.</strong> El caballo no obtiene el Certificado de Calidad (y si lo tenía, se retira, salvo que sus resultados deportivos le aseguren estrellas). La tarifa corresponde a la valoración realizada y no se devuelve; por eso recomendamos la pre-valoración gratuita antes de pedirla.</li>
                   <li>Cada valoración queda en el historial con la edad del caballo (por ejemplo, «4 años · 3 estrellas»).</li>
                   <li><strong>Resultados deportivos:</strong> un resultado verificado con documento oficial asegura unas estrellas mínimas: {MERIT_FLOOR.map((m) => `${m.result} → ${STARS_TXT[m.level]}`).join('; ')}. El caballo se queda con lo más alto entre su valoración y sus resultados.</li>
                   <li>La presidencia puede revisar las estrellas por otros méritos acreditados o si se acredita falsedad en la documentación. Todo cambio queda registrado con su motivo.</li>

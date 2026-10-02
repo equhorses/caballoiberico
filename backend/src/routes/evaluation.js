@@ -2,7 +2,7 @@
 // Flujo: abrir caso → revisión de material por criterio → propuesta IA (con evidencia y confianza)
 // → decisión humana por criterio (aceptar/corregir/rechazar/no evaluable) → resolución. Todo auditado.
 const router = require('express').Router();
-const { db, UPLOAD_DIR, authenticate, requireRole, audit, ageYears, wrap } = require('../lib/common');
+const { db, UPLOAD_DIR, authenticate, requireRole, audit, ageYears, verificationCode, wrap } = require('../lib/common');
 const ai = require('../lib/ai');
 const L = require('../lib/levels');
 
@@ -256,18 +256,35 @@ async function resolveCase(c, user, summary, guidance) {
   const earned = Math.min(L.levelFromScore(score, rubric.content), stage ? stage.cap : 5);
   const finalSummary = typeof summary === 'function' ? summary({ score, earned, stage }) : summary;
   return db.tx(async (client) => {
-    const horse = await db.one('SELECT id, level FROM horses WHERE id=$1 FOR UPDATE', [c.horseId], client);
+    const horse = await db.one('SELECT id, name, level, status FROM horses WHERE id=$1 FOR UPDATE', [c.horseId], client);
     const out = await db.one(
       `UPDATE evaluation_cases SET status='RESUELTO', summary=$2, guidance=$3, final_score=$4, level_awarded=$5, resolved_at=now(), updated_at=now()
        WHERE id=$1 RETURNING *`, [c.id, finalSummary, guidance || null, score, earned], client,
     );
-    if (earned > horse.level) {
-      await db.query('UPDATE horses SET level=$2, updated_at=now() WHERE id=$1', [horse.id, earned], client);
-      await db.query(`INSERT INTO level_history(horse_id, from_level, to_level, reason, case_id, notes, decided_by)
-                      VALUES ($1,$2,$3,'VALORACION',$4,$5,$6)`, [horse.id, horse.level, earned, c.id, `${stage ? stage.name : ''} · ${earned} ${earned === 1 ? 'estrella' : 'estrellas'} (${score}/100)`, user.id], client);
+    // La calidad es la de la última valoración (puede subir o bajar). Los resultados verificados aseguran un mínimo.
+    const merits = await db.query('SELECT level, position FROM sport_merits WHERE horse_id=$1 AND verified', [horse.id], client);
+    const floor = merits.reduce((mx, m) => Math.max(mx, L.meritFloor(m)), 0);
+    const newLevel = Math.max(earned, floor);
+    const stars = (n) => `${n} ${n === 1 ? 'estrella' : 'estrellas'}`;
+    await db.query(`INSERT INTO level_history(horse_id, from_level, to_level, reason, case_id, notes, decided_by)
+                    VALUES ($1,$2,$3,'VALORACION',$4,$5,$6)`,
+    [horse.id, horse.level, newLevel, c.id, `${stage ? stage.name : ''} · ${earned ? stars(earned) : 'menos de 50/100, sin estrellas'} (${score}/100)${floor > earned ? ` · se mantiene en ${stars(floor)} por sus resultados` : ''}`, user.id], client);
+    if (newLevel !== horse.level) await db.query('UPDATE horses SET level=$2, updated_at=now() WHERE id=$1', [horse.id, newLevel], client);
+
+    // Certificado de Calidad: se expide solo si tiene Origen y al menos 1 estrella; si baja de 50 sin resultados que lo sostengan, se retira
+    const quality = await db.one("SELECT id FROM certificates WHERE horse_id=$1 AND type='CALIDAD' AND status='VIGENTE'", [horse.id], client);
+    let certificate = null;
+    if (newLevel >= 1 && !quality && horse.status === 'CERTIFICADO') {
+      certificate = await db.one("INSERT INTO certificates(horse_id, type, code, notes) VALUES ($1,'CALIDAD',$2,$3) RETURNING code",
+        [horse.id, verificationCode(), 'Expedido al cerrar la valoración'], client);
+      await audit(user.id, 'Certificate', certificate.code, 'EXPEDIR', { type: 'CALIDAD', ejemplar: horse.name, automatico: true }, client);
     }
-    await audit(user.id, 'EvaluationCase', c.id, 'RESOLVER', { summary: finalSummary, guidance, nota: score, nivelObtenido: earned, nivelAnterior: horse.level, sube: earned > horse.level }, client);
-    return { ...out, previousLevel: horse.level, newLevel: Math.max(earned, horse.level) };
+    if (newLevel === 0 && quality) {
+      await db.query("UPDATE certificates SET status='REVOCADO', revoked_at=now(), notes=$2 WHERE id=$1", [quality.id, 'Nueva valoración por debajo de 50/100'], client);
+      await audit(user.id, 'Certificate', quality.id, 'REVOCAR', { motivo: 'Nueva valoración por debajo de 50/100', automatico: true }, client);
+    }
+    await audit(user.id, 'EvaluationCase', c.id, 'RESOLVER', { summary: finalSummary, guidance, nota: score, estrellas: earned, minimoPorResultados: floor, anterior: horse.level, nuevo: newLevel }, client);
+    return { ...out, previousLevel: horse.level, newLevel, floor, certificate: certificate?.code || null, noQuality: newLevel === 0 };
   });
 }
 
@@ -297,7 +314,7 @@ router.post('/cases/:id/accept-ai', wrap(async (req, res) => {
   audit(req.user.id, 'EvaluationCase', c.id, 'ACEPTA_IA', { modelos: air.models, runId: air.runId });
   const stageName = (st) => (st ? st.name : '');
   const r = await resolveCase(c, req.user, ({ score, earned, stage }) =>
-    `Valoración realizada por la IA C-IBERICO (${air.models.join(' + ')}) con la rúbrica v${rubric.version}${stage ? `, etapa ${stageName(stage)}` : ''}. Nota ${score}/100 · nivel ${L.ROMAN[earned] || '—'}. Resultado aceptado por la secretaría tras comprobar el material.`,
+    `Valoración realizada por la IA C-IBERICO (${air.models.join(' + ')}) con la rúbrica v${rubric.version}${stage ? `, con ${stageName(stage)}` : ''}. Nota ${score}/100 · ${earned ? `${earned} ${earned === 1 ? 'estrella' : 'estrellas'}` : 'por debajo de 50: sin estrellas'}. Resultado aceptado por la secretaría tras comprobar el material.`,
   req.body?.guidance);
   res.json(r);
 }));

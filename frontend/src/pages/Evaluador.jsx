@@ -100,7 +100,7 @@ function CaseView({ id, onBack, notify }) {
   const doResolve = async (requiresMaterial) => {
     try {
       const r = await api(`/eval/cases/${id}/resolve`, { method: 'POST', body: { ...resolve, requiresMaterial } })
-      notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : r.newLevel > r.previousLevel ? `Valoración resuelta: sube a ${STARS_TXT[r.newLevel]}` : `Valoración resuelta: conserva ${STARS_TXT[r.newLevel]}`)
+      notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : `Valoración resuelta: ${STARS_TXT[r.previousLevel]} → ${STARS_TXT[r.newLevel]}${r.certificate ? ` · Certificado de Calidad expedido (${r.certificate})` : ''}`)
       reload()
     } catch (x) { notify(x.message) }
   }
@@ -109,7 +109,7 @@ function CaseView({ id, onBack, notify }) {
     setAccepting(true)
     try {
       const r = await api(`/eval/cases/${id}/accept-ai`, { method: 'POST', body: {} })
-      notify(r.newLevel > r.previousLevel ? `Resultado aceptado: sube a ${STARS_TXT[r.newLevel]}` : `Resultado aceptado: conserva ${STARS_TXT[r.newLevel]}`)
+      notify(`Resultado aceptado: ${STARS_TXT[r.previousLevel]} → ${STARS_TXT[r.newLevel]}${r.certificate ? ` · Certificado de Calidad expedido (${r.certificate})` : ''}${r.noQuality ? ' · sin estrellas: no hay Certificado de Calidad' : ''}`)
       reload()
     } catch (x) { notify(x.message) }
     setAccepting(false)
@@ -163,7 +163,7 @@ function CaseView({ id, onBack, notify }) {
                   </tr>
                 ))}</tbody>
               </table>
-              <p className="ai-total mt16">Nota <strong>{ar.score ?? '—'}/100</strong> → nivel <strong>{STARS_TXT[ar.level || 0]}</strong> · {ar.level > c.horse.level ? `subirá de ${STARS_TXT[c.horse.level]} a ${STARS_TXT[ar.level]}` : `conserva su ${STARS_TXT[c.horse.level]}`}</p>
+              <p className="ai-total mt16">Nota <strong>{ar.score ?? '—'}/100</strong> → <strong>{STARS_TXT[ar.level || 0]}</strong> · ahora tiene {STARS_TXT[c.horse.level]}; al aceptar pasará a {STARS_TXT[ar.level || 0]} (o al mínimo que le aseguren sus resultados){!ar.level ? '. Menos de 50: no obtendrá el Certificado de Calidad.' : ''}</p>
             </>
           )}
           <div className="secretaria mt16">
@@ -190,7 +190,7 @@ function CaseView({ id, onBack, notify }) {
           <div className="row between"><h3>Ajuste manual excepcional</h3><button type="button" className="link small" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => setManual(false)}>Volver al modelo IA</button></div>
           <p className="notice info">
             Nota provisional con lo decidido: <strong>{c.preview?.score != null ? `${c.preview.score}/100` : '—'}</strong> → nivel <strong>{STARS_TXT[c.preview?.level || 0]}</strong>.{' '}
-            {c.preview && c.preview.level > c.preview.current ? `Al resolver, el ejemplar subirá de ${STARS_TXT[c.preview.current]} a ${STARS_TXT[c.preview.level]}.` : `No supera su nivel actual (${STARS_TXT[c.preview?.current || 0]}): lo conservará.`}
+            {`Al resolver pasará de ${STARS_TXT[c.preview?.current || 0]} a ${STARS_TXT[c.preview?.level || 0]} (o al mínimo que le aseguren sus resultados).`}
           </p>
           <div className="field"><label>Conclusión (se publica en la ficha)</label><textarea className="textarea" value={resolve.summary} onChange={(e) => setResolve({ ...resolve, summary: e.target.value })} /></div>
           <div className="field"><label>Orientación (la emite el evaluador, nunca la IA)</label><textarea className="textarea" value={resolve.guidance} onChange={(e) => setResolve({ ...resolve, guidance: e.target.value })} /></div>
@@ -373,7 +373,7 @@ function HorseAdmin({ id, onBack, notify, openCase, isAdmin }) {
           <h3>Calidad (estrellas)</h3>
           <LevelBadge level={h.level} big />
         </div>
-        <p className="small muted mt8">Sube con una valoración que lo mejore o con un resultado verificado (podio). Nunca baja por una nueva valoración. El cambio manual es excepcional y queda registrado.</p>
+        <p className="small muted mt8">Cuenta la última valoración (sube o baja); un resultado verificado (podio) asegura un mínimo. El cambio manual es excepcional y queda registrado.</p>
         {isAdmin && (
           <form className="row mt16" style={{ gap: 8, alignItems: 'stretch' }} onSubmit={(e) => { e.preventDefault(); call(() => api(`/admin/horses/${id}/level`, { method: 'POST', body: { ...lvl, level: Number(lvl.level) } }), 'Estrellas actualizadas').then((ok) => ok && setLvl({ level: '', reason: 'MERITO', notes: '' })) }}>
             <select className="select" style={{ width: 150 }} required value={lvl.level} onChange={(e) => setLvl({ ...lvl, level: e.target.value })}>

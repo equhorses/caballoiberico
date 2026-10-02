@@ -10,7 +10,7 @@ export default function Valoracion() {
     <>
       <PageHero eyebrow="Inteligencia artificial C-IBERICO" title={<>Valoración morfo-deportiva<br />del ejemplar</>} image="/images/valoracion.jpg">
         Desde los 6 meses. Nueve bloques puntuados de 0 a 10 según el reglamento de doma clásica y los criterios de selección
-        centroeuropeos, calibrados por la edad. El resultado es su calidad de 1 a 5 estrellas, que el caballo conserva y puede mejorar.
+        centroeuropeos, calibrados por la edad. El resultado es su calidad de 1 a 5 estrellas en ese momento.
       </PageHero>
 
       <section className="section white">
@@ -84,8 +84,8 @@ export default function Valoracion() {
       <section className="section white">
         <div className="wrap">
           <span className="eyebrow">Calidad C-IBERICO</span>
-          <h2>De 1 a 5 estrellas, que se conservan y se mejoran</h2>
-          <p className="lead">Se puede presentar por primera vez a cualquier edad, sin haber pasado por las anteriores. Cada año puede volver a presentarse (una nueva valoración, {eur(SERVICES.find((s) => s.code === 'CALIDAD').price)}): si mejora, sube; si no, conserva lo que tenía. Nunca baja. Cada valoración queda en su historial con su edad, por ejemplo «4 años · 3 estrellas».</p>
+          <h2>De 1 a 5 estrellas, siempre actualizadas</h2>
+          <p className="lead">Se puede presentar por primera vez a cualquier edad, sin haber pasado por las anteriores. Cada año puede volver a presentarse (una nueva valoración, {eur(SERVICES.find((s) => s.code === 'CALIDAD').price)}): cuenta siempre la última, suba o baje, y todas quedan en su historial con su edad, por ejemplo «4 años · 3 estrellas», «5 años · 2 estrellas». <strong>Por debajo de 50/100 no se obtienen estrellas ni el Certificado de Calidad</strong>; la tarifa corresponde a la valoración y no se devuelve, por eso conviene hacer antes la pre-valoración gratuita.</p>
           <div className="card mt24">
             <h3>Los resultados en pista también cuentan</h3>
             <p className="muted mt8">Un resultado deportivo verificado le asegura unas estrellas mínimas, aunque la valoración haya dado menos. Se queda con lo más alto.</p>
