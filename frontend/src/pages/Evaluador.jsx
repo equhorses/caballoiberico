@@ -35,7 +35,7 @@ export default function Evaluador() {
         </div>
       </div>
       <div className="wrap section tight">
-        {tab === 'inicio' && <Dashboard go={go} />}
+        {tab === 'inicio' && <Dashboard go={go} notify={setToast} openHorse={openHorse} />}
         {tab === 'casos' && (caseId ? <CaseView id={caseId} onBack={() => setCaseId(null)} notify={setToast} /> : <Cases open={setCaseId} />)}
         {tab === 'ejemplares' && (horseId
           ? <HorseAdmin id={horseId} onBack={() => setHorseId(null)} notify={setToast} openCase={(id) => { setTab('casos'); setCaseId(id) }} isAdmin={isAdmin} />
@@ -100,7 +100,7 @@ function CaseView({ id, onBack, notify }) {
   const doResolve = async (requiresMaterial) => {
     try {
       const r = await api(`/eval/cases/${id}/resolve`, { method: 'POST', body: { ...resolve, requiresMaterial } })
-      notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : `Valoración resuelta: ${STARS_TXT[r.previousLevel]} → ${STARS_TXT[r.newLevel]}${r.certificate ? ` · Certificado de Calidad expedido (${r.certificate})` : ''}`)
+      notify(requiresMaterial ? 'Se ha pedido nuevo material al titular' : `Valoración resuelta: ${STARS_TXT[r.previousLevel]} → ${STARS_TXT[r.newLevel]}${r.certificate ? ` · Certificado de Calidad expedido (${r.certificate})` : ''}${r.pendingQuality ? ' · Certificado de Calidad pendiente de expedir (Inicio)' : ''}${r.withdrawn ? ` · Certificado de Calidad retirado (${r.withdrawn})` : ''}`)
       reload()
     } catch (x) { notify(x.message) }
   }
@@ -109,7 +109,7 @@ function CaseView({ id, onBack, notify }) {
     setAccepting(true)
     try {
       const r = await api(`/eval/cases/${id}/accept-ai`, { method: 'POST', body: {} })
-      notify(`Resultado aceptado: ${STARS_TXT[r.previousLevel]} → ${STARS_TXT[r.newLevel]}${r.certificate ? ` · Certificado de Calidad expedido (${r.certificate})` : ''}${r.noQuality ? ' · sin estrellas: no hay Certificado de Calidad' : ''}`)
+      notify(`Resultado aceptado: ${STARS_TXT[r.previousLevel]} → ${STARS_TXT[r.newLevel]}${r.certificate ? ` · Certificado de Calidad expedido (${r.certificate})` : ''}${r.pendingQuality ? ' · Certificado de Calidad pendiente de expedir (Inicio)' : ''}${r.withdrawn ? ` · Certificado de Calidad retirado (${r.withdrawn})` : ''}${r.noQuality && !r.withdrawn ? ' · 0 estrellas: sin Certificado de Calidad' : ''}`)
       reload()
     } catch (x) { notify(x.message) }
     setAccepting(false)

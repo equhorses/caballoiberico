@@ -27,8 +27,59 @@ export function ExportButton({ kind, label = 'Descargar Excel (CSV)', notify }) 
 }
 
 // ─── INICIO ───
-export function Dashboard({ go }) {
-  const { data: s } = useFetch('/admin/stats')
+// Certificados de Calidad: interruptor de expedición automática y lista de pendientes de expedir
+function QualityIssuing({ notify, openHorse, onChange }) {
+  const { data: cfg, reload: reloadCfg } = useFetch('/admin/settings')
+  const { data: list, reload } = useFetch('/admin/quality-pending')
+  const [busy, setBusy] = useState(null)
+  if (!cfg || !list) return null
+  const auto = Boolean(cfg.auto_issue_quality)
+  const toggle = async () => {
+    const next = !auto
+    if (next && !window.confirm('A partir de ahora el Certificado de Calidad se expedirá solo al aceptar la valoración (si tiene Origen y al menos 1 estrella). ¿Activar?')) return
+    setBusy('cfg')
+    try { await api('/admin/settings', { method: 'PATCH', body: { auto_issue_quality: next } }); await reloadCfg(); notify?.(next ? 'Expedición automática activada' : 'Expedición automática desactivada: la expides tú') } catch (x) { notify?.(x.message) }
+    setBusy(null)
+  }
+  const issue = async (h) => {
+    setBusy(h.id)
+    try { await api(`/admin/horses/${h.id}/certificates`, { method: 'POST', body: { type: 'CALIDAD' } }); await reload(); onChange?.(); notify?.(`Certificado de Calidad expedido a ${h.name}`) } catch (x) { notify?.(x.message) }
+    setBusy(null)
+  }
+  return (
+    <div className="card">
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <h3>Expedición del Certificado de Calidad</h3>
+          <p className="small muted mt8">{auto
+            ? 'Automática: se expide al aceptar la valoración si el ejemplar tiene Origen y al menos 1 estrella.'
+            : 'Manual: tras aceptar la valoración, el certificado queda aquí pendiente hasta que lo expidas tú.'} Si una nueva valoración baja de 50/100, el certificado se retira siempre de forma automática (0 estrellas).</p>
+        </div>
+        <label className="row" style={{ gap: 8, alignItems: 'center', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <input type="checkbox" checked={auto} onChange={toggle} disabled={busy === 'cfg'} />
+          <strong>Expedir automáticamente</strong>
+        </label>
+      </div>
+      {list.length > 0 ? (
+        <table className="table mt16">
+          <thead><tr><th>Ejemplar</th><th>Calidad</th><th>Nota</th><th>Valorado</th><th /></tr></thead>
+          <tbody>{list.map((h) => (
+            <tr key={h.id}>
+              <td className="t-name"><button type="button" className="link" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => openHorse?.(h.id)}>{h.name}</button> <span className="small muted">{h.registrationNumber}</span></td>
+              <td><LevelBadge level={h.level} /></td>
+              <td>{h.score != null ? `${h.score}/100` : '—'}</td>
+              <td className="small muted">{h.resolvedAt ? fmtDate(h.resolvedAt) : '—'}</td>
+              <td><button type="button" className="btn btn-gold btn-sm" disabled={busy === h.id} onClick={() => issue(h)}>Expedir</button></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      ) : <p className="small muted mt16">No hay certificados pendientes de expedir.</p>}
+    </div>
+  )
+}
+
+export function Dashboard({ go, notify, openHorse }) {
+  const { data: s, reload } = useFetch('/admin/stats')
   if (!s) return <p className="muted">Cargando…</p>
   const tile = (n, label, sub, tab) => (
     <button type="button" className="dash-tile" onClick={() => tab && go(tab)} disabled={!tab}>
@@ -44,8 +95,10 @@ export function Dashboard({ go }) {
           {tile(s.openCases, 'Valoraciones abiertas', 'por resolver', 'casos')}
           {tile(s.pendingOrigin, 'Procedencias por acreditar', 'ejemplares sin Certificado de Origen', 'ejemplares')}
           {tile(s.unverifiedMerits, 'Resultados por verificar', 'méritos deportivos', 'meritos')}
+          {tile(s.pendingQuality, 'Calidad por expedir', 'valorados con estrellas, sin certificado')}
         </div>
       </div>
+      <QualityIssuing notify={notify} openHorse={openHorse} onChange={reload} />
       <div>
         <span className="eyebrow">Registro</span>
         <div className="dash-grid mt8">

@@ -5,7 +5,7 @@ const L = require('../lib/levels');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { validateHorse } = require('../lib/horses');
-const { db, MERIT_STARS, upload, authenticate, requireRole, audit, verificationCode, nextRegistrationNumber, wrap } = require('../lib/common');
+const { db, MERIT_STARS, upload, authenticate, requireRole, audit, verificationCode, nextRegistrationNumber, SETTINGS_DEFAULTS, wrap } = require('../lib/common');
 
 router.use(authenticate, requireRole('ADMIN', 'EVALUADOR'));
 
@@ -21,6 +21,8 @@ router.get('/stats', wrap(async (req, res) => {
     (SELECT COUNT(*)::int FROM service_requests WHERE status IN ('PENDIENTE_PAGO','PAGADA','EN_REVISION','REQUIERE_DOCUMENTACION')) AS pending,
     (SELECT COUNT(*)::int FROM evaluation_cases WHERE status <> 'RESUELTO') AS open_cases,
     (SELECT COUNT(*)::int FROM sport_merits WHERE NOT verified) AS unverified_merits,
+    (SELECT COUNT(*)::int FROM horses h WHERE h.status='CERTIFICADO' AND h.level >= 1
+       AND NOT EXISTS (SELECT 1 FROM certificates c WHERE c.horse_id=h.id AND c.type='CALIDAD' AND c.status='VIGENTE')) AS pending_quality,
     (SELECT COUNT(*)::int FROM users) AS users,
     (SELECT COUNT(*)::int FROM users WHERE created_at > now() - interval '30 days') AS users_month,
     (SELECT COUNT(DISTINCT raw->>'runId')::int FROM ai_proposals WHERE created_at > date_trunc('month', now())) AS ai_runs_month,
@@ -28,6 +30,39 @@ router.get('/stats', wrap(async (req, res) => {
     (SELECT COUNT(*)::int FROM prevaluations WHERE created_at > date_trunc('month', now())) AS preval_month,
     (SELECT COALESCE(SUM(amount),0)::int FROM payments WHERE status='COMPLETADO') / 100.0 AS revenue,
     (SELECT COALESCE(SUM(amount),0)::int FROM payments WHERE status='COMPLETADO' AND paid_at > date_trunc('month', now())) / 100.0 AS revenue_month`));
+}));
+
+// Ejemplares con estrellas y Origen que aún no tienen el Certificado de Calidad expedido
+router.get('/quality-pending', wrap(async (req, res) => {
+  res.json(await db.query(
+    `SELECT h.id, h.name, h.registration_number, h.level,
+       (SELECT final_score FROM evaluation_cases e WHERE e.horse_id=h.id AND e.status='RESUELTO' ORDER BY e.resolved_at DESC NULLS LAST LIMIT 1) AS score,
+       (SELECT resolved_at FROM evaluation_cases e WHERE e.horse_id=h.id AND e.status='RESUELTO' ORDER BY e.resolved_at DESC NULLS LAST LIMIT 1) AS resolved_at
+     FROM horses h WHERE h.status='CERTIFICADO' AND h.level >= 1
+       AND NOT EXISTS (SELECT 1 FROM certificates c WHERE c.horse_id=h.id AND c.type='CALIDAD' AND c.status='VIGENTE')
+     ORDER BY resolved_at DESC NULLS LAST`,
+  ));
+}));
+
+// Ajustes de la presidencia
+router.get('/settings', requireRole('ADMIN'), wrap(async (req, res) => {
+  const rows = await db.query('SELECT key, value FROM settings');
+  res.json({ ...SETTINGS_DEFAULTS, ...Object.fromEntries(rows.map((r) => [r.key, r.value])) });
+}));
+
+router.patch('/settings', requireRole('ADMIN'), wrap(async (req, res) => {
+  const b = req.body || {};
+  const keys = Object.keys(b).filter((k) => k in SETTINGS_DEFAULTS);
+  if (!keys.length) return res.status(400).json({ error: 'Ajuste no válido' });
+  for (const k of keys) {
+    if (typeof b[k] !== typeof SETTINGS_DEFAULTS[k]) return res.status(400).json({ error: `Valor no válido para ${k}` });
+    // eslint-disable-next-line no-await-in-loop
+    await db.query(`INSERT INTO settings(key, value, updated_at, updated_by) VALUES ($1,$2::jsonb,now(),$3)
+                    ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=now(), updated_by=EXCLUDED.updated_by`, [k, JSON.stringify(b[k]), req.user.id]);
+    audit(req.user.id, 'Setting', k, 'CAMBIAR', { valor: b[k] });
+  }
+  const rows = await db.query('SELECT key, value FROM settings');
+  res.json({ ...SETTINGS_DEFAULTS, ...Object.fromEntries(rows.map((r) => [r.key, r.value])) });
 }));
 
 router.get('/requests', wrap(async (req, res) => {

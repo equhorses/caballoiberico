@@ -2,7 +2,7 @@
 // Flujo: abrir caso → revisión de material por criterio → propuesta IA (con evidencia y confianza)
 // → decisión humana por criterio (aceptar/corregir/rechazar/no evaluable) → resolución. Todo auditado.
 const router = require('express').Router();
-const { db, UPLOAD_DIR, authenticate, requireRole, audit, ageYears, verificationCode, wrap } = require('../lib/common');
+const { db, UPLOAD_DIR, authenticate, requireRole, audit, ageYears, verificationCode, getSetting, wrap } = require('../lib/common');
 const ai = require('../lib/ai');
 const L = require('../lib/levels');
 
@@ -244,7 +244,7 @@ router.put('/cases/:id/decisions/:key', wrap(async (req, res) => {
   res.json(d);
 }));
 
-// Cierre de la valoración: nota ponderada, estrellas de calidad y subida si mejora. Nunca baja.
+// Cierre de la valoración: nota ponderada y estrellas. Cuenta la última (sube o baja); los resultados verificados aseguran un mínimo.
 async function resolveCase(c, user, summary, guidance) {
   const rubric = await db.one('SELECT content FROM rubrics WHERE id=$1', [c.rubricId]);
   const decisions = await db.query('SELECT * FROM human_decisions WHERE case_id=$1', [c.id]);
@@ -265,26 +265,32 @@ async function resolveCase(c, user, summary, guidance) {
     const merits = await db.query('SELECT level, position FROM sport_merits WHERE horse_id=$1 AND verified', [horse.id], client);
     const floor = merits.reduce((mx, m) => Math.max(mx, L.meritFloor(m)), 0);
     const newLevel = Math.max(earned, floor);
+    const quality = await db.one("SELECT id, code FROM certificates WHERE horse_id=$1 AND type='CALIDAD' AND status='VIGENTE'", [horse.id], client);
     const stars = (n) => `${n} ${n === 1 ? 'estrella' : 'estrellas'}`;
     await db.query(`INSERT INTO level_history(horse_id, from_level, to_level, reason, case_id, notes, decided_by)
                     VALUES ($1,$2,$3,'VALORACION',$4,$5,$6)`,
-    [horse.id, horse.level, newLevel, c.id, `${stage ? stage.name : ''} · ${earned ? stars(earned) : 'menos de 50/100, sin estrellas'} (${score}/100)${floor > earned ? ` · se mantiene en ${stars(floor)} por sus resultados` : ''}`, user.id], client);
+    [horse.id, horse.level, newLevel, c.id, `${stage ? stage.name : ''} · ${earned ? stars(earned) : '0 estrellas (menos de 50/100)'} (${score}/100)${floor > earned ? ` · se mantiene en ${stars(floor)} por sus resultados` : ''}${newLevel === 0 && quality ? ' · Certificado de Calidad retirado' : ''}`, user.id], client);
     if (newLevel !== horse.level) await db.query('UPDATE horses SET level=$2, updated_at=now() WHERE id=$1', [horse.id, newLevel], client);
 
-    // Certificado de Calidad: se expide solo si tiene Origen y al menos 1 estrella; si baja de 50 sin resultados que lo sostengan, se retira
-    const quality = await db.one("SELECT id FROM certificates WHERE horse_id=$1 AND type='CALIDAD' AND status='VIGENTE'", [horse.id], client);
+    // Certificado de Calidad: requiere Origen y al menos 1 estrella. Se expide solo si la presidencia lo ha activado en Ajustes;
+    // si no, queda pendiente de expedir a mano. Si baja de 50 sin resultados que lo sostengan, se retira siempre.
     let certificate = null;
+    let pendingQuality = false;
+    let withdrawn = null;
     if (newLevel >= 1 && !quality && horse.status === 'CERTIFICADO') {
-      certificate = await db.one("INSERT INTO certificates(horse_id, type, code, notes) VALUES ($1,'CALIDAD',$2,$3) RETURNING code",
-        [horse.id, verificationCode(), 'Expedido al cerrar la valoración'], client);
-      await audit(user.id, 'Certificate', certificate.code, 'EXPEDIR', { type: 'CALIDAD', ejemplar: horse.name, automatico: true }, client);
+      if (await getSetting('auto_issue_quality', client)) {
+        certificate = await db.one("INSERT INTO certificates(horse_id, type, code, notes) VALUES ($1,'CALIDAD',$2,$3) RETURNING code",
+          [horse.id, verificationCode(), 'Expedido automáticamente al cerrar la valoración'], client);
+        await audit(user.id, 'Certificate', certificate.code, 'EXPEDIR', { type: 'CALIDAD', ejemplar: horse.name, automatico: true }, client);
+      } else pendingQuality = true;
     }
     if (newLevel === 0 && quality) {
-      await db.query("UPDATE certificates SET status='REVOCADO', revoked_at=now(), notes=$2 WHERE id=$1", [quality.id, 'Nueva valoración por debajo de 50/100'], client);
-      await audit(user.id, 'Certificate', quality.id, 'REVOCAR', { motivo: 'Nueva valoración por debajo de 50/100', automatico: true }, client);
+      await db.query("UPDATE certificates SET status='REVOCADO', revoked_at=now(), notes=$2 WHERE id=$1", [quality.id, 'Retirado: nueva valoración por debajo de 50/100 (0 estrellas)'], client);
+      await audit(user.id, 'Certificate', quality.code, 'REVOCAR', { motivo: 'Nueva valoración por debajo de 50/100 (0 estrellas)', automatico: true }, client);
+      withdrawn = quality.code;
     }
     await audit(user.id, 'EvaluationCase', c.id, 'RESOLVER', { summary: finalSummary, guidance, nota: score, estrellas: earned, minimoPorResultados: floor, anterior: horse.level, nuevo: newLevel }, client);
-    return { ...out, previousLevel: horse.level, newLevel, floor, certificate: certificate?.code || null, noQuality: newLevel === 0 };
+    return { ...out, previousLevel: horse.level, newLevel, floor, certificate: certificate?.code || null, pendingQuality, withdrawn, noQuality: newLevel === 0 };
   });
 }
 

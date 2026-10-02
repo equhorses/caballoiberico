@@ -76,4 +76,11 @@ const starsOf = (merits) => merits.filter((m) => m.verified).reduce((max, m) => 
 
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
-module.exports = { db, SERVICES, MERIT_STARS, UPLOAD_DIR, upload, authenticate, optionalAuth, requireRole, audit, verificationCode, nextRegistrationNumber, ageYears, starsOf, wrap };
+// Ajustes de la presidencia
+const SETTINGS_DEFAULTS = { auto_issue_quality: false };
+async function getSetting(key, client) {
+  const r = await db.one('SELECT value FROM settings WHERE key=$1', [key], client);
+  return r ? r.value : SETTINGS_DEFAULTS[key];
+}
+
+module.exports = { db, SETTINGS_DEFAULTS, getSetting, SERVICES, MERIT_STARS, UPLOAD_DIR, upload, authenticate, optionalAuth, requireRole, audit, verificationCode, nextRegistrationNumber, ageYears, starsOf, wrap };
