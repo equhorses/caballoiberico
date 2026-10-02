@@ -91,17 +91,17 @@ const CRITERIA = [
   },
   {
     key: 'reunion_giros', name: 'Ejercicios: equilibrio y reunión', area: 'FUNCIONALIDAD', material: ['VIDEO'],
-    observe: 'Transiciones, capacidad de cargar el posterior y bajar la grupa, equilibrio en giros. Sin montar: equilibrio natural en giros y cambios de aire en libertad.',
+    observe: 'Según la FEI: equilibrio natural y autoporte (se lleva solo, sin apoyarse en la mano), rectitud, transiciones entre aires y dentro del aire, facilidad para alargar y acortar sin perder el ritmo, y capacidad de reunir: los posteriores entran bajo la masa y cargan peso, con trancos más cortos, altos y activos sin perder impulsión. Se exige según la edad: hasta los 6 años equilibrio y tendencia cuesta arriba; desde los 7, capacidad real de reunir y cargar peso. Sin montar: equilibrio en giros, frenadas y cambios de aire en libertad.',
     anchors: {
-      '9-10': 'Transiciones fluidas, reunión con descenso real de la grupa sin perder amplitud ni ritmo.',
-      '7-8': 'Equilibrio correcto para su edad con transiciones limpias.',
-      '5-6': 'Se apoya en el anterior o pierde el equilibrio en transiciones o giros.',
-      '0-4': 'No demuestra capacidad de reunión.',
+      '9-10': 'Equilibrio cuesta arriba y autoporte; transiciones fluidas; reunión con descenso real de la grupa y posteriores que cargan, sin perder amplitud, impulsión ni ritmo.',
+      '7-8': 'Equilibrio correcto para su edad, recto, con transiciones limpias y capacidad clara de acortar y alargar.',
+      '5-6': 'Se apoya en el anterior, se tuerce o pierde el ritmo en transiciones, giros o al acortar.',
+      '0-4': 'Sin equilibrio ni capacidad de reunir: cae sobre el anterior o rompe el aire.',
     },
   },
   {
     key: 'comportamiento_montable', name: 'Aptitud para ser montado', area: 'DOMA', material: ['VIDEO'], ridden: true,
-    observe: 'Contacto, aceptación de ayudas, voluntad y permeabilidad. Solo conducta observable; nunca se infiere temperamento.',
+    observe: 'Equivale a la "sumisión" de las pruebas FEI de caballos jóvenes: contacto ligero y constante, rectitud, respuesta a las ayudas, relajación y voluntad, sin tensión ni resistencias (boca abierta, cola agitada, cuello encogido, dorso tenso). Solo conducta observable; nunca se infiere temperamento.',
     anchors: {
       '9-10': 'Contacto estable, responde a ayudas mínimas, trabaja con voluntad y se deja estirar.',
       '7-8': 'Buena disposición con resistencias puntuales.',
@@ -153,7 +153,7 @@ const REFERENCES = {
 
 const RULES = [
   STANDARD,
-  'Usa los textos de referencia (FEI, caballos jóvenes, estándar centroeuropeo y tipo PRE/PSL) para describir y puntuar, pero la nota sigue el criterio C-IBERICO: movimiento con la vara centroeuropea y conformación por su función, respetando el tipo ibérico.',
+  'Los textos de referencia mandan. Si un texto oficial es más preciso que estas reglas o que las anclas, sigue el texto oficial: FEI para la definición de los aires, la escala y las faltas; estándar de los studbooks de deporte centroeuropeos para la calidad del movimiento y la conformación funcional; prototipos oficiales PRE y PSL para el tipo racial que se respeta.',
   'Notas máximas por faltas (FEI): paso con cuatro tiempos poco marcados máx. 5; paso irregular máx. 4; paso lateral o amblado máx. 3; trote muy desigual máx. 4 (si parece cojera, abstente y avísalo en limitaciones); galope desunido, a cuatro tiempos o con rupturas por debajo de 5.',
   'La conformación se juzga por su función en el caballo de deporte. Los rasgos de tipo PRE o PSL (perfil de la cabeza, grupa redondeada, crin) no restan si no limitan el movimiento.',
   'Tu nota es la nota oficial: la secretaría solo comprueba el material y la acepta tal cual. Por eso sé rigurosa, cita evidencia y abstente si el material no permite valorar.',
@@ -169,7 +169,7 @@ const RULES = [
 const { DEFAULT_STAGES, DEFAULT_LEVELS } = require('./levels');
 
 const DEFAULT_RUBRIC = {
-  version: '2.3.0',
+  version: '2.3.1',
   status: 'EXPERIMENTAL',
   content: {
     standard: STANDARD,
@@ -177,7 +177,7 @@ const DEFAULT_RUBRIC = {
     stages: DEFAULT_STAGES, levels: DEFAULT_LEVELS,
     scale: '0-10, anclada al estándar de movimiento del caballo de deporte centroeuropeo',
   },
-  notes: 'v2.3: añade textos de referencia (FEI doma y caballos jóvenes, estándar centroeuropeo, prototipos PRE y PSL) y notas máximas por faltas. La nota de la IA es la oficial. Pesos y umbrales pendientes de calibración.',
+  notes: 'v2.3.1: los textos oficiales prevalecen sobre las reglas propias; ejercicios y aptitud alineados con la FEI. v2.3: añade textos de referencia (FEI doma y caballos jóvenes, estándar centroeuropeo, prototipos PRE y PSL) y notas máximas por faltas. La nota de la IA es la oficial. Pesos y umbrales pendientes de calibración.',
 };
 
 module.exports = { DEFAULT_RUBRIC, CRITERIA, AREAS };
